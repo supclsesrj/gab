@@ -1,4 +1,4 @@
-// DocCheck — Gemini edition
+// DocCheck — Gemini edition (versão CDN, sem imports)
 const { useState, useCallback, useRef } = React;
 
 const GEMINI_MODEL = "gemini-2.0-flash";
@@ -49,9 +49,9 @@ const PRESET_CHECKLISTS = {
 
 const StatusBadge = ({ status }) => {
   const cfg = {
-    presente: { bg: "#ECFDF5", color: "#065F46", dot: "#10B981", label: "Presente" },
-    ausente: { bg: "#FEF2F2", color: "#991B1B", dot: "#EF4444", label: "Ausente" },
-    parcial: { bg: "#FFFBEB", color: "#92400E", dot: "#F59E0B", label: "Parcial" },
+    presente:   { bg: "#ECFDF5", color: "#065F46", dot: "#10B981", label: "Presente" },
+    ausente:    { bg: "#FEF2F2", color: "#991B1B", dot: "#EF4444", label: "Ausente" },
+    parcial:    { bg: "#FFFBEB", color: "#92400E", dot: "#F59E0B", label: "Parcial" },
     analisando: { bg: "#EFF6FF", color: "#1E40AF", dot: "#3B82F6", label: "Analisando…" },
   }[status] || { bg: "#F3F4F6", color: "#374151", dot: "#9CA3AF", label: "Pendente" };
 
@@ -112,7 +112,7 @@ const ChecklistItem = ({ item, index }) => {
   );
 };
 
-export default function App() {
+function App() {
   const [apiKey, setApiKey] = useState("");
   const [apiKeySet, setApiKeySet] = useState(false);
   const [presetKey, setPresetKey] = useState("Processo Licitatório");
@@ -161,7 +161,7 @@ export default function App() {
   const runAnalysis = async () => {
     if (!pdfBase64) { setError("Carregue um PDF primeiro."); return; }
     if (activeItems.length === 0) { setError("Adicione ao menos um item ao checklist."); return; }
-    if (!apiKey) { setError("Informe sua chave de API Anthropic."); return; }
+    if (!apiKey) { setError("Informe sua chave de API do Gemini."); return; }
 
     setLoading(true);
     setError("");
@@ -225,8 +225,8 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
 
       setResults(mapped);
       const presentes = mapped.filter(r => r.status === "presente").length;
-      const parciais = mapped.filter(r => r.status === "parcial").length;
-      const ausentes = mapped.filter(r => r.status === "ausente").length;
+      const parciais  = mapped.filter(r => r.status === "parcial").length;
+      const ausentes  = mapped.filter(r => r.status === "ausente").length;
       setSummary({ presentes, parciais, ausentes, total: mapped.length });
     } catch (e) {
       setError("Erro na análise: " + e.message);
@@ -236,7 +236,9 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
     }
   };
 
-  const score = summary ? Math.round(((summary.presentes + summary.parciais * 0.5) / summary.total) * 100) : null;
+  const score = summary
+    ? Math.round(((summary.presentes + summary.parciais * 0.5) / summary.total) * 100)
+    : null;
 
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", minHeight: "100vh", background: "#F8F9FB" }}>
@@ -244,7 +246,7 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
       <div style={{ background: "#0F172A", padding: "0 32px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 6, background: "#3B82F6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 28, height: 28, borderRadius: 6, background: "#4F8EF7", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span style={{ color: "#fff", fontSize: 14 }}>✓</span>
             </div>
             <span style={{ color: "#F1F5F9", fontWeight: 700, fontSize: 15, letterSpacing: "-.01em" }}>DocCheck</span>
@@ -280,7 +282,7 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
               </button>
             </div>
             <p style={{ margin: "8px 0 0", fontSize: 11, color: "#9CA3AF" }}>
-              Obtenha sua chave gratuitamente em <strong>aistudio.google.com</strong> → Get API Key
+              Obtenha sua chave gratuitamente em aistudio.google.com → Get API Key
             </p>
           </div>
         ) : (
@@ -308,11 +310,11 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
             </div>
 
             {presetKey !== "Personalizado" && (
-              <div style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 16, maxHeight: 220, overflowY: "auto" }}>
                 <p style={{ fontSize: 12, color: "#6B7280", fontWeight: 600, marginBottom: 8 }}>Itens do modelo</p>
                 {PRESET_CHECKLISTS[presetKey].map((item, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "5px 0", borderBottom: "1px solid #F3F4F6" }}>
-                    <span style={{ color: "#3B82F6", fontSize: 12, marginTop: 1 }}>✓</span>
+                    <span style={{ color: "#4F8EF7", fontSize: 12, marginTop: 1 }}>✓</span>
                     <span style={{ fontSize: 12, color: "#374151" }}>{item}</span>
                   </div>
                 ))}
@@ -323,6 +325,9 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
               <p style={{ fontSize: 12, color: "#6B7280", fontWeight: 600, marginBottom: 8 }}>
                 {presetKey === "Personalizado" ? "Itens do checklist" : "Itens adicionais"}
               </p>
+              {customItems.length === 0 && presetKey !== "Personalizado" && (
+                <p style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 8 }}>Adicione itens extras ao modelo acima.</p>
+              )}
               {customItems.map((item, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "1px solid #F3F4F6" }}>
                   <span style={{ color: "#8B5CF6", fontSize: 12 }}>+</span>
@@ -354,17 +359,16 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
             </div>
           </div>
 
-          {/* Upload */}
+          {/* Upload + Summary + Botão */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, padding: 24 }}>
               <p style={{ margin: "0 0 16px", fontSize: 14, fontWeight: 700, color: "#0F172A" }}>Documento PDF</p>
-
               <div
                 onDrop={handleDrop}
                 onDragOver={e => e.preventDefault()}
                 onClick={() => fileRef.current.click()}
                 style={{
-                  border: `2px dashed ${pdfFile ? "#3B82F6" : "#D1D5DB"}`,
+                  border: `2px dashed ${pdfFile ? "#4F8EF7" : "#D1D5DB"}`,
                   borderRadius: 10, padding: "32px 16px", textAlign: "center",
                   cursor: "pointer", background: pdfFile ? "#EFF6FF" : "#FAFAFA",
                   transition: "all .15s",
@@ -382,20 +386,19 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
                 ) : (
                   <>
                     <div style={{ fontSize: 28, marginBottom: 8 }}>📂</div>
-                    <p style={{ margin: 0, fontSize: 13, color: "#6B7280" }}>Arraste um PDF ou <strong style={{ color: "#3B82F6" }}>clique para selecionar</strong></p>
+                    <p style={{ margin: 0, fontSize: 13, color: "#6B7280" }}>Arraste um PDF ou <strong style={{ color: "#4F8EF7" }}>clique para selecionar</strong></p>
                   </>
                 )}
               </div>
             </div>
 
-            {/* Summary */}
             {summary && (
               <div style={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, padding: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Resultado</p>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Resultado geral</p>
                   <span style={{
-                    fontSize: 20, fontWeight: 800,
-                    color: score >= 80 ? "#065F46" : score >= 50 ? "#92400E" : "#991B1B"
+                    fontSize: 22, fontWeight: 800,
+                    color: score >= 80 ? "#065F46" : score >= 50 ? "#92400E" : "#991B1B",
                   }}>
                     {score}%
                   </span>
@@ -403,11 +406,11 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                   {[
                     { label: "Presentes", value: summary.presentes, color: "#10B981" },
-                    { label: "Parciais", value: summary.parciais, color: "#F59E0B" },
-                    { label: "Ausentes", value: summary.ausentes, color: "#EF4444" },
+                    { label: "Parciais",  value: summary.parciais,  color: "#F59E0B" },
+                    { label: "Ausentes",  value: summary.ausentes,  color: "#EF4444" },
                   ].map(({ label, value, color }) => (
                     <div key={label} style={{ textAlign: "center", padding: "10px 8px", background: "#F8F9FB", borderRadius: 8 }}>
-                      <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color }}>{value}</p>
+                      <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color }}>{value}</p>
                       <p style={{ margin: "2px 0 0", fontSize: 11, color: "#6B7280" }}>{label}</p>
                     </div>
                   ))}
@@ -429,7 +432,8 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
                 background: loading || !pdfFile || !apiKeySet ? "#E2E8F0" : "#0F172A",
                 color: loading || !pdfFile || !apiKeySet ? "#9CA3AF" : "#fff",
                 border: "none", borderRadius: 10,
-                fontSize: 14, fontWeight: 700, cursor: loading || !pdfFile || !apiKeySet ? "not-allowed" : "pointer",
+                fontSize: 14, fontWeight: 700,
+                cursor: loading || !pdfFile || !apiKeySet ? "not-allowed" : "pointer",
                 transition: "all .15s",
               }}
             >
@@ -443,7 +447,11 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
           <div style={{ marginTop: 24, background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, padding: 24 }}>
             <p style={{ margin: "0 0 16px", fontSize: 14, fontWeight: 700, color: "#0F172A" }}>
               Resultado item a item
-              {!loading && <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 400, marginLeft: 8 }}>clique em um item para ver o trecho do documento</span>}
+              {!loading && (
+                <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 400, marginLeft: 8 }}>
+                  clique em um item para ver o trecho do documento
+                </span>
+              )}
             </p>
             {results.map((item, i) => <ChecklistItem key={i} item={item} index={i} />)}
           </div>
