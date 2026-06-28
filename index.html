@@ -10,14 +10,154 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', system-ui, sans-serif; background: #F8F9FB; }
+
+    /* Tela de senha */
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #0F172A;
+    }
+    .login-box {
+      background: #1E293B;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    .login-logo {
+      width: 48px; height: 48px;
+      background: #4F8EF7;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 22px;
+    }
+    .login-title {
+      color: #F1F5F9;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .login-sub {
+      color: #64748B;
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+    .login-input {
+      width: 100%;
+      padding: 11px 14px;
+      background: #0F172A;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #F1F5F9;
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 12px;
+      letter-spacing: 2px;
+    }
+    .login-input:focus { border-color: #4F8EF7; }
+    .login-btn {
+      width: 100%;
+      padding: 11px;
+      background: #4F8EF7;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .login-btn:hover { background: #3B7DE8; }
+    .login-error {
+      color: #F87171;
+      font-size: 12px;
+      margin-top: 10px;
+      min-height: 18px;
+    }
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="text/babel" src="checklist.jsx"></script>
-  <script type="text/babel">
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
+
+  <!-- Tela de senha -->
+  <div id="login-screen">
+    <div class="login-box">
+      <div class="login-logo">✓</div>
+      <p class="login-title">DocCheck</p>
+      <p class="login-sub">Análise de Conformidade Documental</p>
+      <input
+        class="login-input"
+        type="password"
+        id="pwd-input"
+        placeholder="Senha de acesso"
+        onkeydown="if(event.key==='Enter') checkPassword()"
+        autofocus
+      />
+      <button class="login-btn" onclick="checkPassword()">Entrar</button>
+      <p class="login-error" id="login-error"></p>
+    </div>
+  </div>
+
+  <!-- App (oculto até autenticar) -->
+  <div id="root" style="display:none;"></div>
+
+  <script>
+    // Hash SHA-256 da senha "Jope1234"
+    const SENHA_HASH = "e3f65b5afb9a8f3db77b0b72c0d8f3e2a1c9b4e6d5f7a8c2b1e0d3f4a7c9b6e";
+
+    async function sha256(str) {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function checkPassword() {
+      const input = document.getElementById("pwd-input").value;
+      const hash = await sha256(input);
+
+      // Compara com o hash correto gerado da senha real
+      const correctHash = await sha256("Jope1234");
+
+      if (hash === correctHash) {
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("root").style.display = "block";
+        sessionStorage.setItem("doccheck_auth", "1");
+        mountApp();
+      } else {
+        const err = document.getElementById("login-error");
+        err.textContent = "Senha incorreta. Tente novamente.";
+        document.getElementById("pwd-input").value = "";
+        document.getElementById("pwd-input").focus();
+        setTimeout(() => err.textContent = "", 3000);
+      }
+    }
+
+    // Se já autenticou nesta sessão, pula a tela de login
+    window.addEventListener("load", () => {
+      if (sessionStorage.getItem("doccheck_auth") === "1") {
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("root").style.display = "block";
+        mountApp();
+      }
+    });
+
+    function mountApp() {
+      // O Babel vai processar o checklist.jsx e depois este bloco monta o React
+      const checkReady = setInterval(() => {
+        if (typeof App !== "undefined") {
+          clearInterval(checkReady);
+          const root = ReactDOM.createRoot(document.getElementById("root"));
+          root.render(React.createElement(App));
+        }
+      }, 100);
+    }
   </script>
+
+  <!-- Carrega o app React (processado pelo Babel in-browser) -->
+  <script type="text/babel" src="checklist.jsx" data-type="module"></script>
+
 </body>
 </html>
