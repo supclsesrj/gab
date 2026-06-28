@@ -112,9 +112,16 @@ const ChecklistItem = ({ item, index }) => {
   );
 };
 
+// Persiste chave no localStorage com ofuscação simples (base64)
+const STORAGE_KEY = "doccheck_gemini_key";
+function saveKey(key) { try { localStorage.setItem(STORAGE_KEY, btoa(unescape(encodeURIComponent(key)))); } catch(e) {} }
+function loadKey() { try { const v = localStorage.getItem(STORAGE_KEY); return v ? decodeURIComponent(escape(atob(v))) : ""; } catch(e) { return ""; } }
+function clearKey() { try { localStorage.removeItem(STORAGE_KEY); } catch(e) {} }
+
 function App() {
-  const [apiKey, setApiKey] = useState("");
-  const [apiKeySet, setApiKeySet] = useState(false);
+  const _saved = loadKey();
+  const [apiKey, setApiKey] = useState(_saved);
+  const [apiKeySet, setApiKeySet] = useState(_saved.length > 10);
   const [presetKey, setPresetKey] = useState("Processo Licitatório");
   const [customItems, setCustomItems] = useState([]);
   const [newItem, setNewItem] = useState("");
@@ -271,11 +278,11 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
                 placeholder="AIzaSy..."
-                onKeyDown={e => e.key === "Enter" && apiKey.length > 10 && setApiKeySet(true)}
+                onKeyDown={e => e.key === "Enter" && apiKey.length > 10 && (saveKey(apiKey), setApiKeySet(true))}
                 style={{ flex: 1, padding: "9px 12px", border: "1px solid #D1D5DB", borderRadius: 8, fontSize: 13, outline: "none" }}
               />
               <button
-                onClick={() => apiKey.length > 10 && setApiKeySet(true)}
+                onClick={() => apiKey.length > 10 && (saveKey(apiKey), setApiKeySet(true))}
                 style={{ padding: "9px 20px", background: "#0F172A", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
               >
                 Confirmar
@@ -286,9 +293,12 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
             </p>
           </div>
         ) : (
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
-            <button onClick={() => { setApiKeySet(false); setApiKey(""); }} style={{ fontSize: 12, color: "#6B7280", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
-              Alterar chave de API
+          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 16, marginBottom: 16 }}>
+            <span style={{ fontSize: 12, color: "#10B981", display: "flex", alignItems: "center", gap: 4 }}>
+              <span>✓</span> Chave salva no navegador
+            </span>
+            <button onClick={() => { clearKey(); setApiKeySet(false); setApiKey(""); }} style={{ fontSize: 12, color: "#6B7280", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+              Alterar / Esquecer chave
             </button>
           </div>
         )}
