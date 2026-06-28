@@ -3,88 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DocCheck — Análise de Conformidade</title>
+  <title>DocCheck — GAB SUPCL/SESRJ</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: #F8F9FB; }
-
-    #login-screen {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      background: #0F172A;
-    }
-    .login-box {
-      background: #1E293B;
-      border: 1px solid #334155;
-      border-radius: 16px;
-      padding: 40px 36px;
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-    }
-    .login-logo {
-      width: 48px; height: 48px;
-      background: #4F8EF7;
-      border-radius: 12px;
-      display: inline-flex; align-items: center; justify-content: center;
-      margin-bottom: 20px;
-      font-size: 22px;
-      color: white;
-    }
-    .login-title { color: #F1F5F9; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-    .login-sub { color: #64748B; font-size: 13px; margin-bottom: 28px; }
-    .login-input {
-      width: 100%; padding: 11px 14px;
-      background: #0F172A; border: 1px solid #334155;
-      border-radius: 8px; color: #F1F5F9; font-size: 14px;
-      outline: none; margin-bottom: 12px; letter-spacing: 2px;
-    }
-    .login-input:focus { border-color: #4F8EF7; }
-    .login-btn {
-      width: 100%; padding: 11px;
-      background: #4F8EF7; color: #fff;
-      border: none; border-radius: 8px;
-      font-size: 14px; font-weight: 700; cursor: pointer;
-    }
-    .login-btn:hover { background: #3B7DE8; }
-    .login-error { color: #F87171; font-size: 12px; margin-top: 10px; min-height: 18px; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Inter',system-ui,sans-serif; background:#F8F9FB; }
+    #login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#0F172A; }
+    .login-box { background:#1E293B; border:1px solid #334155; border-radius:16px; padding:40px 36px; width:100%; max-width:380px; text-align:center; }
+    .login-logo { width:48px; height:48px; background:#4F8EF7; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:20px; font-size:22px; color:white; }
+    .login-title { color:#F1F5F9; font-size:20px; font-weight:700; margin-bottom:4px; }
+    .login-sub { color:#64748B; font-size:13px; margin-bottom:28px; }
+    .login-input { width:100%; padding:11px 14px; background:#0F172A; border:1px solid #334155; border-radius:8px; color:#F1F5F9; font-size:14px; outline:none; margin-bottom:12px; letter-spacing:2px; }
+    .login-input:focus { border-color:#4F8EF7; }
+    .login-btn { width:100%; padding:11px; background:#4F8EF7; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; }
+    .login-btn:hover { background:#3B7DE8; }
+    .login-error { color:#F87171; font-size:12px; margin-top:10px; min-height:18px; }
   </style>
 </head>
 <body>
-
   <div id="login-screen">
     <div class="login-box">
       <div class="login-logo">✓</div>
       <p class="login-title">DocCheck</p>
-      <p class="login-sub">Análise de Conformidade Documental</p>
-      <input class="login-input" type="password" id="pwd-input"
-        placeholder="Senha de acesso"
-        onkeydown="if(event.key==='Enter') checkPassword()"
-        autofocus />
+      <p class="login-sub">GAB — SUPCL/SESRJ</p>
+      <input class="login-input" type="password" id="pwd-input" placeholder="Senha de acesso" onkeydown="if(event.key==='Enter') checkPassword()" autofocus />
       <button class="login-btn" onclick="checkPassword()">Entrar</button>
       <p class="login-error" id="login-error"></p>
     </div>
   </div>
-
   <div id="root" style="display:none;"></div>
-
   <script>
     async function sha256(str) {
       const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
     }
-
     async function checkPassword() {
       const input = document.getElementById("pwd-input").value;
-      const inputHash = await sha256(input);
-      const correctHash = await sha256("Jope1234");
-      if (inputHash === correctHash) {
-        sessionStorage.setItem("doccheck_auth", "1");
+      if ((await sha256(input)) === (await sha256("Jope1234"))) {
+        sessionStorage.setItem("doccheck_auth","1");
         showApp();
       } else {
         const err = document.getElementById("login-error");
@@ -94,17 +52,15 @@
         setTimeout(() => err.textContent = "", 3000);
       }
     }
-
     function showApp() {
       document.getElementById("login-screen").style.display = "none";
       document.getElementById("root").style.display = "block";
+      document.dispatchEvent(new Event("doccheck:auth"));
     }
-
     if (sessionStorage.getItem("doccheck_auth") === "1") {
       document.addEventListener("DOMContentLoaded", showApp);
     }
   </script>
-
   <script type="text/babel">
 // DocCheck — Gemini edition (versão CDN, sem imports)
 const { useState, useCallback, useRef } = React;
@@ -579,26 +535,557 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
   );
 }
 
+// ─────────────────────────────────────────────
+// UTILITÁRIOS COMPARTILHADOS
+// ─────────────────────────────────────────────
 
-    if (sessionStorage.getItem("doccheck_auth") === "1") {
-      const _root = ReactDOM.createRoot(document.getElementById("root"));
-      _root.render(<App />);
+function formatCNPJ(v) {
+  v = v.replace(/\D/g, "").slice(0, 14);
+  if (v.length > 12) v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, "$1.$2.$3/$4-$5");
+  else if (v.length > 8) v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{0,4})/, "$1.$2.$3/$4");
+  else if (v.length > 5) v = v.replace(/^(\d{2})(\d{3})(\d{0,3})/, "$1.$2.$3");
+  else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,3})/, "$1.$2");
+  return v;
+}
+
+function Badge({ color, children }) {
+  const colors = {
+    red:    { bg:"#FEF2F2", text:"#991B1B", border:"#FEE2E2" },
+    green:  { bg:"#ECFDF5", text:"#065F46", border:"#D1FAE5" },
+    yellow: { bg:"#FFFBEB", text:"#92400E", border:"#FDE68A" },
+    blue:   { bg:"#EFF6FF", text:"#1E40AF", border:"#BFDBFE" },
+    gray:   { bg:"#F3F4F6", text:"#374151", border:"#E5E7EB" },
+    orange: { bg:"#FFF7ED", text:"#9A3412", border:"#FED7AA" },
+  }[color] || { bg:"#F3F4F6", text:"#374151", border:"#E5E7EB" };
+  return (
+    <span style={{
+      display:"inline-block", padding:"2px 10px", borderRadius:20,
+      fontSize:11, fontWeight:700,
+      background:colors.bg, color:colors.text, border:`1px solid ${colors.border}`
+    }}>{children}</span>
+  );
+}
+
+function InfoRow({ label, value, mono }) {
+  if (!value) return null;
+  return (
+    <div style={{ display:"flex", gap:12, padding:"8px 0", borderBottom:"1px solid #F3F4F6", alignItems:"flex-start" }}>
+      <span style={{ fontSize:12, color:"#6B7280", minWidth:160, flexShrink:0 }}>{label}</span>
+      <span style={{ fontSize:13, color:"#111827", fontFamily: mono ? "monospace" : "inherit", wordBreak:"break-all" }}>{value}</span>
+    </div>
+  );
+}
+
+// Barra de progresso
+function ProgressBar({ steps, current, label }) {
+  const pct = steps > 0 ? Math.round((current / steps) * 100) : 0;
+  return (
+    <div style={{ marginTop:16 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+        <span style={{ fontSize:12, color:"#6B7280" }}>{label}</span>
+        <span style={{ fontSize:12, color:"#6B7280", fontWeight:600 }}>{pct}%</span>
+      </div>
+      <div style={{ background:"#E2E8F0", borderRadius:99, height:8, overflow:"hidden" }}>
+        <div style={{
+          height:"100%", borderRadius:99,
+          background: pct === 100 ? "#10B981" : "#4F8EF7",
+          width: pct + "%",
+          transition:"width .4s ease"
+        }} />
+      </div>
+      <p style={{ fontSize:11, color:"#94A3B8", marginTop:4 }}>
+        {current} de {steps} empresa{steps !== 1 ? "s" : ""} consultada{steps !== 1 ? "s" : ""}
+      </p>
+    </div>
+  );
+}
+
+// Gera e baixa xlsx sem biblioteca externa (formato SYLK/CSV que Excel abre nativamente)
+function downloadCSV(empresas) {
+  const rows = [["Empresa","CNPJ","Situação","Sócio","Qualificação","Aparece em outras empresas"]];
+  const socios_count = {};
+  empresas.forEach(emp => {
+    (emp.qsa || []).forEach(s => {
+      socios_count[s.nome] = (socios_count[s.nome] || 0) + 1;
+    });
+  });
+  empresas.forEach(emp => {
+    if (!emp.qsa || emp.qsa.length === 0) {
+      rows.push([emp.nome || emp.cnpj, emp.cnpj, emp.situacao || "—", "Sem sócios", "", ""]);
     } else {
-      document.addEventListener("doccheck:auth", () => {
-        const _root = ReactDOM.createRoot(document.getElementById("root"));
-        _root.render(<App />);
+      emp.qsa.forEach(s => {
+        rows.push([
+          emp.nome || emp.cnpj,
+          emp.cnpj,
+          emp.situacao || "—",
+          s.nome,
+          s.qual,
+          socios_count[s.nome] > 1 ? "SIM ⚠" : "Não"
+        ]);
       });
     }
-  </script>
+  });
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const bom = "\uFEFF";
+  const blob = new Blob([bom + csv], { type:"text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "background_check_rapp.csv"; a.click();
+  URL.revokeObjectURL(url);
+}
 
-  <script>
-    // Dispara evento para montar o React após autenticação
-    const _origShowApp = showApp;
-    function showApp() {
-      _origShowApp();
-      document.dispatchEvent(new Event("doccheck:auth"));
+// ─────────────────────────────────────────────
+// MÓDULO — BACKGROUND CHECK (CNPJ SIMPLES)
+// ─────────────────────────────────────────────
+function BackgroundCheck() {
+  const [cnpj, setCnpj] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [dadosCnpj, setDadosCnpj] = React.useState(null);
+  const [step, setStep] = React.useState("");
+
+  const buscar = async () => {
+    const raw = cnpj.replace(/\D/g, "");
+    if (raw.length !== 14) { setError("CNPJ deve ter 14 dígitos."); return; }
+    setLoading(true); setError(""); setDadosCnpj(null);
+    try {
+      setStep("Consultando Receita Federal…");
+      const r1 = await fetch(`https://receitaws.com.br/v1/cnpj/${raw}`);
+      if (!r1.ok) throw new Error(`ReceitaWS: erro ${r1.status}`);
+      const d1 = await r1.json();
+      if (d1.status === "ERROR") throw new Error(d1.message || "CNPJ não encontrado.");
+      setDadosCnpj(d1);
+    } catch(e) {
+      setError("Erro: " + e.message);
+    } finally {
+      setLoading(false); setStep("");
     }
-  </script>
+  };
 
+  return (
+    <div style={{ maxWidth:900, margin:"0 auto", padding:"32px 24px" }}>
+      <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:12, padding:24, marginBottom:20 }}>
+        <p style={{ fontSize:14, fontWeight:700, color:"#0F172A", marginBottom:4 }}>Consulta Individual de CNPJ</p>
+        <p style={{ fontSize:12, color:"#6B7280", marginBottom:16 }}>Para análise completa de múltiplas empresas com cruzamento de sócios, use a aba <strong>RAPP</strong>.</p>
+        <div style={{ display:"flex", gap:8 }}>
+          <input value={cnpj} onChange={e => setCnpj(formatCNPJ(e.target.value))}
+            onKeyDown={e => e.key === "Enter" && buscar()}
+            placeholder="00.000.000/0000-00"
+            style={{ flex:1, padding:"10px 14px", border:"1px solid #D1D5DB", borderRadius:8, fontSize:15, outline:"none", letterSpacing:1, fontFamily:"monospace" }} />
+          <button onClick={buscar} disabled={loading}
+            style={{ padding:"10px 28px", background: loading ? "#E2E8F0" : "#0F172A", color: loading ? "#9CA3AF" : "#fff", border:"none", borderRadius:8, fontSize:14, fontWeight:700, cursor: loading ? "not-allowed" : "pointer" }}>
+            {loading ? "Consultando…" : "Consultar"}
+          </button>
+        </div>
+        {step && <p style={{ marginTop:10, fontSize:12, color:"#6B7280" }}>⏳ {step}</p>}
+        {error && <p style={{ marginTop:10, fontSize:12, color:"#EF4444" }}>⚠ {error}</p>}
+      </div>
+
+      {dadosCnpj && (
+        <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:12, padding:24, marginBottom:20 }}>
+          <p style={{ fontSize:13, fontWeight:700, color:"#0F172A", marginBottom:16 }}>📋 Dados Cadastrais</p>
+          <InfoRow label="Razão Social" value={dadosCnpj.nome} />
+          <InfoRow label="CNPJ" value={dadosCnpj.cnpj} mono />
+          <InfoRow label="Situação" value={dadosCnpj.situacao} />
+          <InfoRow label="Abertura" value={dadosCnpj.abertura} />
+          <InfoRow label="Natureza Jurídica" value={dadosCnpj.natureza_juridica} />
+          <InfoRow label="Porte" value={dadosCnpj.porte} />
+          <InfoRow label="Capital Social" value={dadosCnpj.capital_social ? `R$ ${Number(dadosCnpj.capital_social).toLocaleString("pt-BR")}` : null} />
+          <InfoRow label="CNAE Principal" value={dadosCnpj.atividade_principal?.[0] ? `${dadosCnpj.atividade_principal[0].code} — ${dadosCnpj.atividade_principal[0].text}` : null} />
+          <InfoRow label="Endereço" value={[dadosCnpj.logradouro, dadosCnpj.numero, dadosCnpj.bairro, dadosCnpj.municipio, dadosCnpj.uf].filter(Boolean).join(", ")} />
+          {dadosCnpj.qsa?.length > 0 && (
+            <div style={{ marginTop:16 }}>
+              <p style={{ fontSize:12, fontWeight:700, color:"#374151", marginBottom:10 }}>👥 Quadro Societário</p>
+              {dadosCnpj.qsa.map((s,i) => (
+                <div key={i} style={{ display:"flex", gap:10, padding:"8px 0", borderBottom:"1px solid #F3F4F6", alignItems:"center" }}>
+                  <div style={{ width:32, height:32, borderRadius:"50%", background:"#EFF6FF", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, color:"#3B82F6", flexShrink:0 }}>{(s.nome||"?")[0]}</div>
+                  <div><p style={{ fontSize:13, fontWeight:600, color:"#111827", margin:0 }}>{s.nome}</p><p style={{ fontSize:11, color:"#6B7280", margin:0 }}>{s.qual}</p></div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// MÓDULO — ANÁLISE DE RAPP (CRUZAMENTO DE SÓCIOS)
+// ─────────────────────────────────────────────
+function RappCheck() {
+  const [apiKey, setApiKey] = React.useState(() => { try { const v = localStorage.getItem("doccheck_gemini_key"); return v ? decodeURIComponent(escape(atob(v))) : ""; } catch(e) { return ""; } });
+  const [apiKeySet, setApiKeySet] = React.useState(() => { try { const v = localStorage.getItem("doccheck_gemini_key"); return v ? atob(v).length > 10 : false; } catch(e) { return false; } });
+  const [pdfFile, setPdfFile] = React.useState(null);
+  const [pdfBase64, setPdfBase64] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [progresso, setProgresso] = React.useState({ total:0, atual:0, label:"" });
+  const [empresas, setEmpresas] = React.useState([]);
+  const [conluios, setConluios] = React.useState([]);
+  const fileRef = React.useRef();
+
+  const handleFile = (file) => {
+    if (!file || file.type !== "application/pdf") { setError("Selecione um arquivo PDF."); return; }
+    setPdfFile(file); setError(""); setEmpresas([]); setConluios([]);
+    const reader = new FileReader();
+    reader.onload = (e) => setPdfBase64(e.target.result.split(",")[1]);
+    reader.readAsDataURL(file);
+  };
+
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+  const consultarEmpresa = async (cnpj, nome) => {
+    const raw = cnpj.replace(/\D/g, "");
+    try {
+      const r = await fetch(`https://receitaws.com.br/v1/cnpj/${raw}`);
+      if (!r.ok) return { cnpj, nome, situacao:"Erro", qsa:[], erro:`HTTP ${r.status}` };
+      const d = await r.json();
+      if (d.status === "ERROR") return { cnpj, nome: nome || cnpj, situacao:"Não encontrado", qsa:[], erro: d.message };
+      return {
+        cnpj: d.cnpj || cnpj,
+        nome: d.nome || nome,
+        situacao: d.situacao,
+        abertura: d.abertura,
+        porte: d.porte,
+        qsa: d.qsa || [],
+      };
+    } catch(e) {
+      return { cnpj, nome, situacao:"Erro", qsa:[], erro: e.message };
+    }
+  };
+
+  const analisar = async () => {
+    if (!pdfBase64) { setError("Carregue o PDF do RAPP primeiro."); return; }
+    if (!apiKeySet) { setError("Configure a chave da API Gemini."); return; }
+    setLoading(true); setError(""); setEmpresas([]); setConluios([]);
+    setProgresso({ total:0, atual:0, label:"Extraindo empresas do RAPP com IA…" });
+
+    try {
+      // ETAPA 1 — Gemini extrai CNPJs e nomes do PDF
+      const prompt = `Analise este documento PDF (RAPP — Relatório de Análise de Preços e Proposta ou similar) e extraia TODAS as empresas mencionadas como participantes, licitantes ou proponentes.
+
+Para cada empresa, retorne um objeto com:
+- "cnpj": CNPJ no formato XX.XXX.XXX/XXXX-XX (ou null se não encontrado)
+- "nome": razão social ou nome da empresa
+
+Responda APENAS com um array JSON puro, sem markdown, sem texto antes ou depois.
+Exemplo: [{"cnpj":"12.345.678/0001-90","nome":"Empresa ABC Ltda"},...]
+
+Se não encontrar nenhuma empresa, retorne [].`;
+
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const r = await fetch(url, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          contents:[{ parts:[
+            { inline_data:{ mime_type:"application/pdf", data:pdfBase64 } },
+            { text:prompt }
+          ]}],
+          generationConfig:{ temperature:0.1, maxOutputTokens:4096 }
+        })
+      });
+      if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message || `Gemini erro ${r.status}`); }
+      const gdata = await r.json();
+      const raw = gdata.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+      const clean = raw.replace(/```json|```/g,"").trim();
+      let lista = JSON.parse(clean);
+      if (!Array.isArray(lista) || lista.length === 0) throw new Error("Nenhuma empresa encontrada no PDF. Verifique se é um RAPP válido.");
+
+      // Deduplica por CNPJ
+      const vistos = new Set();
+      lista = lista.filter(e => {
+        const key = e.cnpj ? e.cnpj.replace(/\D/g,"") : e.nome;
+        if (vistos.has(key)) return false;
+        vistos.add(key); return true;
+      });
+
+      setProgresso({ total: lista.length, atual:0, label:"Consultando Receita Federal…" });
+
+      // ETAPA 2 — Consulta Receita para cada empresa (com delay para respeitar rate limit)
+      const resultados = [];
+      for (let i = 0; i < lista.length; i++) {
+        const emp = lista[i];
+        setProgresso({ total: lista.length, atual: i, label:`Consultando: ${emp.nome || emp.cnpj}…` });
+        if (emp.cnpj) {
+          const dados = await consultarEmpresa(emp.cnpj, emp.nome);
+          resultados.push(dados);
+        } else {
+          resultados.push({ cnpj:"—", nome: emp.nome, situacao:"CNPJ não identificado", qsa:[] });
+        }
+        if (i < lista.length - 1) await sleep(1200); // Rate limit ReceitaWS: ~1 req/seg
+      }
+
+      setProgresso({ total: lista.length, atual: lista.length, label:"Cruzando sócios…" });
+      setEmpresas(resultados);
+
+      // ETAPA 3 — Cruzamento de sócios
+      const socioMap = {}; // nome_socio -> [empresas]
+      resultados.forEach(emp => {
+        (emp.qsa || []).forEach(s => {
+          if (!socioMap[s.nome]) socioMap[s.nome] = [];
+          socioMap[s.nome].push({ empresa: emp.nome, cnpj: emp.cnpj, qual: s.qual });
+        });
+      });
+
+      const alertas = Object.entries(socioMap)
+        .filter(([, emps]) => emps.length > 1)
+        .map(([socio, emps]) => ({ socio, empresas: emps }))
+        .sort((a,b) => b.empresas.length - a.empresas.length);
+
+      setConluios(alertas);
+      setProgresso({ total: lista.length, atual: lista.length, label:"Análise concluída!" });
+
+    } catch(e) {
+      setError("Erro: " + e.message);
+      setProgresso({ total:0, atual:0, label:"" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const temResultado = empresas.length > 0;
+
+  return (
+    <div style={{ maxWidth:960, margin:"0 auto", padding:"32px 24px" }}>
+
+      {/* API Key */}
+      {!apiKeySet ? (
+        <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:12, padding:24, marginBottom:20 }}>
+          <p style={{ fontSize:13, fontWeight:600, color:"#374151", marginBottom:4 }}>Chave de API — Google Gemini</p>
+          <p style={{ fontSize:12, color:"#6B7280", marginBottom:12 }}>Necessária para extrair as empresas do PDF do RAPP.</p>
+          <div style={{ display:"flex", gap:8 }}>
+            <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)}
+              placeholder="AIzaSy…"
+              onKeyDown={e => { if (e.key === "Enter" && apiKey.length > 10) { try { localStorage.setItem("doccheck_gemini_key", btoa(unescape(encodeURIComponent(apiKey)))); } catch(x){} setApiKeySet(true); } }}
+              style={{ flex:1, padding:"9px 12px", border:"1px solid #D1D5DB", borderRadius:8, fontSize:13, outline:"none" }} />
+            <button onClick={() => { if (apiKey.length > 10) { try { localStorage.setItem("doccheck_gemini_key", btoa(unescape(encodeURIComponent(apiKey)))); } catch(x){} setApiKeySet(true); } }}
+              style={{ padding:"9px 20px", background:"#0F172A", color:"#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:600, cursor:"pointer" }}>
+              Confirmar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", gap:16, marginBottom:16 }}>
+          <span style={{ fontSize:12, color:"#10B981" }}>✓ Chave Gemini configurada</span>
+          <button onClick={() => { try { localStorage.removeItem("doccheck_gemini_key"); } catch(x){} setApiKeySet(false); setApiKey(""); }}
+            style={{ fontSize:12, color:"#6B7280", background:"none", border:"none", cursor:"pointer", textDecoration:"underline" }}>
+            Alterar chave
+          </button>
+        </div>
+      )}
+
+      {/* Upload + Ação */}
+      <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:12, padding:24, marginBottom:20 }}>
+        <p style={{ fontSize:14, fontWeight:700, color:"#0F172A", marginBottom:4 }}>Análise de RAPP — Cruzamento de Sócios</p>
+        <p style={{ fontSize:12, color:"#6B7280", marginBottom:16 }}>
+          O sistema extrai automaticamente as empresas do PDF, consulta o QSA de cada uma na Receita Federal e identifica sócios em comum.
+        </p>
+
+        <div onClick={() => fileRef.current.click()}
+          onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }}
+          onDragOver={e => e.preventDefault()}
+          style={{ border:`2px dashed ${pdfFile ? "#4F8EF7" : "#D1D5DB"}`, borderRadius:10, padding:"28px 16px", textAlign:"center", cursor:"pointer", background: pdfFile ? "#EFF6FF" : "#FAFAFA", marginBottom:16 }}>
+          <input ref={fileRef} type="file" accept=".pdf" style={{ display:"none" }} onChange={e => handleFile(e.target.files[0])} />
+          {pdfFile ? (
+            <>
+              <div style={{ fontSize:24, marginBottom:6 }}>📄</div>
+              <p style={{ fontSize:13, fontWeight:600, color:"#1E40AF", margin:0 }}>{pdfFile.name}</p>
+              <p style={{ fontSize:11, color:"#6B7280", margin:"4px 0 0" }}>{(pdfFile.size/1024).toFixed(0)} KB — clique para trocar</p>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize:24, marginBottom:6 }}>📂</div>
+              <p style={{ fontSize:13, color:"#6B7280", margin:0 }}>Arraste o PDF do RAPP ou <strong style={{ color:"#4F8EF7" }}>clique para selecionar</strong></p>
+            </>
+          )}
+        </div>
+
+        {/* Barra de progresso */}
+        {loading && progresso.total > 0 && (
+          <ProgressBar steps={progresso.total} current={progresso.atual} label={progresso.label} />
+        )}
+        {loading && progresso.total === 0 && (
+          <p style={{ fontSize:12, color:"#6B7280", marginTop:12 }}>⏳ {progresso.label}</p>
+        )}
+        {!loading && progresso.label === "Análise concluída!" && (
+          <p style={{ fontSize:12, color:"#10B981", marginTop:12 }}>✓ {progresso.label}</p>
+        )}
+
+        {error && <p style={{ fontSize:12, color:"#EF4444", marginTop:12 }}>⚠ {error}</p>}
+
+        <div style={{ display:"flex", gap:10, marginTop:16 }}>
+          <button onClick={analisar} disabled={loading || !pdfFile || !apiKeySet}
+            style={{ flex:1, padding:"13px 24px", background: loading || !pdfFile || !apiKeySet ? "#E2E8F0" : "#0F172A", color: loading || !pdfFile || !apiKeySet ? "#9CA3AF" : "#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor: loading || !pdfFile || !apiKeySet ? "not-allowed" : "pointer" }}>
+            {loading ? "Analisando…" : "Analisar RAPP"}
+          </button>
+          {temResultado && (
+            <button onClick={() => downloadCSV(empresas)}
+              style={{ padding:"13px 20px", background:"#ECFDF5", color:"#065F46", border:"1px solid #D1FAE5", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer" }}>
+              ⬇ Exportar CSV
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ALERTAS DE CONLUÍO */}
+      {conluios.length > 0 && (
+        <div style={{ background:"#FFF7ED", border:"1px solid #FED7AA", borderRadius:12, padding:24, marginBottom:20 }}>
+          <p style={{ fontSize:14, fontWeight:700, color:"#9A3412", marginBottom:4 }}>
+            ⚠ {conluios.length} sócio{conluios.length > 1 ? "s" : ""} em comum detectado{conluios.length > 1 ? "s" : ""}
+          </p>
+          <p style={{ fontSize:12, color:"#92400E", marginBottom:16 }}>
+            Os sócios abaixo aparecem em mais de uma empresa participante do RAPP — possível indício de conluio ou empresas coligadas.
+          </p>
+          {conluios.map((c, i) => (
+            <div key={i} style={{ background:"#fff", border:"1px solid #FED7AA", borderRadius:8, padding:"14px 16px", marginBottom:10 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+                <div style={{ width:36, height:36, borderRadius:"50%", background:"#FFF7ED", border:"2px solid #FB923C", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, color:"#EA580C", fontWeight:700, flexShrink:0 }}>
+                  {(c.socio||"?")[0]}
+                </div>
+                <div>
+                  <p style={{ fontSize:13, fontWeight:700, color:"#111827", margin:0 }}>{c.socio}</p>
+                  <Badge color="orange">Sócio em {c.empresas.length} empresas</Badge>
+                </div>
+              </div>
+              {c.empresas.map((e, j) => (
+                <div key={j} style={{ display:"flex", gap:8, padding:"6px 0", borderTop:"1px solid #FEF3C7", alignItems:"center" }}>
+                  <span style={{ fontSize:11, color:"#6B7280", fontFamily:"monospace", minWidth:160 }}>{e.cnpj}</span>
+                  <span style={{ fontSize:12, color:"#374151", flex:1 }}>{e.empresa}</span>
+                  <span style={{ fontSize:11, color:"#9A3412" }}>{e.qual}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {conluios.length === 0 && temResultado && (
+        <div style={{ background:"#ECFDF5", border:"1px solid #D1FAE5", borderRadius:12, padding:20, marginBottom:20, display:"flex", alignItems:"center", gap:12 }}>
+          <span style={{ fontSize:28 }}>✅</span>
+          <div>
+            <p style={{ fontSize:13, fontWeight:700, color:"#065F46", margin:0 }}>Nenhum sócio em comum identificado</p>
+            <p style={{ fontSize:12, color:"#6B7280", margin:"2px 0 0" }}>As empresas analisadas não compartilham sócios entre si.</p>
+          </div>
+        </div>
+      )}
+
+      {/* TABELA DE EMPRESAS */}
+      {temResultado && (
+        <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:12, padding:24 }}>
+          <p style={{ fontSize:13, fontWeight:700, color:"#0F172A", marginBottom:16 }}>
+            📊 {empresas.length} empresa{empresas.length > 1 ? "s" : ""} analisada{empresas.length > 1 ? "s" : ""}
+          </p>
+          {empresas.map((emp, i) => {
+            const sociosAlerta = (emp.qsa || []).filter(s => conluios.some(c => c.socio === s.nome));
+            return (
+              <div key={i} style={{ border:"1px solid #E5E7EB", borderRadius:8, marginBottom:12, overflow:"hidden" }}>
+                {/* Cabeçalho empresa */}
+                <div style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 16px", background:"#F8FAFC", borderBottom:"1px solid #E5E7EB" }}>
+                  <div style={{ flex:1 }}>
+                    <p style={{ fontSize:13, fontWeight:700, color:"#111827", margin:0 }}>{emp.nome || "—"}</p>
+                    <p style={{ fontSize:11, color:"#6B7280", margin:"2px 0 0", fontFamily:"monospace" }}>{emp.cnpj}</p>
+                  </div>
+                  <Badge color={emp.situacao === "ATIVA" ? "green" : emp.erro ? "gray" : "red"}>
+                    {emp.situacao || "—"}
+                  </Badge>
+                  {sociosAlerta.length > 0 && <Badge color="orange">⚠ {sociosAlerta.length} sócio{sociosAlerta.length>1?"s":""} em alerta</Badge>}
+                </div>
+                {/* Sócios */}
+                <div style={{ padding:"10px 16px" }}>
+                  {emp.erro && <p style={{ fontSize:12, color:"#EF4444", margin:0 }}>Erro na consulta: {emp.erro}</p>}
+                  {!emp.erro && (!emp.qsa || emp.qsa.length === 0) && (
+                    <p style={{ fontSize:12, color:"#9CA3AF", margin:0 }}>Nenhum sócio encontrado no QSA.</p>
+                  )}
+                  {(emp.qsa || []).map((s, j) => {
+                    const emAlerta = conluios.some(c => c.socio === s.nome);
+                    return (
+                      <div key={j} style={{ display:"flex", alignItems:"center", gap:10, padding:"6px 0", borderBottom: j < emp.qsa.length-1 ? "1px solid #F3F4F6" : "none" }}>
+                        <div style={{ width:28, height:28, borderRadius:"50%", background: emAlerta ? "#FFF7ED" : "#EFF6FF", border: emAlerta ? "2px solid #FB923C" : "none", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color: emAlerta ? "#EA580C" : "#3B82F6", fontWeight:700, flexShrink:0 }}>
+                          {(s.nome||"?")[0]}
+                        </div>
+                        <div style={{ flex:1 }}>
+                          <span style={{ fontSize:13, color: emAlerta ? "#9A3412" : "#111827", fontWeight: emAlerta ? 700 : 500 }}>{s.nome}</span>
+                          <span style={{ fontSize:11, color:"#6B7280", marginLeft:8 }}>{s.qual}</span>
+                        </div>
+                        {emAlerta && <Badge color="orange">⚠ Sócio compartilhado</Badge>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// SHELL — NAVEGAÇÃO POR ABAS
+// ─────────────────────────────────────────────
+function Shell() {
+  const [aba, setAba] = React.useState(() => localStorage.getItem("doccheck_aba") || "checklist");
+  const trocar = (a) => { setAba(a); localStorage.setItem("doccheck_aba", a); };
+
+  const abas = [
+    { id:"checklist",  label:"✓ Checklist" },
+    { id:"rapp",       label:"🔍 Background Check RAPP" },
+    { id:"cnpj",       label:"🏢 Consulta CNPJ" },
+  ];
+
+  return (
+    <div style={{ fontFamily:"'Inter', system-ui, sans-serif", minHeight:"100vh", background:"#F8F9FB" }}>
+      {/* Header */}
+      <div style={{ background:"#0F172A", padding:"0 32px" }}>
+        <div style={{ maxWidth:960, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", height:52 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <div style={{ width:26, height:26, borderRadius:6, background:"#4F8EF7", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, color:"#fff" }}>✓</div>
+            <span style={{ color:"#F1F5F9", fontWeight:700, fontSize:15 }}>DocCheck</span>
+            <span style={{ color:"#475569", fontSize:12, marginLeft:4 }}>by Ítalo Peixoto</span>
+          </div>
+          <span style={{ color:"#64748B", fontSize:12 }}>GAB — SUPCL/SESRJ</span>
+        </div>
+      </div>
+
+      {/* Abas */}
+      <div style={{ background:"#fff", borderBottom:"1px solid #E2E8F0" }}>
+        <div style={{ maxWidth:960, margin:"0 auto", padding:"0 32px", display:"flex" }}>
+          {abas.map(a => (
+            <button key={a.id} onClick={() => trocar(a.id)} style={{
+              padding:"14px 20px", background:"none", border:"none",
+              borderBottom: aba === a.id ? "2px solid #4F8EF7" : "2px solid transparent",
+              color: aba === a.id ? "#1E40AF" : "#6B7280",
+              fontSize:13, fontWeight: aba === a.id ? 700 : 500,
+              cursor:"pointer", transition:"all .15s",
+            }}>{a.label}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Conteúdo */}
+      <div style={{ display: aba === "checklist" ? "block" : "none" }}><App /></div>
+      <div style={{ display: aba === "rapp"      ? "block" : "none" }}><RappCheck /></div>
+      <div style={{ display: aba === "cnpj"      ? "block" : "none" }}><BackgroundCheck /></div>
+    </div>
+  );
+}
+
+document.addEventListener("doccheck:auth", () => {
+  const _root = ReactDOM.createRoot(document.getElementById("root"));
+  _root.render(<Shell />);
+});
+if (sessionStorage.getItem("doccheck_auth") === "1") {
+  document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+      const _root = ReactDOM.createRoot(document.getElementById("root"));
+      _root.render(<Shell />);
+    }, 100);
+  });
+}
+
+  </script>
 </body>
 </html>
