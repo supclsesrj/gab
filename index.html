@@ -327,7 +327,13 @@
   
   
   
+  
+  
+  
   <script type="text/babel">
+
+
+
 
 
 
@@ -370,9 +376,15 @@ async function callGemini(geminiPayload) {
   
   
   
+  
+  
+  
   </script>
 
   <script type="text/babel">
+
+
+
 
 
 
@@ -811,9 +823,15 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
   
   
   
+  
+  
+  
   </script>
 
   <script type="text/babel">
+
+
+
 
 
 
@@ -1011,6 +1029,12 @@ function BackgroundCheck() {
 }
 
 // ─────────────────────────────────────────────
+
+  
+  </script>
+
+  <script type="text/babel">
+
 // MÓDULO — ANÁLISE DE RAPP (CRUZAMENTO DE SÓCIOS)
 // ─────────────────────────────────────────────
 function RappCheck() {
@@ -1327,6 +1351,18 @@ Se não encontrar nenhuma empresa, retorne [].`;
   
   
   clsesrj/gab/main/";
+  
+  </script>
+
+  <script type="text/babel">
+
+
+
+// ─────────────────────────────────────────────
+// MÓDULO — CONTROLE DE VENCIMENTOS
+// ─────────────────────────────────────────────
+
+const GITHUB_BASE = "https://raw.githubusercontent.com/supclsesrj/gab/main/";
 
 function parseData(val) {
   if (!val) return null;
@@ -1432,39 +1468,39 @@ function normalizarRegistro(r, tipo) {
 function CardEdicao({ reg, idx, onChange }) {
   const dias = diasAteVencer(reg.vencimento);
   const urg = statusUrgencia(dias);
-  const corBorda = { red:"var(--danger-border)", orange:"var(--orange-border)", green:"var(--success-border)", gray:"#E5E7EB" }[urg.cor];
-  const corBg    = { red:"var(--danger-bg)", orange:"var(--orange-bg)", green:"#F0FDF4", gray:"var(--surface-2)" }[urg.cor];
+  const corBorda = { red:"#FEE2E2", orange:"#FED7AA", green:"#D1FAE5", gray:"#E5E7EB" }[urg.cor];
+  const corBg    = { red:"#FEF2F2", orange:"#FFF7ED", green:"#F0FDF4", gray:"#F9FAFB" }[urg.cor];
 
   return (
     <div style={{ border:`1px solid ${corBorda}`, background:corBg, borderRadius:10, padding:"14px 16px", marginBottom:12 }}>
       {/* Cabeçalho */}
       <div style={{ display:"flex", gap:10, alignItems:"flex-start", marginBottom:12 }}>
         <div style={{ flex:1 }}>
-          <p style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", margin:"0 0 2px" }}>{reg.empresa || "—"}</p>
-          <p style={{ fontSize:11, color:"var(--text-muted)", margin:0, fontFamily:"monospace" }}>
+          <p style={{ fontSize:13, fontWeight:700, color:"#111827", margin:"0 0 2px" }}>{reg.empresa || "—"}</p>
+          <p style={{ fontSize:11, color:"#6B7280", margin:0, fontFamily:"monospace" }}>
             SEI: {reg.sei || "—"} · {reg.tipo === "servicos" ? "Serviço" : "Aquisição"} · Vence: <strong>{fmtData(reg.vencimento)}</strong>
           </p>
-          <p style={{ fontSize:11, color:"var(--text-secondary)", margin:"4px 0 0" }}>{reg.objeto}</p>
+          <p style={{ fontSize:11, color:"#374151", margin:"4px 0 0" }}>{reg.objeto}</p>
         </div>
         <span style={{
           fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20,
-          background: { red:"var(--danger-border)", orange:"var(--orange-border)", green:"var(--success-border)", gray:"#E5E7EB" }[urg.cor],
-          color:      { red:"var(--danger-text)", orange:"var(--orange-text)", green:"var(--success-text)", gray:"var(--text-secondary)" }[urg.cor],
+          background: { red:"#FEE2E2", orange:"#FED7AA", green:"#D1FAE5", gray:"#E5E7EB" }[urg.cor],
+          color:      { red:"#991B1B", orange:"#9A3412", green:"#065F46", gray:"#374151" }[urg.cor],
         }}>{urg.label}</span>
       </div>
 
       {/* Campos manuais */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
         <div>
-          <label style={{ fontSize:11, color:"var(--text-muted)", display:"block", marginBottom:3 }}>Vigência Máxima</label>
+          <label style={{ fontSize:11, color:"#6B7280", display:"block", marginBottom:3 }}>Vigência Máxima</label>
           <input value={reg.vigMax} onChange={e => onChange(idx,"vigMax",e.target.value)}
             placeholder="Ex: 60 meses / atingida / —"
-            style={{ width:"100%", padding:"7px 10px", border:"1px solid var(--input-border)", borderRadius:6, fontSize:12, outline:"none" }} />
+            style={{ width:"100%", padding:"7px 10px", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, outline:"none" }} />
         </div>
         <div>
-          <label style={{ fontSize:11, color:"var(--text-muted)", display:"block", marginBottom:3 }}>Status</label>
+          <label style={{ fontSize:11, color:"#6B7280", display:"block", marginBottom:3 }}>Status</label>
           <select value={reg.status} onChange={e => onChange(idx,"status",e.target.value)}
-            style={{ width:"100%", padding:"7px 10px", border:"1px solid var(--input-border)", borderRadius:6, fontSize:12, outline:"none", background:"var(--card-bg)" }}>
+            style={{ width:"100%", padding:"7px 10px", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, outline:"none", background:"#fff" }}>
             <option value="prorrogação">Em prorrogação</option>
             <option value="substituto">Processo substituto</option>
             <option value="encerramento">Encerramento</option>
@@ -1472,16 +1508,16 @@ function CardEdicao({ reg, idx, onChange }) {
           </select>
         </div>
         <div>
-          <label style={{ fontSize:11, color:"var(--text-muted)", display:"block", marginBottom:3 }}>SEI Processo Substituto</label>
+          <label style={{ fontSize:11, color:"#6B7280", display:"block", marginBottom:3 }}>SEI Processo Substituto</label>
           <input value={reg.seiSubst} onChange={e => onChange(idx,"seiSubst",e.target.value)}
             placeholder="Ex: 123456/2025"
-            style={{ width:"100%", padding:"7px 10px", border:"1px solid var(--input-border)", borderRadius:6, fontSize:12, outline:"none" }} />
+            style={{ width:"100%", padding:"7px 10px", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, outline:"none" }} />
         </div>
         <div>
-          <label style={{ fontSize:11, color:"var(--text-muted)", display:"block", marginBottom:3 }}>Andamento</label>
+          <label style={{ fontSize:11, color:"#6B7280", display:"block", marginBottom:3 }}>Andamento</label>
           <input value={reg.andamento} onChange={e => onChange(idx,"andamento",e.target.value)}
             placeholder="Ex: Em elaboração de TR / Aguard. SUBJUR"
-            style={{ width:"100%", padding:"7px 10px", border:"1px solid var(--input-border)", borderRadius:6, fontSize:12, outline:"none" }} />
+            style={{ width:"100%", padding:"7px 10px", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, outline:"none" }} />
         </div>
       </div>
     </div>
@@ -1660,60 +1696,60 @@ function VencimentosModule() {
   // ── ETAPA 1 — Carga ──
   if (etapa === 1) return (
     <div style={{ maxWidth:860, margin:"0 auto", padding:"32px 24px" }}>
-      <div style={{ background:"var(--card-bg)", border:"1px solid var(--card-border)", borderRadius:12, padding:28, marginBottom:20 }}>
-        <p style={{ fontSize:15, fontWeight:700, color:"var(--text-primary)", marginBottom:4 }}>📅 Controle de Vencimentos</p>
-        <p style={{ fontSize:12, color:"var(--text-muted)", marginBottom:24 }}>
+      <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:12, padding:28, marginBottom:20 }}>
+        <p style={{ fontSize:15, fontWeight:700, color:"#0F172A", marginBottom:4 }}>📅 Controle de Vencimentos</p>
+        <p style={{ fontSize:12, color:"#6B7280", marginBottom:24 }}>
           Exibe contratos e ARPs com vencimento no mês atual e nos 2 meses seguintes, com geração de mensagem para WhatsApp.
         </p>
 
         {/* Opção GitHub */}
-        <div style={{ border:"1px solid var(--card-border)", borderRadius:10, padding:20, marginBottom:16 }}>
-          <p style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", marginBottom:4 }}>Carregar do repositório GitHub</p>
-          <p style={{ fontSize:12, color:"var(--text-muted)", marginBottom:14 }}>
-            Busca automaticamente os arquivos <code style={{ background:"var(--surface-2)", padding:"1px 6px", borderRadius:4 }}>vencimento_servicos</code> e <code style={{ background:"var(--surface-2)", padding:"1px 6px", borderRadius:4 }}>vencimento_aquisicoes</code> (.json ou .csv) da raiz do repositório.
+        <div style={{ border:"1px solid #E2E8F0", borderRadius:10, padding:20, marginBottom:16 }}>
+          <p style={{ fontSize:13, fontWeight:700, color:"#0F172A", marginBottom:4 }}>Carregar do repositório GitHub</p>
+          <p style={{ fontSize:12, color:"#6B7280", marginBottom:14 }}>
+            Busca automaticamente os arquivos <code style={{ background:"#F1F5F9", padding:"1px 6px", borderRadius:4 }}>vencimento_servicos</code> e <code style={{ background:"#F1F5F9", padding:"1px 6px", borderRadius:4 }}>vencimento_aquisicoes</code> (.json ou .csv) da raiz do repositório.
           </p>
           <button onClick={carregarDoGithub} disabled={loading}
-            style={{ padding:"10px 24px", background: loading ? "#E2E8F0" : "var(--text-primary)", color: loading ? "var(--text-subtle)" : "var(--card-bg)", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor: loading ? "not-allowed" : "pointer" }}>
+            style={{ padding:"10px 24px", background: loading ? "#E2E8F0" : "#0F172A", color: loading ? "#9CA3AF" : "#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor: loading ? "not-allowed" : "pointer" }}>
             {loading ? "Carregando…" : "⬇ Carregar do GitHub"}
           </button>
         </div>
 
         {/* Opção upload manual */}
-        <div style={{ border:"1px solid var(--card-border)", borderRadius:10, padding:20 }}>
-          <p style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", marginBottom:4 }}>Ou fazer upload manual</p>
-          <p style={{ fontSize:12, color:"var(--text-muted)", marginBottom:14 }}>Suporta arquivos <strong>.json</strong> ou <strong>.csv</strong> (exportado do Excel via "Salvar como CSV").</p>
+        <div style={{ border:"1px solid #E2E8F0", borderRadius:10, padding:20 }}>
+          <p style={{ fontSize:13, fontWeight:700, color:"#0F172A", marginBottom:4 }}>Ou fazer upload manual</p>
+          <p style={{ fontSize:12, color:"#6B7280", marginBottom:14 }}>Suporta arquivos <strong>.json</strong> ou <strong>.csv</strong> (exportado do Excel via "Salvar como CSV").</p>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:14 }}>
             {[
               { ref:fileServRef, label:"vencimento_servicos", tipo:"servicos" },
               { ref:fileAqRef,   label:"vencimento_aquisicoes", tipo:"aquisicoes" },
             ].map(({ ref, label }) => (
               <div key={label}>
-                <p style={{ fontSize:11, color:"var(--text-muted)", marginBottom:5, fontWeight:600 }}>{label}</p>
+                <p style={{ fontSize:11, color:"#6B7280", marginBottom:5, fontWeight:600 }}>{label}</p>
                 <input ref={ref} type="file" accept=".json,.csv"
                   style={{ fontSize:12, width:"100%" }} />
               </div>
             ))}
           </div>
           <button onClick={carregarManual} disabled={loading}
-            style={{ padding:"10px 24px", background: loading ? "#E2E8F0" : "var(--text-muted)", color: loading ? "var(--text-subtle)" : "var(--card-bg)", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor: loading ? "not-allowed" : "pointer" }}>
+            style={{ padding:"10px 24px", background: loading ? "#E2E8F0" : "#475569", color: loading ? "#9CA3AF" : "#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor: loading ? "not-allowed" : "pointer" }}>
             {loading ? "Processando…" : "📂 Carregar arquivos"}
           </button>
         </div>
 
         {error && (
-          <div style={{ background:"var(--danger-bg)", border:"1px solid #FEE2E2", borderRadius:8, padding:"12px 16px", marginTop:16 }}>
-            <p style={{ fontSize:13, color:"var(--danger-text)", margin:0 }}>⚠ {error}</p>
+          <div style={{ background:"#FEF2F2", border:"1px solid #FEE2E2", borderRadius:8, padding:"12px 16px", marginTop:16 }}>
+            <p style={{ fontSize:13, color:"#991B1B", margin:0 }}>⚠ {error}</p>
           </div>
         )}
 
         {/* Template para download */}
-        <div style={{ marginTop:20, padding:"14px 16px", background:"var(--card-header-bg)", border:"1px solid var(--card-border)", borderRadius:8 }}>
-          <p style={{ fontSize:12, fontWeight:600, color:"var(--text-secondary)", marginBottom:6 }}>📄 Formato esperado dos arquivos</p>
-          <p style={{ fontSize:11, color:"var(--text-muted)", marginBottom:8 }}>Colunas obrigatórias (JSON ou CSV com cabeçalho):</p>
-          <code style={{ fontSize:11, color:"var(--info-text)", display:"block", background:"var(--info-bg)", padding:"8px 12px", borderRadius:6 }}>
+        <div style={{ marginTop:20, padding:"14px 16px", background:"#F8FAFC", border:"1px solid #E2E8F0", borderRadius:8 }}>
+          <p style={{ fontSize:12, fontWeight:600, color:"#374151", marginBottom:6 }}>📄 Formato esperado dos arquivos</p>
+          <p style={{ fontSize:11, color:"#6B7280", marginBottom:8 }}>Colunas obrigatórias (JSON ou CSV com cabeçalho):</p>
+          <code style={{ fontSize:11, color:"#1E40AF", display:"block", background:"#EFF6FF", padding:"8px 12px", borderRadius:6 }}>
             sei, contrato, empresa, objeto, valor, vencimento
           </code>
-          <p style={{ fontSize:11, color:"var(--text-subtle)", marginTop:8 }}>
+          <p style={{ fontSize:11, color:"#9CA3AF", marginTop:8 }}>
             Data de vencimento aceita nos formatos: <strong>DD/MM/AAAA</strong> ou <strong>AAAA-MM-DD</strong>
           </p>
           <button onClick={() => {
@@ -1721,7 +1757,7 @@ function VencimentosModule() {
             const blob = new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8;"});
             const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
             a.download = "template_vencimentos.csv"; a.click();
-          }} style={{ marginTop:10, padding:"6px 14px", background:"var(--card-bg)", border:"1px solid var(--input-border)", borderRadius:6, fontSize:12, cursor:"pointer", color:"var(--text-secondary)" }}>
+          }} style={{ marginTop:10, padding:"6px 14px", background:"#fff", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, cursor:"pointer", color:"#374151" }}>
             ⬇ Baixar template CSV
           </button>
         </div>
@@ -1735,20 +1771,20 @@ function VencimentosModule() {
       {/* Header etapa */}
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
         <div>
-          <p style={{ fontSize:15, fontWeight:700, color:"var(--text-primary)", margin:0 }}>
+          <p style={{ fontSize:15, fontWeight:700, color:"#0F172A", margin:0 }}>
             Etapa 2 — Completar informações
           </p>
-          <p style={{ fontSize:12, color:"var(--text-muted)", margin:"4px 0 0" }}>
+          <p style={{ fontSize:12, color:"#6B7280", margin:"4px 0 0" }}>
             {registros.length} vencimento{registros.length > 1 ? "s" : ""} encontrado{registros.length > 1 ? "s" : ""} nos próximos 3 meses. Preencha os campos de status.
           </p>
         </div>
         <div style={{ display:"flex", gap:8 }}>
           <button onClick={() => setEtapa(1)}
-            style={{ padding:"8px 16px", background:"var(--card-bg)", border:"1px solid var(--input-border)", borderRadius:8, fontSize:12, cursor:"pointer", color:"var(--text-secondary)" }}>
+            style={{ padding:"8px 16px", background:"#fff", border:"1px solid #D1D5DB", borderRadius:8, fontSize:12, cursor:"pointer", color:"#374151" }}>
             ← Voltar
           </button>
           <button onClick={gerarEAvancar}
-            style={{ padding:"8px 20px", background:"var(--text-primary)", color:"var(--card-bg)", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer" }}>
+            style={{ padding:"8px 20px", background:"#0F172A", color:"#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer" }}>
             Gerar mensagem →
           </button>
         </div>
@@ -1757,11 +1793,11 @@ function VencimentosModule() {
       {/* Legenda */}
       <div style={{ display:"flex", gap:12, marginBottom:20, flexWrap:"wrap" }}>
         {[
-          { cor:"var(--danger-text)", bg:"var(--danger-bg)", label:"Vencido ou ≤ 30 dias — URGENTE (enviar SUBJUR)" },
-          { cor:"var(--warning-text)", bg:"var(--warning-bg)", label:"31–60 dias — Atenção" },
-          { cor:"var(--success-text)", bg:"var(--success-bg)", label:"Mais de 60 dias" },
+          { cor:"#EF4444", bg:"#FEF2F2", label:"Vencido ou ≤ 30 dias — URGENTE (enviar SUBJUR)" },
+          { cor:"#F59E0B", bg:"#FFFBEB", label:"31–60 dias — Atenção" },
+          { cor:"#10B981", bg:"#ECFDF5", label:"Mais de 60 dias" },
         ].map(({ cor, bg, label }) => (
-          <div key={label} style={{ display:"flex", alignItems:"center", gap:6, fontSize:11, color:"var(--text-secondary)" }}>
+          <div key={label} style={{ display:"flex", alignItems:"center", gap:6, fontSize:11, color:"#374151" }}>
             <span style={{ width:10, height:10, borderRadius:"50%", background:cor, flexShrink:0 }} />
             {label}
           </div>
@@ -1775,7 +1811,7 @@ function VencimentosModule() {
         const idxsDoMes = doMes.map(r => registros.indexOf(r));
         return (
           <div key={`${mes}-${ano}`} style={{ marginBottom:24 }}>
-            <p style={{ fontSize:13, fontWeight:700, color:"var(--text-muted)", marginBottom:12, textTransform:"uppercase", letterSpacing:".05em" }}>
+            <p style={{ fontSize:13, fontWeight:700, color:"#475569", marginBottom:12, textTransform:"uppercase", letterSpacing:".05em" }}>
               📅 {nomeMes(mes, ano)}
             </p>
             {idxsDoMes.map(idx => (
@@ -1787,7 +1823,7 @@ function VencimentosModule() {
 
       <div style={{ display:"flex", justifyContent:"flex-end", marginTop:8 }}>
         <button onClick={gerarEAvancar}
-          style={{ padding:"12px 28px", background:"var(--text-primary)", color:"var(--card-bg)", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}>
+          style={{ padding:"12px 28px", background:"#0F172A", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}>
           Gerar mensagem WhatsApp →
         </button>
       </div>
@@ -1799,30 +1835,30 @@ function VencimentosModule() {
     <div style={{ maxWidth:860, margin:"0 auto", padding:"32px 24px" }}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
         <div>
-          <p style={{ fontSize:15, fontWeight:700, color:"var(--text-primary)", margin:0 }}>Etapa 3 — Mensagem gerada</p>
-          <p style={{ fontSize:12, color:"var(--text-muted)", margin:"4px 0 0" }}>Copie e cole no WhatsApp.</p>
+          <p style={{ fontSize:15, fontWeight:700, color:"#0F172A", margin:0 }}>Etapa 3 — Mensagem gerada</p>
+          <p style={{ fontSize:12, color:"#6B7280", margin:"4px 0 0" }}>Copie e cole no WhatsApp.</p>
         </div>
         <div style={{ display:"flex", gap:8 }}>
           <button onClick={() => setEtapa(2)}
-            style={{ padding:"8px 16px", background:"var(--card-bg)", border:"1px solid var(--input-border)", borderRadius:8, fontSize:12, cursor:"pointer", color:"var(--text-secondary)" }}>
+            style={{ padding:"8px 16px", background:"#fff", border:"1px solid #D1D5DB", borderRadius:8, fontSize:12, cursor:"pointer", color:"#374151" }}>
             ← Editar
           </button>
           <button onClick={copiar}
-            style={{ padding:"8px 20px", background: copiado ? "var(--success-text)" : "#4F8EF7", color:"var(--card-bg)", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", transition:"background .2s" }}>
+            style={{ padding:"8px 20px", background: copiado ? "#10B981" : "#4F8EF7", color:"#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", transition:"background .2s" }}>
             {copiado ? "✓ Copiado!" : "📋 Copiar mensagem"}
           </button>
         </div>
       </div>
 
-      <div style={{ background:"var(--card-bg)", border:"1px solid var(--card-border)", borderRadius:12, padding:24 }}>
-        <pre style={{ fontFamily:"'Courier New', monospace", fontSize:12.5, color:"var(--text-primary)", lineHeight:1.7, whiteSpace:"pre-wrap", wordBreak:"break-word", margin:0 }}>
+      <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:12, padding:24 }}>
+        <pre style={{ fontFamily:"'Courier New', monospace", fontSize:12.5, color:"#1E293B", lineHeight:1.7, whiteSpace:"pre-wrap", wordBreak:"break-word", margin:0 }}>
           {mensagem}
         </pre>
       </div>
 
       <div style={{ marginTop:16, display:"flex", justifyContent:"center" }}>
         <button onClick={copiar}
-          style={{ padding:"14px 48px", background: copiado ? "var(--success-text)" : "var(--text-primary)", color:"var(--card-bg)", border:"none", borderRadius:10, fontSize:15, fontWeight:700, cursor:"pointer", transition:"background .2s" }}>
+          style={{ padding:"14px 48px", background: copiado ? "#10B981" : "#0F172A", color:"#fff", border:"none", borderRadius:10, fontSize:15, fontWeight:700, cursor:"pointer", transition:"background .2s" }}>
           {copiado ? "✓ Copiado para a área de transferência!" : "📋 Copiar mensagem"}
         </button>
       </div>
@@ -1835,17 +1871,9 @@ function VencimentosModule() {
   
   
   
-  
-  
-  
-  
   </script>
 
   <script type="text/babel">
-
-
-
-
 
 
 
@@ -1883,7 +1911,7 @@ function ComparadorTR() {
       style={{
         border: `2px dashed ${file ? "#4F8EF7" : "#D1D5DB"}`,
         borderRadius: 10, padding: "28px 16px", textAlign: "center",
-        cursor: "pointer", background: file ? "var(--info-bg)" : "var(--surface-2)",
+        cursor: "pointer", background: file ? "#EFF6FF" : "#FAFAFA",
         transition: "all .15s", flex: 1,
       }}
     >
@@ -1894,7 +1922,7 @@ function ComparadorTR() {
         textTransform: "uppercase", letterSpacing: ".05em" }}>{versao}</p>
       {file ? (
         <>
-          <p style={{ fontSize: 13, fontWeight: 600, color: "var(--info-text)", margin: 0 }}>{file.name}</p>
+          <p style={{ fontSize: 13, fontWeight: 600, color: "#1E40AF", margin: 0 }}>{file.name}</p>
           <p style={{ fontSize: 11, color: "var(--text-muted)", margin: "4px 0 0" }}>
             {(file.size/1024).toFixed(0)} KB · clique para trocar
           </p>
@@ -2005,9 +2033,9 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
   };
 
   const corTipo = {
-    alterada: { bg:"var(--warning-bg)", border:"var(--warning-border)", badge:"var(--warning-text)", badgeBg:"var(--warning-bg)", icon:"✏️", label:"Alterada" },
-    incluida: { bg:"#F0FDF4", border:"#BBF7D0", badge:"var(--success-text)", badgeBg:"#DCFCE7", icon:"➕", label:"Incluída" },
-    removida: { bg:"var(--danger-bg)", border:"var(--danger-border)", badge:"var(--danger-text)", badgeBg:"var(--danger-border)", icon:"➖", label:"Removida" },
+    alterada: { bg:"#FFFBEB", border:"#FDE68A", badge:"#92400E", badgeBg:"#FEF3C7", icon:"✏️", label:"Alterada" },
+    incluida: { bg:"#F0FDF4", border:"#BBF7D0", badge:"#065F46", badgeBg:"#DCFCE7", icon:"➕", label:"Incluída" },
+    removida: { bg:"#FEF2F2", border:"#FEE2E2", badge:"#991B1B", badgeBg:"#FEE2E2", icon:"➖", label:"Removida" },
   };
 
   const clausulasFiltradas = resultado?.clausulas?.filter(c => {
@@ -2042,18 +2070,18 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
         </div>
 
         {error && (
-          <div style={{ background:"var(--danger-bg)", border:"1px solid #FEE2E2", borderRadius:8, padding:"12px 16px", marginBottom:16 }}>
-            <p style={{ fontSize:13, color:"var(--danger-text)", margin:0 }}>⚠ {error}</p>
+          <div style={{ background:"#FEF2F2", border:"1px solid #FEE2E2", borderRadius:8, padding:"12px 16px", marginBottom:16 }}>
+            <p style={{ fontSize:13, color:"#991B1B", margin:0 }}>⚠ {error}</p>
           </div>
         )}
 
-        <button onClick={analisar} disabled={loading || !b64Antes || !b64Depois }
+        <button onClick={analisar} disabled={loading || !b64Antes || !b64Depois}
           style={{
             width:"100%", padding:"13px 24px",
-            background: loading || !b64Antes || !b64Depois  ? "#E2E8F0" : "var(--text-primary)",
-            color: loading || !b64Antes || !b64Depois  ? "var(--text-subtle)" : "var(--card-bg)",
+            background: loading || !b64Antes || !b64Depois ? "#E2E8F0" : "#0F172A",
+            color: loading || !b64Antes || !b64Depois ? "#9CA3AF" : "#fff",
             border:"none", borderRadius:10, fontSize:14, fontWeight:700,
-            cursor: loading || !b64Antes || !b64Depois  ? "not-allowed" : "pointer",
+            cursor: loading || !b64Antes || !b64Depois ? "not-allowed" : "pointer",
           }}>
           {loading ? "Comparando documentos…" : "Comparar TRs"}
         </button>
@@ -2071,10 +2099,10 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
           {/* Resumo executivo */}
           {(() => {
             const alertaCfg = {
-              critico:   { bg:"var(--danger-bg)", border:"var(--danger-border)", titleColor:"var(--danger-text)", textColor:"#7F1D1D", icon:"🚨", label:"ATENÇÃO — Alterações com impacto crítico identificadas" },
-              relevante: { bg:"var(--warning-bg)", border:"var(--warning-border)", titleColor:"var(--warning-text)", textColor:"#78350F", icon:"⚠️", label:"Alterações relevantes identificadas — revisão recomendada" },
-              baixo:     { bg:"var(--info-bg)", border:"var(--info-border)", titleColor:"var(--info-text)", textColor:"var(--info-text)", icon:"📝", label:"Resumo executivo" },
-            }[resultado.alerta_geral] || { bg:"var(--info-bg)", border:"var(--info-border)", titleColor:"var(--info-text)", textColor:"var(--info-text)", icon:"📝", label:"Resumo executivo" };
+              critico:   { bg:"#FEF2F2", border:"#FEE2E2", titleColor:"#991B1B", textColor:"#7F1D1D", icon:"🚨", label:"ATENÇÃO — Alterações com impacto crítico identificadas" },
+              relevante: { bg:"#FFFBEB", border:"#FDE68A", titleColor:"#92400E", textColor:"#78350F", icon:"⚠️", label:"Alterações relevantes identificadas — revisão recomendada" },
+              baixo:     { bg:"#EFF6FF", border:"#BFDBFE", titleColor:"#1E40AF", textColor:"#1E3A8A", icon:"📝", label:"Resumo executivo" },
+            }[resultado.alerta_geral] || { bg:"#EFF6FF", border:"#BFDBFE", titleColor:"#1E40AF", textColor:"#1E3A8A", icon:"📝", label:"Resumo executivo" };
             return (
               <div style={{ background:alertaCfg.bg, border:`1px solid ${alertaCfg.border}`, borderRadius:12, padding:20, marginBottom:16 }}>
                 <p style={{ fontSize:13, fontWeight:700, color:alertaCfg.titleColor, marginBottom:8 }}>
@@ -2088,17 +2116,17 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
           {/* Contadores */}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:8, marginBottom:16 }}>
             {[
-              { label:"Todas",     valor: resultado.clausulas.length,                                                          cor:"#4F8EF7", bg:"var(--info-bg)", id:"todos" },
-              { label:"Alteradas", valor: resultado.total_alteradas || resultado.clausulas.filter(c=>c.tipo==="alterada").length, cor:"var(--warning-text)", bg:"var(--warning-bg)", id:"alterada" },
-              { label:"Incluídas", valor: resultado.total_incluidas || resultado.clausulas.filter(c=>c.tipo==="incluida").length, cor:"var(--success-text)", bg:"#F0FDF4", id:"incluida" },
-              { label:"Removidas", valor: resultado.total_removidas || resultado.clausulas.filter(c=>c.tipo==="removida").length, cor:"var(--danger-text)", bg:"var(--danger-bg)", id:"removida" },
-              { label:"Críticas",  valor: resultado.clausulas.filter(c=>c.impacto_nivel==="critico").length,                   cor:"var(--danger-text)", bg:"var(--danger-bg)", id:"critico" },
-              { label:"Relevantes",valor: resultado.clausulas.filter(c=>c.impacto_nivel==="relevante").length,                 cor:"var(--warning-text)", bg:"var(--warning-bg)", id:"relevante" },
+              { label:"Todas",     valor: resultado.clausulas.length,                                                          cor:"#4F8EF7", bg:"#EFF6FF", id:"todos" },
+              { label:"Alteradas", valor: resultado.total_alteradas || resultado.clausulas.filter(c=>c.tipo==="alterada").length, cor:"#D97706", bg:"#FFFBEB", id:"alterada" },
+              { label:"Incluídas", valor: resultado.total_incluidas || resultado.clausulas.filter(c=>c.tipo==="incluida").length, cor:"#059669", bg:"#F0FDF4", id:"incluida" },
+              { label:"Removidas", valor: resultado.total_removidas || resultado.clausulas.filter(c=>c.tipo==="removida").length, cor:"#DC2626", bg:"#FEF2F2", id:"removida" },
+              { label:"Críticas",  valor: resultado.clausulas.filter(c=>c.impacto_nivel==="critico").length,                   cor:"#991B1B", bg:"#FEF2F2", id:"critico" },
+              { label:"Relevantes",valor: resultado.clausulas.filter(c=>c.impacto_nivel==="relevante").length,                 cor:"#92400E", bg:"#FFFBEB", id:"relevante" },
             ].map(({ label, valor, cor, bg, id }) => (
               <button key={id} onClick={() => setFiltro(id)}
                 style={{
                   textAlign:"center", padding:"12px 6px", borderRadius:10, cursor:"pointer",
-                  background: filtro===id ? bg : "var(--card-bg)",
+                  background: filtro===id ? bg : "#fff",
                   border: `2px solid ${filtro===id ? cor : "#E5E7EB"}`,
                   transition:"all .15s",
                 }}>
@@ -2163,10 +2191,10 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
                     {/* Impacto */}
                     {(c.impacto_descricao || c.impacto) && (() => {
                       const nivelCfg = {
-                        critico:   { bg:"var(--danger-bg)", color:"var(--danger-text)", border:"var(--danger-border)", icon:"🚨", label:"Impacto Crítico" },
-                        relevante: { bg:"var(--warning-bg)", color:"var(--warning-text)", border:"var(--warning-border)", icon:"⚠️", label:"Impacto Relevante" },
-                        baixo:     { bg:"#F0FDF4", color:"var(--success-text)", border:"#BBF7D0", icon:"ℹ️", label:"Impacto Baixo" },
-                      }[c.impacto_nivel] || { bg:"var(--card-header-bg)", color:"var(--text-muted)", border:"#E2E8F0", icon:"⚡", label:"Impacto" };
+                        critico:   { bg:"#FEF2F2", color:"#991B1B", border:"#FEE2E2", icon:"🚨", label:"Impacto Crítico" },
+                        relevante: { bg:"#FFFBEB", color:"#92400E", border:"#FDE68A", icon:"⚠️", label:"Impacto Relevante" },
+                        baixo:     { bg:"#F0FDF4", color:"#065F46", border:"#BBF7D0", icon:"ℹ️", label:"Impacto Baixo" },
+                      }[c.impacto_nivel] || { bg:"#F8FAFC", color:"var(--text-muted)", border:"#E2E8F0", icon:"⚡", label:"Impacto" };
                       return (
                         <div style={{ marginTop:10, background:nivelCfg.bg, border:`1px solid ${nivelCfg.border}`, borderRadius:8, padding:"10px 12px" }}>
                           <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom: c.fundamento ? 6 : 0 }}>
@@ -2198,29 +2226,9 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
   
   
   
-  
-  
-  
-  
   </script>
 
   <script type="text/babel">
-
-
-
-// ─────────────────────────────────────────────
-// MÓDULO — AVALIAÇÃO DE IMPUGNAÇÕES E RECURSOS
-// ─────────────────────────────────────────────
-
-function ImpugnacaoModule() {
-  const [etapa, setEtapa] = React.useState(1);
-  const [loading, setLoading] = React.useState(false);
-  const [progresso, setProgresso] = React.useState("");
-  const [error, setError] = React.useState("");
-  const [res
-
-
-
 // ─────────────────────────────────────────────
 // MÓDULO — AVALIAÇÃO DE IMPUGNAÇÕES E RECURSOS
 // ─────────────────────────────────────────────
@@ -2313,7 +2321,7 @@ function ImpugnacaoModule() {
   const analisar = async () => {
     if (!temImpugnacao) { setError("Carregue ao menos a impugnação ou recurso."); return; }
     setLoading(true); setError(""); setResultado(null);
-        const prompt = `Você é um especialista em Direito Administrativo e licitações públicas, com profundo conhecimento da Lei nº 14.133/2021, Lei nº 8.666/1993, Lei nº 10.520/2002, decretos estaduais do Rio de Janeiro (especialmente Dec. 48.778/2023, 48.816/2023, 48.817/2023, 48.818/2023, 48.819/2023, 48.820/2023, 48.821/2023), jurisprudência do TCU, TCE-RJ, AGU, e doutrina especializada (Marçal Justen Filho, Joel de Menezes Niebuhr, Jessé Torres Pereira Junior, entre outros).
+    const prompt = `Você é um especialista em Direito Administrativo e licitações públicas, com profundo conhecimento da Lei nº 14.133/2021, Lei nº 8.666/1993, Lei nº 10.520/2002, decretos estaduais do Rio de Janeiro (especialmente Dec. 48.778/2023, 48.816/2023, 48.817/2023, 48.818/2023, 48.819/2023, 48.820/2023, 48.821/2023), jurisprudência do TCU, TCE-RJ, AGU, e doutrina especializada (Marçal Justen Filho, Joel de Menezes Niebuhr, Jessé Torres Pereira Junior, entre outros).
 
 Foram fornecidos os seguintes documentos de um processo licitatório:
 - Impugnação(ões) e/ou recurso(s) administrativo(s)
@@ -2460,7 +2468,7 @@ IMPORTANTE:
           </div>
         )}
 
-        <button onClick={analisar} disabled={loading || !temImpugnacao }
+        <button onClick={analisar} disabled={loading || !temImpugnacao}
           className="btn-primary" style={{ width:"100%", padding:"13px", fontSize:14 }}>
           {loading ? "Analisando documentos…" : `Analisar ${totalDocs > 0 ? `${totalDocs} documento${totalDocs>1?"s":""}` : ""}`}
         </button>
@@ -2761,27 +2769,21 @@ function ResultadoImpugnacao({ resultado, onVoltar }) {
   );
 }
 
-  
-  
-  
-  State([]); // múltiplas tabelas
-  const [b64Tabelas, setB64Tabelas] = React.useState([]);
+  </script>
 
-  const [loading, setLoading] = React.useState(false);
-  const [progresso, setProgresso] = React.useState("");
-  const [error, setError] = React.useState("");
-  const [resultado
-
-
-
-
-
-
+  <script type="text/babel">
 // ─────────────────────────────────────────────
 // MÓDULO — PESQUISA SEMESTRAL DE PREÇOS (ARP)
 // ─────────────────────────────────────────────
 
 function PesquisaSemestral() {
+  const [apiKey, setApiKey] = React.useState(() => {
+    try { const v = localStorage.getItem("doccheck_gemini_key"); return v ? decodeURIComponent(escape(atob(v))) : ""; } catch(e) { return ""; }
+  });
+  const [apiKeySet, setApiKeySet] = React.useState(() => {
+    try { const v = localStorage.getItem("doccheck_gemini_key"); return !!(v && atob(v).length > 10); } catch(e) { return false; }
+  });
+
   const [pdfRelatorio, setPdfRelatorio] = React.useState(null);
   const [b64Relatorio, setB64Relatorio] = React.useState(null);
   const [pdfTabelas, setPdfTabelas] = React.useState([]); // múltiplas tabelas
@@ -2861,7 +2863,7 @@ Retorne APENAS um JSON puro com esta estrutura (sem markdown):
 
     try {
       setProgresso("Enviando documentos ao Gemini…");
-            // Monta parts com todas as tabelas + relatório
+      // Monta parts com todas as tabelas + relatório
       const parts = [];
       b64Tabelas.forEach((b64, i) => {
         parts.push({ text: `TABELA DE PREÇOS ${i + 1} (${pdfTabelas[i]?.name || "tabela"}):` });
@@ -2872,10 +2874,7 @@ Retorne APENAS um JSON puro com esta estrutura (sem markdown):
       parts.push({ text: prompt });
 
       setProgresso("Analisando compatibilidade de preços…");
-      const resp = await callGemini({
-          contents: [{ parts }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
-        });
+      const resp = await callGemini({ contents:[{ parts }], generationConfig:{ temperature:0.15, maxOutputTokens:8192 } });
 
       if (!resp.ok) {
         const e = await resp.json();
@@ -2916,6 +2915,26 @@ Retorne APENAS um JSON puro com esta estrutura (sem markdown):
 
   return (
     <div className="module-container">
+      {/* API Key */}
+      {!apiKeySet ? (
+        <div className="card" style={{ marginBottom:20 }}>
+          <p className="card-title">Chave de API — Google Gemini</p>
+          <p className="card-subtitle">Necessária para analisar os documentos.</p>
+          <div style={{ display:"flex", gap:8, marginTop:12 }}>
+            <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)}
+              placeholder="AIzaSy…" onKeyDown={e => e.key==="Enter" && confirmarChave()}
+              className="input-field" style={{ flex:1 }} />
+            <button onClick={confirmarChave} className="btn-primary">Confirmar</button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", gap:16, marginBottom:16 }}>
+          <span className="text-success" style={{ fontSize:12 }}>✓ Chave Gemini configurada</span>
+          <button onClick={() => { try { localStorage.removeItem("doccheck_gemini_key"); } catch(x){} setApiKeySet(false); setApiKey(""); }}
+            className="btn-link">Alterar chave</button>
+        </div>
+      )}
+
       {/* Upload */}
       <div className="card" style={{ marginBottom:20 }}>
         <p className="card-title">📊 Pesquisa Semestral de Preços — ARP</p>
@@ -2997,7 +3016,7 @@ Retorne APENAS um JSON puro com esta estrutura (sem markdown):
           </div>
         )}
 
-        <button onClick={analisar} disabled={loading || !b64Relatorio || b64Tabelas.length === 0 }
+        <button onClick={analisar} disabled={loading || !b64Relatorio || b64Tabelas.length === 0}
           className="btn-primary" style={{ width:"100%", padding:"13px" }}>
           {loading ? "Analisando documentos…" : "Analisar compatibilidade de preços"}
         </button>
@@ -3121,13 +3140,21 @@ Retorne APENAS um JSON puro com esta estrutura (sem markdown):
   );
 }
 
-  
-  
-  
-  
-  
-  
-  s] = React.useState({
+  </script>
+
+  <script type="text/babel">
+// ─────────────────────────────────────────────
+// MÓDULO — REAJUSTE CONTRATUAL (v3)
+// ─────────────────────────────────────────────
+function ReajusteModule() {
+  const [etapa, setEtapa] = React.useState(1);
+  const [loading, setLoading] = React.useState(false);
+  const [loadingIbge, setLoadingIbge] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [pdfContrato, setPdfContrato] = React.useState(null);
+  const [b64Contrato, setB64Contrato] = React.useState(null);
+  const [contratoInfo, setContratoInfo] = React.useState(null);
+  const [campos, setCampos] = React.useState({
     dataBase: "", indice: "IPCA", indiceCustom: "",
     reajustesAnteriores: [], // [{dataConcessao, cicloNumero}]
     dataPedido: "",
@@ -3293,7 +3320,8 @@ Atenção: o índice de reajuste DEVE ser extraído da cláusula contratual. Nã
         <p style={{fontSize:13,color:"var(--text-muted)",margin:0}}>Período aquisitivo de 12 meses, cômputo do índice e prazo de 60 dias para retroatividade dos efeitos financeiros.</p>
       </div>
       <Stepper/>
-{error&&<div className="error-box" style={{marginBottom:16}}><p style={{margin:0}}>⚠ {error}</p></div>}
+      {!apiKeySet&&<div className="info-box" style={{marginBottom:20}}><p style={{fontSize:13,color:"var(--info-text)",margin:0}}>🔑 Configure a chave Gemini na página inicial.</p></div>}
+      {error&&<div className="error-box" style={{marginBottom:16}}><p style={{margin:0}}>⚠ {error}</p></div>}
 
       {/* ETAPA 1 — só o contrato */}
       <div className="card" style={{marginBottom:20,opacity:etapa>1?.65:1}}>
@@ -3303,7 +3331,7 @@ Atenção: o índice de reajuste DEVE ser extraído da cláusula contratual. Nã
           <input ref={refContrato} type="file" accept=".pdf" style={{display:"none"}} onChange={e=>handleContrato(e.target.files[0])}/>
           {pdfContrato?(<><div style={{fontSize:22}}>📄</div><p style={{fontSize:13,fontWeight:600,color:"var(--accent)",margin:"6px 0 2px"}}>{pdfContrato.name}</p><p className="text-muted" style={{fontSize:11}}>Clique para trocar</p></>):(<><div style={{fontSize:22}}>📂</div><p style={{fontSize:12,color:"var(--text-muted)",margin:"6px 0 0"}}>Arraste ou <strong style={{color:"var(--accent)"}}>clique</strong> para selecionar o PDF do contrato</p></>)}
         </div>
-        {etapa===1&&<button onClick={analisarContrato} disabled={loading||!b64Contrato} className="btn-primary" style={{width:"100%"}}>{loading?"Analisando contrato…":"Analisar contrato →"}</button>}
+        {etapa===1&&<button onClick={analisarContrato} disabled={loading||!b64Contrato||!apiKeySet} className="btn-primary" style={{width:"100%"}}>{loading?"Analisando contrato…":"Analisar contrato →"}</button>}
         {contratoInfo&&etapa>1&&(
           <div style={{marginTop:12,padding:"10px 14px",background:"var(--surface-2)",borderRadius:8,fontSize:12,color:"var(--text-secondary)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span>✓ <strong>{contratoInfo.numero_contrato||"Contrato"}</strong> · Lei <strong>{contratoInfo.lei_aplicavel==="14133"?"14.133/2021":contratoInfo.lei_aplicavel==="8666"?"8.666/1993":"a confirmar"}</strong> · Índice: <strong>{contratoInfo.indice_reajuste||"verificar"}</strong></span>
@@ -3557,28 +3585,6 @@ function RepactuacaoModule() {
   const [pdfCctBase, setPdfCctBase] = React.useState(null);
   const [b64CctBase, setB64CctBase] = React.useState(null);
   const [cctBaseInfo, setCctBaseInfo] = React.useState(null);
-  const [novasCcts, setNovasCcts] = React.use
-// ─────────────────────────────────────────────
-// MÓDULO — REPACTUAÇÃO (v3)
-// Etapa 1: só contrato
-// Etapa 2: CCT atual + nova CCT + dados
-// Múltiplos direitos = múltiplas CCTs posteriores
-// ─────────────────────────────────────────────
-
-function RepactuacaoModule() {
-  const [etapa, setEtapa] = React.useState(1);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState("");
-
-  // Etapa 1
-  const [pdfContrato, setPdfContrato] = React.useState(null);
-  const [b64Contrato, setB64Contrato] = React.useState(null);
-  const [contratoInfo, setContratoInfo] = React.useState(null);
-
-  // Etapa 2
-  const [pdfCctBase, setPdfCctBase] = React.useState(null);
-  const [b64CctBase, setB64CctBase] = React.useState(null);
-  const [cctBaseInfo, setCctBaseInfo] = React.useState(null);
   const [novasCcts, setNovasCcts] = React.useState([]); // [{file, b64, info, analisado}]
   const [campos, setCampos] = React.useState({
     dataReferencia: "",
@@ -3635,15 +3641,14 @@ function RepactuacaoModule() {
 
   // Etapa 2 — analisa CCTs
   const analisarCcts = async () => {
-    if(!apiKeySet)return;
-        const promptCct=`Analise este instrumento normativo trabalhista (CCT/ACT/Acordo Coletivo/Lei do Piso/Dissídio). Retorne APENAS JSON puro sem markdown:
+      const promptCct=`Analise este instrumento normativo trabalhista (CCT/ACT/Acordo Coletivo/Lei do Piso/Dissídio). Retorne APENAS JSON puro sem markdown:
 {"tipo":"CCT"|"ACT"|"Lei do Piso"|"Dissídio"|"outro","descricao":"identificação completa (ex: CCT 2024/2025 — Vigilantes SP)","data_publicacao":"DD/MM/AAAA ou null","data_vigencia_inicio":"DD/MM/AAAA ou null","data_base_categoria":"mês/ano ou null","categoria":"categoria profissional","sindicato_laboral":"nome do sindicato dos trabalhadores","sindicato_patronal":"nome ou null","piso_salarial":"valor se informado ou null","percentual_reajuste":"percentual se informado ou null","regra_retroatividade":"descrição da regra de retroatividade prevista no próprio documento, se houver (ex: 'efeitos retroativos a 01/01/2024 conforme cláusula 3ª') ou null","vigencia_fim":"DD/MM/AAAA ou null","observacoes":"alertas sobre cláusulas especiais, retroatividade diferente do padrão de 60 dias, ou outros pontos relevantes para a repactuação, ou null"}`;
 
     // Analisa CCT base se ainda não analisou
     if(b64CctBase&&!cctBaseInfo){
       setLoading(true);
       try {
-        const resp = await callGemini({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64CctBase}},{text:promptCct}]}],generationConfig:{temperature:0.1,maxOutputTokens:512}});
+        const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64CctBase}},{text:promptCct}]}],generationConfig:{temperature:0.1,maxOutputTokens:512}})});
         const d=await r.json();
         const c=JSON.parse((d.candidates?.[0]?.content?.parts?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
         setCctBaseInfo(c);
@@ -3657,7 +3662,7 @@ function RepactuacaoModule() {
       if(!atualizadas[i].analisado){
         setLoading(true);
         try {
-          const resp = await callGemini({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:atualizadas[i].b64}},{text:promptCct}]}],generationConfig:{temperature:0.1,maxOutputTokens:512}});
+          const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:atualizadas[i].b64}},{text:promptCct}]}],generationConfig:{temperature:0.1,maxOutputTokens:512}})});
           const d=await r.json();
           const c=JSON.parse((d.candidates?.[0]?.content?.parts?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
           atualizadas[i]={...atualizadas[i],info:c,analisado:true};
@@ -3742,14 +3747,16 @@ function RepactuacaoModule() {
         <p style={{fontSize:13,color:"var(--text-muted)",margin:0}}>Direito a repactuação por novas CCT/ACT/Lei do Piso posteriores à data de referência — um direito por instrumento normativo.</p>
       </div>
       <Stepper/>
-{error&&<div className="error-box" style={{marginBottom:16}}><p style={{margin:0}}>⚠ {error}</p></div>}
+
+      {!apiKeySet&&<div className="info-box" style={{marginBottom:20}}><p style={{fontSize:13,color:"var(--info-text)",margin:0}}>🔑 Configure a chave Gemini na página inicial.</p></div>}
+      {error&&<div className="error-box" style={{marginBottom:16}}><p style={{margin:0}}>⚠ {error}</p></div>}
 
       {/* Link o conciliador */}
       <div style={{padding:"12px 16px",background:"var(--surface-2)",border:"1px solid var(--card-border)",borderRadius:10,marginBottom:20,display:"flex",alignItems:"center",gap:12}}>
         <span style={{fontSize:20}}>🔗</span>
         <div>
           <p style={{fontSize:12,fontWeight:700,color:"var(--text-primary)",margin:"0 0 2px"}}>Portal O Conciliador</p>
-          <p style={{fontSize:11,color:"var(--text-muted)",margin:0}}>Consulte CCTs e ACTs vigentes por categoria e localidade: <strong style={{color:"var(--accent)"}}>MEDIADOR (MTE)</strong> — consulte em <strong style={{color:"var(--accent)"}}>www3.mte.gov.br/sistemas/mediador</strong> para localizar CCTs e ACTs por categoria e data.</p>
+          <p style={{fontSize:11,color:"var(--text-muted)",margin:0}}>Consulte CCTs e ACTs vigentes por categoria e localidade: <strong style={{color:"var(--accent)"}}>oconciliador.com.br</strong> — útil para identificar todos os instrumentos normativos posteriores à data de referência.</p>
         </div>
       </div>
 
@@ -3761,7 +3768,7 @@ function RepactuacaoModule() {
           <input ref={refContrato} type="file" accept=".pdf" style={{display:"none"}} onChange={e=>handleContrato(e.target.files[0])}/>
           {pdfContrato?(<><div style={{fontSize:22}}>📄</div><p style={{fontSize:13,fontWeight:600,color:"var(--accent)",margin:"6px 0 2px"}}>{pdfContrato.name}</p><p className="text-muted" style={{fontSize:11}}>Clique para trocar</p></>):(<><div style={{fontSize:22}}>📂</div><p style={{fontSize:12,color:"var(--text-muted)",margin:"6px 0 0"}}>Arraste ou <strong style={{color:"var(--accent)"}}>clique</strong> para selecionar</p></>)}
         </div>
-        {etapa===1&&<button onClick={analisarContrato} disabled={loading||!b64Contrato} className="btn-primary" style={{width:"100%"}}>{loading?"Analisando contrato…":"Analisar contrato →"}</button>}
+        {etapa===1&&<button onClick={analisarContrato} disabled={loading||!b64Contrato||!apiKeySet} className="btn-primary" style={{width:"100%"}}>{loading?"Analisando contrato…":"Analisar contrato →"}</button>}
         {contratoInfo&&etapa>1&&(
           <div style={{marginTop:12,padding:"10px 14px",background:"var(--surface-2)",borderRadius:8,fontSize:12,color:"var(--text-secondary)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span>✓ <strong>{contratoInfo.numero_contrato}</strong> · Lei <strong>{contratoInfo.lei_aplicavel==="14133"?"14.133/2021":contratoInfo.lei_aplicavel==="8666"?"8.666/1993":"a confirmar"}</strong></span>
@@ -3909,7 +3916,7 @@ function ResultadoRepactuacao({ resultado, onVoltar }) {
       {/* Link o conciliador */}
       <div style={{padding:"10px 14px",background:"var(--surface-2)",border:"1px solid var(--card-border)",borderRadius:10,marginBottom:16,display:"flex",gap:10,alignItems:"center"}}>
         <span style={{fontSize:16}}>🔗</span>
-        <p style={{fontSize:12,color:"var(--text-muted)",margin:0}}>Consulte CCTs e ACTs: <strong style={{color:"var(--accent)"}}>www3.mte.gov.br/sistemas/mediador (MEDIADOR/MTE)</strong> — verifique se há instrumentos normativos adicionais ainda não incluídos nesta análise.</p>
+        <p style={{fontSize:12,color:"var(--text-muted)",margin:0}}>Consulte CCTs e ACTs: <strong style={{color:"var(--accent)"}}>oconciliador.com.br</strong> — verifique se há instrumentos normativos adicionais ainda não incluídos nesta análise.</p>
       </div>
 
       {/* Cards por direito */}
@@ -3984,6 +3991,9 @@ function ResultadoRepactuacao({ resultado, onVoltar }) {
   );
 }
 
+  </script>
+
+  <script type="text/babel">
 
 
 // ─────────────────────────────────────────────
@@ -3999,8 +4009,7 @@ function HomePage({ onNavigate }) {
       desc:"Análise de processos licitatórios e documentos",
       items:[
         { id:"checklist",  icon:"✓",  label:"Checklist Documental",   desc:"Verifique itens obrigatórios em documentos PDF com IA" },
-        { id:"comparador",  icon:"🔀", label:"Comparador de TR",           desc:"Identifique e avalie alterações entre versões do TR" },
-        { id:"impugnacao",  icon:"⚖️", label:"Impugnações e Recursos",      desc:"Avalie enfrentamento e mérito jurídico com jurisprudência TCU/TCE-RJ" },
+        { id:"comparador", icon:"🔀", label:"Comparador de TR",        desc:"Identifique e avalie alterações entre versões do TR" },
       ]
     },
     {
@@ -4014,7 +4023,7 @@ function HomePage({ onNavigate }) {
       ]
     },
     {
-      id:"pesquisa", label:"Pesquisa & Background", icon:"🔍", color:"var(--success-text)",
+      id:"pesquisa", label:"Pesquisa & Background", icon:"🔍", color:"#10B981",
       desc:"Pesquisa de preços e verificação de antecedentes",
       items:[
         { id:"pesquisa", icon:"📊", label:"Pesquisa Semestral ARP",   desc:"Analise compatibilidade de preços (Dec. 48.821/2023)" },
@@ -4029,18 +4038,17 @@ function HomePage({ onNavigate }) {
 
       {/* Hero */}
       <div style={{ textAlign:"center", marginBottom:48 }}>
-        <div style={{ display:"inline-flex", width:72, height:72, borderRadius:20, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", alignItems:"center", justifyContent:"center", marginBottom:20, fontSize:30, color:"var(--card-bg)", boxShadow:"0 12px 40px rgba(99,102,241,.35)" }}>✓</div>
+        <div style={{ display:"inline-flex", width:72, height:72, borderRadius:20, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", alignItems:"center", justifyContent:"center", marginBottom:20, fontSize:30, color:"#fff", boxShadow:"0 12px 40px rgba(99,102,241,.35)" }}>✓</div>
         <h1 style={{ fontSize:34, fontWeight:900, color:"var(--text-primary)", margin:"0 0 10px", letterSpacing:"-.03em" }}>DocCheck</h1>
         <p style={{ fontSize:15, color:"var(--text-muted)", margin:"0 0 4px" }}>Plataforma de análise documental · GAB — SUPCL/SESRJ</p>
         <p style={{ fontSize:13, color:"var(--text-subtle)", margin:0 }}>Selecione um módulo ou use a navegação no topo</p>
       </div>
 
-      {/* Conexão via backend seguro — sem exposição de chave */}
       <div style={{ marginBottom:48, padding:"14px 18px", background:"var(--success-bg)", border:"1px solid var(--success-border)", borderRadius:12, display:"flex", alignItems:"center", gap:12 }}>
         <div style={{ width:32, height:32, borderRadius:8, background:"var(--success-text)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, color:"#fff" }}>🔒</div>
         <div>
           <p style={{ fontSize:13, fontWeight:700, color:"var(--success-text)", margin:0 }}>Conexão segura via proxy backend</p>
-          <p style={{ fontSize:11, color:"var(--text-muted)", margin:0 }}>A chave da API Gemini está protegida no servidor — nenhuma credencial é exposta no navegador.</p>
+          <p style={{ fontSize:11, color:"var(--text-muted)", margin:0 }}>A chave da API Gemini está protegida no servidor.</p>
         </div>
       </div>
 
@@ -4103,9 +4111,8 @@ function Shell() {
   const grupos = [
     { id:"home",      label:"🏠 Início",   abas:[] },
     { id:"licitacao", label:"⚖️ Licitação", abas:[
-      { id:"checklist",   label:"✓ Checklist" },
-      { id:"comparador",  label:"🔀 Comparador TR" },
-      { id:"impugnacao",  label:"⚖️ Impugnações/Recursos" },
+      { id:"checklist",  label:"✓ Checklist" },
+      { id:"comparador", label:"🔀 Comparador TR" },
     ]},
     { id:"contratos", label:"📑 Contratos", abas:[
       { id:"vencimentos", label:"📅 Vencimentos" },
@@ -4130,7 +4137,7 @@ function Shell() {
         <div style={{ maxWidth:1200, margin:"0 auto", padding:"0 20px", display:"flex", alignItems:"center", height:56, gap:8 }}>
           <button onClick={() => navGrupo("home")}
             style={{ display:"flex", alignItems:"center", gap:10, background:"none", border:"none", cursor:"pointer", padding:"4px 8px 4px 0", borderRadius:8, flexShrink:0 }}>
-            <div style={{ width:32, height:32, borderRadius:9, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, color:"var(--card-bg)", fontWeight:900, boxShadow:"0 2px 8px rgba(99,102,241,.4)" }}>✓</div>
+            <div style={{ width:32, height:32, borderRadius:9, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, color:"#fff", fontWeight:900, boxShadow:"0 2px 8px rgba(99,102,241,.4)" }}>✓</div>
             <div style={{ lineHeight:1.2, textAlign:"left" }}>
               <div style={{ fontSize:14, fontWeight:900, color:"var(--text-primary)", letterSpacing:"-.02em" }}>DocCheck</div>
               <div style={{ fontSize:10, color:"var(--text-subtle)" }}>GAB · SUPCL/SESRJ</div>
@@ -4144,7 +4151,7 @@ function Shell() {
               <button key={g.id} onClick={() => navGrupo(g.id, g.abas[0]?.id)}
                 style={{ padding:"6px 14px", borderRadius:8, border:"none", cursor:"pointer", whiteSpace:"nowrap", flexShrink:0, fontSize:13, fontWeight: grupo===g.id ? 700 : 500, transition:"all .15s",
                   background: grupo===g.id ? "var(--accent)" : "transparent",
-                  color: grupo===g.id ? "var(--card-bg)" : "var(--header-muted)",
+                  color: grupo===g.id ? "#fff" : "var(--header-muted)",
                 }}>
                 {g.label}
               </button>
@@ -4178,9 +4185,8 @@ function Shell() {
         {grupo === "home" && <HomePage onNavigate={navGrupo} />}
         {grupo === "licitacao" && (
           <>
-            <div style={{ display: aba==="checklist"   ? "block":"none" }}><App /></div>
-            <div style={{ display: aba==="comparador"  ? "block":"none" }}><ComparadorTR /></div>
-            <div style={{ display: aba==="impugnacao"  ? "block":"none" }}><ImpugnacaoModule /></div>
+            <div style={{ display: aba==="checklist"  ? "block":"none" }}><App /></div>
+            <div style={{ display: aba==="comparador" ? "block":"none" }}><ComparadorTR /></div>
           </>
         )}
         {grupo === "contratos" && (
@@ -4207,3 +4213,10 @@ document.addEventListener("doccheck:auth", () => {
   const _root = ReactDOM.createRoot(document.getElementById("root"));
   _root.render(<Shell />);
 });
+
+  
+  
+  </script>
+
+</body>
+</html>
