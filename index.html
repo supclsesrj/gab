@@ -1023,6 +1023,515 @@ Se não encontrar nenhuma empresa, retorne [].`;
   );
 }
 
+
+// ─────────────────────────────────────────────
+// MÓDULO — CONTROLE DE VENCIMENTOS
+// ─────────────────────────────────────────────
+
+const GITHUB_BASE = "https://raw.githubusercontent.com/supclsesrj/gab/main/";
+
+function parseData(val) {
+  if (!val) return null;
+  // Suporta DD/MM/YYYY, YYYY-MM-DD, timestamps Excel (número)
+  if (typeof val === "number") {
+    // Serial date do Excel
+    const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+    return isNaN(d) ? null : d;
+  }
+  const s = String(val).trim();
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+    const [dd, mm, yyyy] = s.split("/");
+    return new Date(`${yyyy}-${mm}-${dd}`);
+  }
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return new Date(s);
+  return null;
+}
+
+function fmtData(d) {
+  if (!d) return "—";
+  return d.toLocaleDateString("pt-BR");
+}
+
+function fmtValor(v) {
+  if (!v && v !== 0) return "—";
+  const n = parseFloat(String(v).replace(/[^\d,.-]/g,"").replace(",","."));
+  if (isNaN(n)) return String(v);
+  return n.toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+}
+
+function diasAteVencer(d) {
+  if (!d) return null;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const diff = Math.ceil((d - hoje) / 86400000);
+  return diff;
+}
+
+function statusUrgencia(dias) {
+  if (dias === null) return { cor:"gray", label:"Sem data" };
+  if (dias < 0)   return { cor:"red",    label:"Vencido" };
+  if (dias <= 30)  return { cor:"red",    label:`${dias}d — URGENTE` };
+  if (dias <= 60)  return { cor:"orange", label:`${dias}d — Atenção` };
+  return { cor:"green", label:`${dias}d` };
+}
+
+function mesesAlvo() {
+  const hoje = new Date();
+  return [0,1,2].map(i => {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() + i, 1);
+    return { ano: d.getFullYear(), mes: d.getMonth() };
+  });
+}
+
+function nomeMes(mes, ano) {
+  return new Date(ano, mes, 1).toLocaleDateString("pt-BR", { month:"long", year:"numeric" });
+}
+
+function parseArquivo(nome, conteudo, tipo) {
+  // tipo: "json" ou "xlsx_csv" (csv gerado do xlsx via SheetJS)
+  try {
+    if (tipo === "json") {
+      const data = JSON.parse(conteudo);
+      return Array.isArray(data) ? data : [];
+    }
+    // CSV simples
+    const linhas = conteudo.trim().split("\n");
+    const headers = linhas[0].split(",").map(h => h.replace(/"/g,"").trim().toLowerCase());
+    return linhas.slice(1).map(linha => {
+      const vals = linha.match(/(".*?"|[^,]+|(?<=,)(?=,)|^(?=,)|(?<=,)$)/g) || [];
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = (vals[i] || "").replace(/^"|"$/g,"").trim(); });
+      return obj;
+    }).filter(r => Object.values(r).some(v => v));
+  } catch(e) { return []; }
+}
+
+function normalizarRegistro(r, tipo) {
+  // Normaliza variações de nome de coluna
+  const get = (...keys) => {
+    for (const k of keys) {
+      const found = Object.keys(r).find(rk => rk.toLowerCase().includes(k.toLowerCase()));
+      if (found && r[found]) return r[found];
+    }
+    return "";
+  };
+  return {
+    sei:        get("sei", "processo"),
+    contrato:   get("contrato", "arp", "número"),
+    empresa:    get("empresa", "fornecedor", "contratad"),
+    objeto:     get("objeto", "serviço", "descri"),
+    valor:      get("valor"),
+    vencimento: parseData(get("vencimento", "vigência", "término", "fim")),
+    tipo,
+    // campos manuais (preenchidos na etapa 2)
+    vigMax:     "",
+    seiSubst:   "",
+    andamento:  "",
+    status:     "prorrogação",
+  };
+}
+
+// Etapa 2 — card editável
+function CardEdicao({ reg, idx, onChange }) {
+  const dias = diasAteVencer(reg.vencimento);
+  const urg = statusUrgencia(dias);
+  const corBorda = { red:"#FEE2E2", orange:"#FED7AA", green:"#D1FAE5", gray:"#E5E7EB" }[urg.cor];
+  const corBg    = { red:"#FEF2F2", orange:"#FFF7ED", green:"#F0FDF4", gray:"#F9FAFB" }[urg.cor];
+
+  return (
+    <div style={{ border:`1px solid ${corBorda}`, background:corBg, borderRadius:10, padding:"14px 16px", marginBottom:12 }}>
+      {/* Cabeçalho */}
+      <div style={{ display:"flex", gap:10, alignItems:"flex-start", marginBottom:12 }}>
+        <div style={{ flex:1 }}>
+          <p style={{ fontSize:13, fontWeight:700, color:"#111827", margin:"0 0 2px" }}>{reg.empresa || "—"}</p>
+          <p style={{ fontSize:11, color:"#6B7280", margin:0, fontFamily:"monospace" }}>
+            SEI: {reg.sei || "—"} · {reg.tipo === "servicos" ? "Serviço" : "Aquisição"} · Vence: <strong>{fmtData(reg.vencimento)}</strong>
+          </p>
+          <p style={{ fontSize:11, color:"#374151", margin:"4px 0 0" }}>{reg.objeto}</p>
+        </div>
+        <span style={{
+          fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20,
+          background: { red:"#FEE2E2", orange:"#FED7AA", green:"#D1FAE5", gray:"#E5E7EB" }[urg.cor],
+          color:      { red:"#991B1B", orange:"#9A3412", green:"#065F46", gray:"#374151" }[urg.cor],
+        }}>{urg.label}</span>
+      </div>
+
+      {/* Campos manuais */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+        <div>
+          <label style={{ fontSize:11, color:"#6B7280", display:"block", marginBottom:3 }}>Vigência Máxima</label>
+          <input value={reg.vigMax} onChange={e => onChange(idx,"vigMax",e.target.value)}
+            placeholder="Ex: 60 meses / atingida / —"
+            style={{ width:"100%", padding:"7px 10px", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, outline:"none" }} />
+        </div>
+        <div>
+          <label style={{ fontSize:11, color:"#6B7280", display:"block", marginBottom:3 }}>Status</label>
+          <select value={reg.status} onChange={e => onChange(idx,"status",e.target.value)}
+            style={{ width:"100%", padding:"7px 10px", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, outline:"none", background:"#fff" }}>
+            <option value="prorrogação">Em prorrogação</option>
+            <option value="substituto">Processo substituto</option>
+            <option value="encerramento">Encerramento</option>
+            <option value="renovacao">Renovação ARP</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ fontSize:11, color:"#6B7280", display:"block", marginBottom:3 }}>SEI Processo Substituto</label>
+          <input value={reg.seiSubst} onChange={e => onChange(idx,"seiSubst",e.target.value)}
+            placeholder="Ex: 123456/2025"
+            style={{ width:"100%", padding:"7px 10px", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, outline:"none" }} />
+        </div>
+        <div>
+          <label style={{ fontSize:11, color:"#6B7280", display:"block", marginBottom:3 }}>Andamento</label>
+          <input value={reg.andamento} onChange={e => onChange(idx,"andamento",e.target.value)}
+            placeholder="Ex: Em elaboração de TR / Aguard. SUBJUR"
+            style={{ width:"100%", padding:"7px 10px", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, outline:"none" }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Gera texto WhatsApp
+function gerarMensagem(registros) {
+  const meses = mesesAlvo();
+  const hoje = new Date();
+  const mesNomeAtual = hoje.toLocaleDateString("pt-BR", { month:"long" });
+
+  let msg = `📋 *CONTROLE DE VENCIMENTOS*\n`;
+  msg += `_${mesNomeAtual.charAt(0).toUpperCase() + mesNomeAtual.slice(1)} de ${hoje.getFullYear()} e próximos 2 meses_\n`;
+  msg += `_Gerado em ${hoje.toLocaleDateString("pt-BR")}_\n\n`;
+
+  meses.forEach(({ mes, ano }) => {
+    const doMes = registros.filter(r => {
+      if (!r.vencimento) return false;
+      return r.vencimento.getMonth() === mes && r.vencimento.getFullYear() === ano;
+    });
+    if (doMes.length === 0) return;
+
+    msg += `━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `📅 *${nomeMes(mes, ano).toUpperCase()}*\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━\n\n`;
+
+    doMes.sort((a,b) => a.vencimento - b.vencimento).forEach((r, i) => {
+      const dias = diasAteVencer(r.vencimento);
+      const urgIcon = dias < 0 ? "🔴" : dias <= 30 ? "🔴" : dias <= 60 ? "🟡" : "🟢";
+      const tipoLabel = r.tipo === "servicos" ? "🔧 Serviço" : "📦 Aquisição";
+
+      // Resumo do objeto (5 palavras)
+      const palavras = (r.objeto || "").split(/\s+/).slice(0,5).join(" ");
+      const resumo = palavras + (r.objeto.split(/\s+/).length > 5 ? "…" : "");
+
+      msg += `${urgIcon} *${i+1}. ${r.empresa}*\n`;
+      msg += `• SEI: ${r.sei || "—"}\n`;
+      msg += `• Contrato/ARP: ${r.contrato || "—"}\n`;
+      msg += `• ${tipoLabel}: ${resumo}\n`;
+      msg += `• Valor: ${fmtValor(r.valor)}\n`;
+      msg += `• Vencimento: ${fmtData(r.vencimento)}${dias !== null ? ` (${dias < 0 ? "vencido há " + Math.abs(dias) + "d" : "em " + dias + "d"})` : ""}\n`;
+
+      if (r.vigMax) msg += `• Vig. Máxima: ${r.vigMax}\n`;
+
+      // Status
+      const statusLabel = {
+        "prorrogação": "Em prorrogação",
+        "substituto":  "Processo substituto",
+        "encerramento":"Encerramento",
+        "renovacao":   "Renovação ARP",
+      }[r.status] || r.status;
+
+      msg += `• Status: *${statusLabel}*`;
+      if (r.seiSubst) msg += ` — SEI ${r.seiSubst}`;
+      if (r.andamento) msg += `\n  ↳ ${r.andamento}`;
+      msg += "\n\n";
+    });
+  });
+
+  // Aviso SUBJUR
+  const urgentes = registros.filter(r => {
+    const d = diasAteVencer(r.vencimento);
+    return d !== null && d >= 0 && d <= 30;
+  });
+  if (urgentes.length > 0) {
+    msg += `⚠️ *ATENÇÃO — ENVIO SUBJUR*\n`;
+    msg += `${urgentes.length} processo${urgentes.length > 1 ? "s" : ""} com vencimento em até 30 dias:\n`;
+    urgentes.forEach(r => { msg += `• ${r.empresa} — vence ${fmtData(r.vencimento)}\n`; });
+  }
+
+  return msg.trim();
+}
+
+function VencimentosModule() {
+  const [etapa, setEtapa] = React.useState(1); // 1=carga, 2=edicao, 3=resultado
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [registros, setRegistros] = React.useState([]);
+  const [mensagem, setMensagem] = React.useState("");
+  const [copiado, setCopiado] = React.useState(false);
+  const [fonteManual, setFonteManual] = React.useState(false);
+  const fileServRef = React.useRef();
+  const fileAqRef = React.useRef();
+
+  const MESES = mesesAlvo();
+
+  // Carrega do GitHub
+  const carregarDoGithub = async () => {
+    setLoading(true); setError("");
+    try {
+      let todos = [];
+      for (const [nome, tipo] of [["vencimento_servicos","servicos"],["vencimento_aquisicoes","aquisicoes"]]) {
+        // Tenta JSON primeiro, depois CSV
+        for (const ext of ["json","csv"]) {
+          try {
+            const r = await fetch(`${GITHUB_BASE}${nome}.${ext}?t=${Date.now()}`);
+            if (!r.ok) continue;
+            const txt = await r.text();
+            const parsed = parseArquivo(nome, txt, ext === "json" ? "json" : "csv");
+            const norm = parsed.map(p => normalizarRegistro(p, tipo));
+            todos = todos.concat(norm);
+            break;
+          } catch(e) { continue; }
+        }
+      }
+      if (todos.length === 0) throw new Error("Arquivos não encontrados no repositório. Verifique se vencimento_servicos.json/.csv e vencimento_aquisicoes.json/.csv estão na raiz do repositório.");
+      filtrarEAvancar(todos);
+    } catch(e) {
+      setError(e.message);
+    } finally { setLoading(false); }
+  };
+
+  // Upload manual de arquivos
+  const carregarArquivo = async (file, tipo) => {
+    if (!file) return [];
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const txt = e.target.result;
+        const ext = file.name.endsWith(".json") ? "json" : "csv";
+        const parsed = parseArquivo(file.name, txt, ext);
+        resolve(parsed.map(p => normalizarRegistro(p, tipo)));
+      };
+      reader.readAsText(file, "UTF-8");
+    });
+  };
+
+  const carregarManual = async () => {
+    setLoading(true); setError("");
+    try {
+      const fServ = fileServRef.current?.files?.[0];
+      const fAq   = fileAqRef.current?.files?.[0];
+      if (!fServ && !fAq) throw new Error("Selecione ao menos um arquivo.");
+      let todos = [];
+      if (fServ) todos = todos.concat(await carregarArquivo(fServ, "servicos"));
+      if (fAq)   todos = todos.concat(await carregarArquivo(fAq,   "aquisicoes"));
+      filtrarEAvancar(todos);
+    } catch(e) {
+      setError(e.message);
+    } finally { setLoading(false); }
+  };
+
+  const filtrarEAvancar = (todos) => {
+    const filtrados = todos.filter(r => {
+      if (!r.vencimento) return false;
+      return MESES.some(({ mes, ano }) =>
+        r.vencimento.getMonth() === mes && r.vencimento.getFullYear() === ano
+      );
+    }).sort((a,b) => a.vencimento - b.vencimento);
+    if (filtrados.length === 0) {
+      setError("Nenhum vencimento encontrado nos próximos 3 meses. Verifique as datas nos arquivos.");
+      return;
+    }
+    setRegistros(filtrados);
+    setEtapa(2);
+  };
+
+  const atualizar = (idx, campo, val) => {
+    setRegistros(prev => prev.map((r,i) => i === idx ? {...r, [campo]:val} : r));
+  };
+
+  const gerarEAvancar = () => {
+    const msg = gerarMensagem(registros);
+    setMensagem(msg);
+    setEtapa(3);
+  };
+
+  const copiar = () => {
+    navigator.clipboard.writeText(mensagem).then(() => {
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2500);
+    });
+  };
+
+  // ── ETAPA 1 — Carga ──
+  if (etapa === 1) return (
+    <div style={{ maxWidth:860, margin:"0 auto", padding:"32px 24px" }}>
+      <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:12, padding:28, marginBottom:20 }}>
+        <p style={{ fontSize:15, fontWeight:700, color:"#0F172A", marginBottom:4 }}>📅 Controle de Vencimentos</p>
+        <p style={{ fontSize:12, color:"#6B7280", marginBottom:24 }}>
+          Exibe contratos e ARPs com vencimento no mês atual e nos 2 meses seguintes, com geração de mensagem para WhatsApp.
+        </p>
+
+        {/* Opção GitHub */}
+        <div style={{ border:"1px solid #E2E8F0", borderRadius:10, padding:20, marginBottom:16 }}>
+          <p style={{ fontSize:13, fontWeight:700, color:"#0F172A", marginBottom:4 }}>Carregar do repositório GitHub</p>
+          <p style={{ fontSize:12, color:"#6B7280", marginBottom:14 }}>
+            Busca automaticamente os arquivos <code style={{ background:"#F1F5F9", padding:"1px 6px", borderRadius:4 }}>vencimento_servicos</code> e <code style={{ background:"#F1F5F9", padding:"1px 6px", borderRadius:4 }}>vencimento_aquisicoes</code> (.json ou .csv) da raiz do repositório.
+          </p>
+          <button onClick={carregarDoGithub} disabled={loading}
+            style={{ padding:"10px 24px", background: loading ? "#E2E8F0" : "#0F172A", color: loading ? "#9CA3AF" : "#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor: loading ? "not-allowed" : "pointer" }}>
+            {loading ? "Carregando…" : "⬇ Carregar do GitHub"}
+          </button>
+        </div>
+
+        {/* Opção upload manual */}
+        <div style={{ border:"1px solid #E2E8F0", borderRadius:10, padding:20 }}>
+          <p style={{ fontSize:13, fontWeight:700, color:"#0F172A", marginBottom:4 }}>Ou fazer upload manual</p>
+          <p style={{ fontSize:12, color:"#6B7280", marginBottom:14 }}>Suporta arquivos <strong>.json</strong> ou <strong>.csv</strong> (exportado do Excel via "Salvar como CSV").</p>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:14 }}>
+            {[
+              { ref:fileServRef, label:"vencimento_servicos", tipo:"servicos" },
+              { ref:fileAqRef,   label:"vencimento_aquisicoes", tipo:"aquisicoes" },
+            ].map(({ ref, label }) => (
+              <div key={label}>
+                <p style={{ fontSize:11, color:"#6B7280", marginBottom:5, fontWeight:600 }}>{label}</p>
+                <input ref={ref} type="file" accept=".json,.csv"
+                  style={{ fontSize:12, width:"100%" }} />
+              </div>
+            ))}
+          </div>
+          <button onClick={carregarManual} disabled={loading}
+            style={{ padding:"10px 24px", background: loading ? "#E2E8F0" : "#475569", color: loading ? "#9CA3AF" : "#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor: loading ? "not-allowed" : "pointer" }}>
+            {loading ? "Processando…" : "📂 Carregar arquivos"}
+          </button>
+        </div>
+
+        {error && (
+          <div style={{ background:"#FEF2F2", border:"1px solid #FEE2E2", borderRadius:8, padding:"12px 16px", marginTop:16 }}>
+            <p style={{ fontSize:13, color:"#991B1B", margin:0 }}>⚠ {error}</p>
+          </div>
+        )}
+
+        {/* Template para download */}
+        <div style={{ marginTop:20, padding:"14px 16px", background:"#F8FAFC", border:"1px solid #E2E8F0", borderRadius:8 }}>
+          <p style={{ fontSize:12, fontWeight:600, color:"#374151", marginBottom:6 }}>📄 Formato esperado dos arquivos</p>
+          <p style={{ fontSize:11, color:"#6B7280", marginBottom:8 }}>Colunas obrigatórias (JSON ou CSV com cabeçalho):</p>
+          <code style={{ fontSize:11, color:"#1E40AF", display:"block", background:"#EFF6FF", padding:"8px 12px", borderRadius:6 }}>
+            sei, contrato, empresa, objeto, valor, vencimento
+          </code>
+          <p style={{ fontSize:11, color:"#9CA3AF", marginTop:8 }}>
+            Data de vencimento aceita nos formatos: <strong>DD/MM/AAAA</strong> ou <strong>AAAA-MM-DD</strong>
+          </p>
+          <button onClick={() => {
+            const csv = `"sei","contrato","empresa","objeto","valor","vencimento"\n"12345/2025","CT-001/2025","Empresa Exemplo Ltda","Serviço de TI","150000","31/07/2025"\n"12346/2025","ARP-002/2025","Fornecedor XYZ Ltda","Aquisição de material","80000","28/08/2025"`;
+            const blob = new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8;"});
+            const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+            a.download = "template_vencimentos.csv"; a.click();
+          }} style={{ marginTop:10, padding:"6px 14px", background:"#fff", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, cursor:"pointer", color:"#374151" }}>
+            ⬇ Baixar template CSV
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── ETAPA 2 — Edição manual ──
+  if (etapa === 2) return (
+    <div style={{ maxWidth:860, margin:"0 auto", padding:"32px 24px" }}>
+      {/* Header etapa */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+        <div>
+          <p style={{ fontSize:15, fontWeight:700, color:"#0F172A", margin:0 }}>
+            Etapa 2 — Completar informações
+          </p>
+          <p style={{ fontSize:12, color:"#6B7280", margin:"4px 0 0" }}>
+            {registros.length} vencimento{registros.length > 1 ? "s" : ""} encontrado{registros.length > 1 ? "s" : ""} nos próximos 3 meses. Preencha os campos de status.
+          </p>
+        </div>
+        <div style={{ display:"flex", gap:8 }}>
+          <button onClick={() => setEtapa(1)}
+            style={{ padding:"8px 16px", background:"#fff", border:"1px solid #D1D5DB", borderRadius:8, fontSize:12, cursor:"pointer", color:"#374151" }}>
+            ← Voltar
+          </button>
+          <button onClick={gerarEAvancar}
+            style={{ padding:"8px 20px", background:"#0F172A", color:"#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer" }}>
+            Gerar mensagem →
+          </button>
+        </div>
+      </div>
+
+      {/* Legenda */}
+      <div style={{ display:"flex", gap:12, marginBottom:20, flexWrap:"wrap" }}>
+        {[
+          { cor:"#EF4444", bg:"#FEF2F2", label:"Vencido ou ≤ 30 dias — URGENTE (enviar SUBJUR)" },
+          { cor:"#F59E0B", bg:"#FFFBEB", label:"31–60 dias — Atenção" },
+          { cor:"#10B981", bg:"#ECFDF5", label:"Mais de 60 dias" },
+        ].map(({ cor, bg, label }) => (
+          <div key={label} style={{ display:"flex", alignItems:"center", gap:6, fontSize:11, color:"#374151" }}>
+            <span style={{ width:10, height:10, borderRadius:"50%", background:cor, flexShrink:0 }} />
+            {label}
+          </div>
+        ))}
+      </div>
+
+      {/* Cards por mês */}
+      {MESES.map(({ mes, ano }) => {
+        const doMes = registros.filter(r => r.vencimento && r.vencimento.getMonth() === mes && r.vencimento.getFullYear() === ano);
+        if (doMes.length === 0) return null;
+        const idxsDoMes = doMes.map(r => registros.indexOf(r));
+        return (
+          <div key={`${mes}-${ano}`} style={{ marginBottom:24 }}>
+            <p style={{ fontSize:13, fontWeight:700, color:"#475569", marginBottom:12, textTransform:"uppercase", letterSpacing:".05em" }}>
+              📅 {nomeMes(mes, ano)}
+            </p>
+            {idxsDoMes.map(idx => (
+              <CardEdicao key={idx} reg={registros[idx]} idx={idx} onChange={atualizar} />
+            ))}
+          </div>
+        );
+      })}
+
+      <div style={{ display:"flex", justifyContent:"flex-end", marginTop:8 }}>
+        <button onClick={gerarEAvancar}
+          style={{ padding:"12px 28px", background:"#0F172A", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}>
+          Gerar mensagem WhatsApp →
+        </button>
+      </div>
+    </div>
+  );
+
+  // ── ETAPA 3 — Resultado ──
+  return (
+    <div style={{ maxWidth:860, margin:"0 auto", padding:"32px 24px" }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+        <div>
+          <p style={{ fontSize:15, fontWeight:700, color:"#0F172A", margin:0 }}>Etapa 3 — Mensagem gerada</p>
+          <p style={{ fontSize:12, color:"#6B7280", margin:"4px 0 0" }}>Copie e cole no WhatsApp.</p>
+        </div>
+        <div style={{ display:"flex", gap:8 }}>
+          <button onClick={() => setEtapa(2)}
+            style={{ padding:"8px 16px", background:"#fff", border:"1px solid #D1D5DB", borderRadius:8, fontSize:12, cursor:"pointer", color:"#374151" }}>
+            ← Editar
+          </button>
+          <button onClick={copiar}
+            style={{ padding:"8px 20px", background: copiado ? "#10B981" : "#4F8EF7", color:"#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", transition:"background .2s" }}>
+            {copiado ? "✓ Copiado!" : "📋 Copiar mensagem"}
+          </button>
+        </div>
+      </div>
+
+      <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:12, padding:24 }}>
+        <pre style={{ fontFamily:"'Courier New', monospace", fontSize:12.5, color:"#1E293B", lineHeight:1.7, whiteSpace:"pre-wrap", wordBreak:"break-word", margin:0 }}>
+          {mensagem}
+        </pre>
+      </div>
+
+      <div style={{ marginTop:16, display:"flex", justifyContent:"center" }}>
+        <button onClick={copiar}
+          style={{ padding:"14px 48px", background: copiado ? "#10B981" : "#0F172A", color:"#fff", border:"none", borderRadius:10, fontSize:15, fontWeight:700, cursor:"pointer", transition:"background .2s" }}>
+          {copiado ? "✓ Copiado para a área de transferência!" : "📋 Copiar mensagem"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────
 // SHELL — NAVEGAÇÃO POR ABAS
 // ─────────────────────────────────────────────
@@ -1031,16 +1540,16 @@ function Shell() {
   const trocar = (a) => { setAba(a); localStorage.setItem("doccheck_aba", a); };
 
   const abas = [
-    { id:"checklist",  label:"✓ Checklist" },
-    { id:"rapp",       label:"🔍 Background Check RAPP" },
-    { id:"cnpj",       label:"🏢 Consulta CNPJ" },
+    { id:"checklist",   label:"✓ Checklist" },
+    { id:"vencimentos", label:"📅 Vencimentos" },
+    { id:"rapp",        label:"🔍 Background Check RAPP" },
+    { id:"cnpj",        label:"🏢 Consulta CNPJ" },
   ];
 
   return (
     <div style={{ fontFamily:"'Inter', system-ui, sans-serif", minHeight:"100vh", background:"#F8F9FB" }}>
-      {/* Header */}
       <div style={{ background:"#0F172A", padding:"0 32px" }}>
-        <div style={{ maxWidth:960, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", height:52 }}>
+        <div style={{ maxWidth:1000, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", height:52 }}>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <div style={{ width:26, height:26, borderRadius:6, background:"#4F8EF7", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, color:"#fff" }}>✓</div>
             <span style={{ color:"#F1F5F9", fontWeight:700, fontSize:15 }}>DocCheck</span>
@@ -1049,26 +1558,23 @@ function Shell() {
           <span style={{ color:"#64748B", fontSize:12 }}>GAB — SUPCL/SESRJ</span>
         </div>
       </div>
-
-      {/* Abas */}
-      <div style={{ background:"#fff", borderBottom:"1px solid #E2E8F0" }}>
-        <div style={{ maxWidth:960, margin:"0 auto", padding:"0 32px", display:"flex" }}>
+      <div style={{ background:"#fff", borderBottom:"1px solid #E2E8F0", overflowX:"auto" }}>
+        <div style={{ maxWidth:1000, margin:"0 auto", padding:"0 32px", display:"flex", minWidth:"max-content" }}>
           {abas.map(a => (
             <button key={a.id} onClick={() => trocar(a.id)} style={{
-              padding:"14px 20px", background:"none", border:"none",
+              padding:"14px 18px", background:"none", border:"none",
               borderBottom: aba === a.id ? "2px solid #4F8EF7" : "2px solid transparent",
               color: aba === a.id ? "#1E40AF" : "#6B7280",
               fontSize:13, fontWeight: aba === a.id ? 700 : 500,
-              cursor:"pointer", transition:"all .15s",
+              cursor:"pointer", transition:"all .15s", whiteSpace:"nowrap",
             }}>{a.label}</button>
           ))}
         </div>
       </div>
-
-      {/* Conteúdo */}
-      <div style={{ display: aba === "checklist" ? "block" : "none" }}><App /></div>
-      <div style={{ display: aba === "rapp"      ? "block" : "none" }}><RappCheck /></div>
-      <div style={{ display: aba === "cnpj"      ? "block" : "none" }}><BackgroundCheck /></div>
+      <div style={{ display: aba === "checklist"   ? "block" : "none" }}><App /></div>
+      <div style={{ display: aba === "vencimentos"  ? "block" : "none" }}><VencimentosModule /></div>
+      <div style={{ display: aba === "rapp"         ? "block" : "none" }}><RappCheck /></div>
+      <div style={{ display: aba === "cnpj"         ? "block" : "none" }}><BackgroundCheck /></div>
     </div>
   );
 }
