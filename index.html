@@ -4,31 +4,125 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DocCheck — GAB SUPCL/SESRJ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <style>
-    * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'Inter',system-ui,sans-serif; background:#F8F9FB; }
-    #login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#0F172A; }
-    .login-box { background:#1E293B; border:1px solid #334155; border-radius:16px; padding:40px 36px; width:100%; max-width:380px; text-align:center; }
-    .login-logo { width:48px; height:48px; background:#4F8EF7; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:20px; font-size:22px; color:white; }
-    .login-title { color:#F1F5F9; font-size:20px; font-weight:700; margin-bottom:4px; }
-    .login-sub { color:#64748B; font-size:13px; margin-bottom:28px; }
-    .login-input { width:100%; padding:11px 14px; background:#0F172A; border:1px solid #334155; border-radius:8px; color:#F1F5F9; font-size:14px; outline:none; margin-bottom:12px; letter-spacing:2px; }
-    .login-input:focus { border-color:#4F8EF7; }
-    .login-btn { width:100%; padding:11px; background:#4F8EF7; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; }
-    .login-btn:hover { background:#3B7DE8; }
-    .login-error { color:#F87171; font-size:12px; margin-top:10px; min-height:18px; }
-  </style>
+:root {
+  /* Cores base — modo claro */
+  --page-bg: #F0F4F8;
+  --header-bg: #ffffff;
+  --header-border: #E2E8F0;
+  --header-text: #0F172A;
+  --header-muted: #64748B;
+  --tab-active-bg: #EFF6FF;
+  --tab-active-color: #1D4ED8;
+  --tab-active-shadow: 0 0 0 1px #BFDBFE inset;
+  --card-bg: #ffffff;
+  --card-header-bg: #F8FAFC;
+  --card-border: #E2E8F0;
+  --card-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --surface-2: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-secondary: #374151;
+  --text-muted: #64748B;
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-light: #EFF6FF;
+  --input-bg: #ffffff;
+  --input-border: #CBD5E1;
+  --input-focus: #2563EB;
+  /* Status */
+  --success-bg: #F0FDF4; --success-border: #BBF7D0; --success-text: #15803D;
+  --warning-bg: #FFFBEB; --warning-border: #FDE68A; --warning-text: #B45309;
+  --danger-bg:  #FEF2F2; --danger-border:  #FEE2E2; --danger-text:  #B91C1C;
+  --info-bg:    #EFF6FF; --info-border:    #BFDBFE; --info-text:    #1D4ED8;
+}
+
+[data-theme="dark"] {
+  --page-bg: #0D1117;
+  --header-bg: #161B22;
+  --header-border: #30363D;
+  --header-text: #F0F6FC;
+  --header-muted: #8B949E;
+  --tab-active-bg: #1F2D3D;
+  --tab-active-color: #58A6FF;
+  --tab-active-shadow: 0 0 0 1px #1F6FEB inset;
+  --card-bg: #161B22;
+  --card-header-bg: #1C2128;
+  --card-border: #30363D;
+  --card-shadow: 0 1px 3px rgba(0,0,0,.3);
+  --surface-2: #1C2128;
+  --text-primary: #F0F6FC;
+  --text-secondary: #C9D1D9;
+  --text-muted: #8B949E;
+  --accent: #58A6FF;
+  --accent-hover: #79B8FF;
+  --accent-light: #1F2D3D;
+  --input-bg: #0D1117;
+  --input-border: #30363D;
+  --input-focus: #58A6FF;
+  /* Status escuro */
+  --success-bg: #0D2818; --success-border: #1A4731; --success-text: #3FB950;
+  --warning-bg: #2D1B00; --warning-border: #5C3700; --warning-text: #D29922;
+  --danger-bg:  #2D0F0F; --danger-border:  #5C1A1A; --danger-text:  #F85149;
+  --info-bg:    #0D1F3C; --info-border:    #1F3A6E; --info-text:    #58A6FF;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--page-bg); color: var(--text-primary); transition: background .2s, color .2s; }
+
+/* Componentes reutilizáveis */
+.module-container { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+.card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 24px; box-shadow: var(--card-shadow); }
+.card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.card-subtitle { font-size: 12px; color: var(--text-muted); }
+.label-text { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.input-field { width: 100%; padding: 9px 12px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; color: var(--text-primary); font-size: 13px; outline: none; transition: border-color .15s; }
+.input-field:focus { border-color: var(--input-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
+.btn-primary { padding: 9px 20px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .15s, opacity .15s; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:disabled { background: var(--surface-2); color: var(--text-muted); cursor: not-allowed; }
+.btn-secondary { padding: 9px 16px; background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--card-border); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.btn-link { font-size: 12px; color: var(--text-muted); background: none; border: none; cursor: pointer; text-decoration: underline; }
+.dropzone { border: 2px dashed var(--input-border); border-radius: 10px; padding: 24px 16px; text-align: center; cursor: pointer; background: var(--surface-2); transition: all .15s; }
+.dropzone:hover { border-color: var(--accent); background: var(--accent-light); }
+.dropzone.active { border-color: var(--accent); background: var(--accent-light); }
+.error-box { background: var(--danger-bg); border: 1px solid var(--danger-border); border-radius: 8px; padding: 12px 16px; color: var(--danger-text); font-size: 13px; }
+.info-box { background: var(--info-bg); border: 1px solid var(--info-border); border-radius: 8px; padding: 14px 16px; }
+.text-success { color: var(--success-text); }
+.text-danger  { color: var(--danger-text);  }
+.text-muted   { color: var(--text-muted);   }
+.section-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 99px; }
+
+/* Login */
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background:linear-gradient(135deg, #0F172A 0%, #1E293B 100%); }
+.login-box { background: rgba(255,255,255,.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; padding: 44px 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,.4); }
+.login-logo { width: 52px; height: 52px; background: linear-gradient(135deg, #2563EB, #60A5FA); border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 24px; color: white; box-shadow: 0 8px 20px rgba(37,99,235,.4); }
+.login-title { color: #F8FAFC; font-size: 22px; font-weight: 800; margin-bottom: 4px; letter-spacing: -.02em; }
+.login-sub { color: #94A3B8; font-size: 13px; margin-bottom: 32px; }
+.login-input { width: 100%; padding: 13px 16px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; color: #F1F5F9; font-size: 14px; outline: none; margin-bottom: 12px; letter-spacing: 2px; transition: border-color .15s; }
+.login-input:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,.25); }
+.login-btn { width: 100%; padding: 13px; background: linear-gradient(135deg, #2563EB, #3B82F6); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity .15s, transform .1s; box-shadow: 0 4px 12px rgba(37,99,235,.4); }
+.login-btn:hover { opacity: .9; transform: translateY(-1px); }
+.login-error { color: #F87171; font-size: 12px; margin-top: 10px; min-height: 18px; }
+</style>
 </head>
 <body>
   <div id="login-screen">
     <div class="login-box">
       <div class="login-logo">✓</div>
       <p class="login-title">DocCheck</p>
-      <p class="login-sub">GAB — SUPCL/SESRJ</p>
-      <input class="login-input" type="password" id="pwd-input" placeholder="Senha de acesso" onkeydown="if(event.key==='Enter') checkPassword()" autofocus />
+      <p class="login-sub">GAB — SUPCL / SESRJ</p>
+      <input class="login-input" type="password" id="pwd-input" placeholder="Senha de acesso"
+        onkeydown="if(event.key==='Enter') checkPassword()" autofocus />
       <button class="login-btn" onclick="checkPassword()">Entrar</button>
       <p class="login-error" id="login-error"></p>
     </div>
@@ -61,8 +155,9 @@
       document.addEventListener("DOMContentLoaded", showApp);
     }
   </script>
-  
+
   <script type="text/babel">
+
 
 // DocCheck — Gemini edition (versão CDN, sem imports)
 const { useState, useCallback, useRef } = React;
@@ -538,9 +633,11 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
 }
 
 
+  
   </script>
 
   <script type="text/babel">
+
 // ─────────────────────────────────────────────
 // UTILITÁRIOS COMPARTILHADOS
 // ─────────────────────────────────────────────
@@ -1031,9 +1128,11 @@ Se não encontrar nenhuma empresa, retorne [].`;
 
 
 
+  
   </script>
 
   <script type="text/babel">
+
 // ─────────────────────────────────────────────
 // MÓDULO — CONTROLE DE VENCIMENTOS
 // ─────────────────────────────────────────────
@@ -1544,9 +1643,11 @@ function VencimentosModule() {
 
 
 
+  
   </script>
 
   <script type="text/babel">
+
 // ─────────────────────────────────────────────
 // MÓDULO — COMPARADOR DE TERMO DE REFERÊNCIA
 // ─────────────────────────────────────────────
@@ -1931,9 +2032,11 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
 
 
 
+  
   </script>
 
   <script type="text/babel">
+
 // ─────────────────────────────────────────────
 // SHELL — NAVEGAÇÃO POR ABAS
 // ─────────────────────────────────────────────
@@ -1997,6 +2100,486 @@ if (sessionStorage.getItem("doccheck_auth") === "1") {
 }
 
   
+  
+  </script>
+
+  <script type="text/babel">
+// ─────────────────────────────────────────────
+// MÓDULO — PESQUISA SEMESTRAL DE PREÇOS (ARP)
+// ─────────────────────────────────────────────
+
+function PesquisaSemestral() {
+  const [apiKey, setApiKey] = React.useState(() => {
+    try { const v = localStorage.getItem("doccheck_gemini_key"); return v ? decodeURIComponent(escape(atob(v))) : ""; } catch(e) { return ""; }
+  });
+  const [apiKeySet, setApiKeySet] = React.useState(() => {
+    try { const v = localStorage.getItem("doccheck_gemini_key"); return !!(v && atob(v).length > 10); } catch(e) { return false; }
+  });
+
+  const [pdfRelatorio, setPdfRelatorio] = React.useState(null);
+  const [b64Relatorio, setB64Relatorio] = React.useState(null);
+  const [pdfTabelas, setPdfTabelas] = React.useState([]); // múltiplas tabelas
+  const [b64Tabelas, setB64Tabelas] = React.useState([]);
+
+  const [loading, setLoading] = React.useState(false);
+  const [progresso, setProgresso] = React.useState("");
+  const [error, setError] = React.useState("");
+  const [resultado, setResultado] = React.useState(null);
+
+  const refRelatorio = React.useRef();
+  const refTabelas = React.useRef();
+
+  const lerPdf = (file) => new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result.split(",")[1]);
+    reader.readAsDataURL(file);
+  });
+
+  const handleRelatorio = async (file) => {
+    if (!file || file.type !== "application/pdf") return;
+    setPdfRelatorio(file);
+    setB64Relatorio(await lerPdf(file));
+    setError(""); setResultado(null);
+  };
+
+  const handleTabelas = async (files) => {
+    const arr = Array.from(files).filter(f => f.type === "application/pdf");
+    setPdfTabelas(arr);
+    const b64s = await Promise.all(arr.map(lerPdf));
+    setB64Tabelas(b64s);
+    setError(""); setResultado(null);
+  };
+
+  const analisar = async () => {
+    if (!b64Relatorio) { setError("Carregue o relatório da Coordenação de Compras."); return; }
+    if (b64Tabelas.length === 0) { setError("Carregue ao menos uma tabela de preços."); return; }
+    if (!apiKeySet) { setError("Configure a chave da API Gemini."); return; }
+
+    setLoading(true); setError(""); setResultado(null);
+
+    const prompt = `Você é um especialista em contratos administrativos e registro de preços no âmbito da Administração Pública do Estado do Rio de Janeiro, com domínio do Decreto Estadual nº 48.821/2023 (alterado pelo Decreto nº 49.956/2025), que regulamenta o Sistema de Registro de Preços (SRP).
+
+Foram fornecidos:
+1. Relatório elaborado pela Coordenação de Compras com a pesquisa semestral de preços
+2. Uma ou mais tabelas em PDF com os preços coletados na pesquisa de mercado
+
+CONTEXTO E CRITÉRIO DE ANÁLISE:
+A pesquisa semestral de ARPs no Estado do Rio de Janeiro não tem foco em vantajosidade, mas sim em COMPATIBILIDADE DE PREÇOS com o mercado. O critério da SES-RJ é:
+
+- Se o valor registrado na ARP estiver ABAIXO do maior valor encontrado na pesquisa de mercado dos últimos 6 meses → o preço está COMPATÍVEL com o mercado. Análise encerrada positivamente para o item.
+
+- Se o valor registrado estiver ACIMA do maior valor da pesquisa → verificar:
+  a) A pesquisa considerou fornecedores do mercado do Rio de Janeiro? (localidade)
+  b) A pesquisa considerou a marca registrada na ARP? (especificidade)
+  → Se NÃO considerou esses fatores: indicar possibilidade de refazer a pesquisa com esses parâmetros OU apontar que a ausência de preços comparáveis no mercado local pode indicar que o valor registrado é compatível com as condições específicas daquela ARP.
+  → Se SIM considerou e mesmo assim o valor está acima: indicar necessidade de RENEGOCIAÇÃO com o fornecedor, conforme art. 12 do Decreto Estadual nº 48.821/2023.
+
+Para cada item da ARP identificado nos documentos, retorne um objeto JSON com:
+- "item": número ou descrição do item
+- "descricao": descrição sucinta do produto/serviço
+- "valor_arp": valor unitário registrado na ARP (como string formatada)
+- "maior_valor_pesquisa": maior valor encontrado na pesquisa de mercado para esse item
+- "situacao": "compativel", "verificar" ou "renegociar"
+- "percentual_diferenca": diferença percentual entre valor ARP e maior valor pesquisa (positivo = ARP acima do mercado)
+- "considerou_localidade_rj": true/false/null (null se não foi possível identificar)
+- "considerou_marca": true/false/null
+- "analise": análise detalhada do item seguindo o critério acima (máx. 400 chars)
+- "recomendacao": recomendação objetiva de conduta para o gestor (máx. 250 chars)
+
+Retorne APENAS um JSON puro com esta estrutura (sem markdown):
+{
+  "arp_identificada": "número/identificação da ARP se encontrada nos documentos",
+  "periodo_pesquisa": "período coberto pela pesquisa (ex: jan-jun/2025)",
+  "resumo_geral": "síntese da situação geral da ARP em 3-4 frases",
+  "situacao_geral": "compativel" | "atencao" | "critica",
+  "itens": [ ... ]
+}`;
+
+    try {
+      setProgresso("Enviando documentos ao Gemini…");
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+      // Monta parts com todas as tabelas + relatório
+      const parts = [];
+      b64Tabelas.forEach((b64, i) => {
+        parts.push({ text: `TABELA DE PREÇOS ${i + 1} (${pdfTabelas[i]?.name || "tabela"}):` });
+        parts.push({ inline_data: { mime_type: "application/pdf", data: b64 } });
+      });
+      parts.push({ text: `RELATÓRIO DA COORDENAÇÃO DE COMPRAS (${pdfRelatorio?.name || "relatório"}):` });
+      parts.push({ inline_data: { mime_type: "application/pdf", data: b64Relatorio } });
+      parts.push({ text: prompt });
+
+      setProgresso("Analisando compatibilidade de preços…");
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts }],
+          generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
+        })
+      });
+
+      if (!resp.ok) {
+        const e = await resp.json();
+        throw new Error(e.error?.message || `Gemini erro ${resp.status}`);
+      }
+
+      const data = await resp.json();
+      const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const clean = raw.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(clean);
+      if (!parsed.itens) throw new Error("Resposta inesperada do modelo.");
+      setResultado(parsed);
+    } catch(e) {
+      setError("Erro na análise: " + e.message);
+    } finally {
+      setLoading(false); setProgresso("");
+    }
+  };
+
+  const sitCfg = {
+    compativel: { icon:"✅", label:"Compatível",   bg:"var(--success-bg)", border:"var(--success-border)", color:"var(--success-text)" },
+    verificar:  { icon:"🔍", label:"Verificar",    bg:"var(--warning-bg)", border:"var(--warning-border)", color:"var(--warning-text)" },
+    renegociar: { icon:"🔴", label:"Renegociar",   bg:"var(--danger-bg)",  border:"var(--danger-border)",  color:"var(--danger-text)"  },
+    atencao:    { icon:"⚠️", label:"Atenção",      bg:"var(--warning-bg)", border:"var(--warning-border)", color:"var(--warning-text)" },
+    critica:    { icon:"🚨", label:"Crítica",      bg:"var(--danger-bg)",  border:"var(--danger-border)",  color:"var(--danger-text)"  },
+  };
+
+  const confirmarChave = () => {
+    if (apiKey.length > 10) {
+      try { localStorage.setItem("doccheck_gemini_key", btoa(unescape(encodeURIComponent(apiKey)))); } catch(x){}
+      setApiKeySet(true);
+    }
+  };
+
+  const compativeis = resultado?.itens?.filter(i => i.situacao === "compativel").length || 0;
+  const verificar   = resultado?.itens?.filter(i => i.situacao === "verificar").length || 0;
+  const renegociar  = resultado?.itens?.filter(i => i.situacao === "renegociar").length || 0;
+
+  return (
+    <div className="module-container">
+      {/* API Key */}
+      {!apiKeySet ? (
+        <div className="card" style={{ marginBottom:20 }}>
+          <p className="card-title">Chave de API — Google Gemini</p>
+          <p className="card-subtitle">Necessária para analisar os documentos.</p>
+          <div style={{ display:"flex", gap:8, marginTop:12 }}>
+            <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)}
+              placeholder="AIzaSy…" onKeyDown={e => e.key==="Enter" && confirmarChave()}
+              className="input-field" style={{ flex:1 }} />
+            <button onClick={confirmarChave} className="btn-primary">Confirmar</button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", gap:16, marginBottom:16 }}>
+          <span className="text-success" style={{ fontSize:12 }}>✓ Chave Gemini configurada</span>
+          <button onClick={() => { try { localStorage.removeItem("doccheck_gemini_key"); } catch(x){} setApiKeySet(false); setApiKey(""); }}
+            className="btn-link">Alterar chave</button>
+        </div>
+      )}
+
+      {/* Upload */}
+      <div className="card" style={{ marginBottom:20 }}>
+        <p className="card-title">📊 Pesquisa Semestral de Preços — ARP</p>
+        <p className="card-subtitle" style={{ marginBottom:20 }}>
+          Conforme Decreto Estadual nº 48.821/2023 (art. 12) — critério de compatibilidade com o mercado, não de vantajosidade.
+        </p>
+
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }}>
+          {/* Tabelas */}
+          <div>
+            <p className="label-text" style={{ marginBottom:8 }}>📋 Tabelas de preços (PDF)</p>
+            <div onClick={() => refTabelas.current.click()}
+              onDrop={e => { e.preventDefault(); handleTabelas(e.dataTransfer.files); }}
+              onDragOver={e => e.preventDefault()}
+              className="dropzone" style={{ minHeight:120 }}>
+              <input ref={refTabelas} type="file" accept=".pdf" multiple style={{ display:"none" }}
+                onChange={e => handleTabelas(e.target.files)} />
+              {pdfTabelas.length > 0 ? (
+                <div>
+                  <div style={{ fontSize:22, marginBottom:6 }}>📄</div>
+                  {pdfTabelas.map((f, i) => (
+                    <p key={i} style={{ fontSize:12, fontWeight:600, color:"var(--accent)", margin:"2px 0" }}>{f.name}</p>
+                  ))}
+                  <p className="text-muted" style={{ fontSize:11, marginTop:4 }}>Clique para trocar</p>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ fontSize:22, marginBottom:6 }}>📂</div>
+                  <p style={{ fontSize:12, color:"var(--text-muted)", margin:0 }}>
+                    Arraste ou clique<br/><strong style={{ color:"var(--accent)" }}>Aceita múltiplos PDFs</strong>
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Relatório */}
+          <div>
+            <p className="label-text" style={{ marginBottom:8 }}>📝 Relatório da Coord. de Compras (PDF)</p>
+            <div onClick={() => refRelatorio.current.click()}
+              onDrop={e => { e.preventDefault(); handleRelatorio(e.dataTransfer.files[0]); }}
+              onDragOver={e => e.preventDefault()}
+              className="dropzone" style={{ minHeight:120 }}>
+              <input ref={refRelatorio} type="file" accept=".pdf" style={{ display:"none" }}
+                onChange={e => handleRelatorio(e.target.files[0])} />
+              {pdfRelatorio ? (
+                <div>
+                  <div style={{ fontSize:22, marginBottom:6 }}>📄</div>
+                  <p style={{ fontSize:12, fontWeight:600, color:"var(--accent)", margin:0 }}>{pdfRelatorio.name}</p>
+                  <p className="text-muted" style={{ fontSize:11, marginTop:4 }}>Clique para trocar</p>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ fontSize:22, marginBottom:6 }}>📂</div>
+                  <p style={{ fontSize:12, color:"var(--text-muted)", margin:0 }}>
+                    Arraste ou clique<br/><strong style={{ color:"var(--accent)" }}>1 arquivo PDF</strong>
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Info metodologia */}
+        <div className="info-box" style={{ marginBottom:16 }}>
+          <p style={{ fontSize:12, fontWeight:700, color:"var(--accent)", marginBottom:6 }}>📌 Metodologia aplicada (SES-RJ)</p>
+          <div style={{ fontSize:12, color:"var(--text-secondary)", lineHeight:1.7 }}>
+            <p style={{ margin:"0 0 4px" }}>✅ <strong>Compatível:</strong> valor da ARP ≤ maior valor da pesquisa de mercado (últimos 6 meses)</p>
+            <p style={{ margin:"0 0 4px" }}>🔍 <strong>Verificar:</strong> valor acima do mercado — analisar se pesquisa considerou mercado do RJ e marca registrada</p>
+            <p style={{ margin:0 }}>🔴 <strong>Renegociar:</strong> valor acima do mercado e pesquisa adequada confirma discrepância → renegociação necessária (art. 12, Dec. 48.821/2023)</p>
+          </div>
+        </div>
+
+        {error && <div className="error-box" style={{ marginBottom:16 }}><p style={{ margin:0 }}>⚠ {error}</p></div>}
+
+        {loading && progresso && (
+          <div className="info-box" style={{ marginBottom:16 }}>
+            <p style={{ fontSize:12, color:"var(--accent)", margin:0 }}>⏳ {progresso}</p>
+          </div>
+        )}
+
+        <button onClick={analisar} disabled={loading || !b64Relatorio || b64Tabelas.length === 0 || !apiKeySet}
+          className="btn-primary" style={{ width:"100%", padding:"13px" }}>
+          {loading ? "Analisando documentos…" : "Analisar compatibilidade de preços"}
+        </button>
+      </div>
+
+      {/* Resultado */}
+      {resultado && (() => {
+        const gcfg = sitCfg[resultado.situacao_geral] || sitCfg.atencao;
+        return (
+          <>
+            {/* Resumo geral */}
+            <div style={{ background:gcfg.bg, border:`1px solid ${gcfg.border}`, borderRadius:12, padding:20, marginBottom:16 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+                <span style={{ fontSize:22 }}>{gcfg.icon}</span>
+                <div>
+                  <p style={{ fontSize:13, fontWeight:700, color:gcfg.color, margin:0 }}>
+                    {resultado.arp_identificada || "ARP"} — Situação Geral: {gcfg.label}
+                  </p>
+                  {resultado.periodo_pesquisa && (
+                    <p style={{ fontSize:11, color:"var(--text-muted)", margin:"2px 0 0" }}>
+                      Período da pesquisa: {resultado.periodo_pesquisa}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <p style={{ fontSize:13, color:gcfg.color, margin:0, lineHeight:1.6 }}>{resultado.resumo_geral}</p>
+            </div>
+
+            {/* Contadores */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:20 }}>
+              {[
+                { label:"Compatíveis", valor:compativeis, ...sitCfg.compativel },
+                { label:"A verificar",  valor:verificar,   ...sitCfg.verificar  },
+                { label:"Renegociar",   valor:renegociar,  ...sitCfg.renegociar },
+              ].map(({ label, valor, icon, bg, border, color }) => (
+                <div key={label} style={{ textAlign:"center", padding:"16px 8px", borderRadius:10, background:bg, border:`1px solid ${border}` }}>
+                  <p style={{ fontSize:24, fontWeight:800, color, margin:0 }}>{valor}</p>
+                  <p style={{ fontSize:11, color:"var(--text-muted)", margin:"4px 0 0" }}>{icon} {label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Cards por item */}
+            {resultado.itens.map((item, i) => {
+              const cfg = sitCfg[item.situacao] || sitCfg.verificar;
+              const pct = item.percentual_diferenca;
+              const acima = pct > 0;
+              return (
+                <div key={i} style={{ background:"var(--card-bg)", border:`1px solid var(--card-border)`, borderRadius:12, marginBottom:12, overflow:"hidden", boxShadow:"var(--card-shadow)" }}>
+                  {/* Header item */}
+                  <div style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 18px", borderBottom:`1px solid var(--card-border)`, background:"var(--card-header-bg)" }}>
+                    <div style={{ flex:1 }}>
+                      <p style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", margin:0 }}>
+                        {item.item ? `Item ${item.item} — ` : ""}{item.descricao}
+                      </p>
+                      <div style={{ display:"flex", gap:16, marginTop:4 }}>
+                        <span style={{ fontSize:12, color:"var(--text-muted)" }}>
+                          ARP: <strong style={{ color:"var(--text-primary)" }}>{item.valor_arp || "—"}</strong>
+                        </span>
+                        <span style={{ fontSize:12, color:"var(--text-muted)" }}>
+                          Maior valor pesquisa: <strong style={{ color:"var(--text-primary)" }}>{item.maior_valor_pesquisa || "—"}</strong>
+                        </span>
+                        {pct !== null && pct !== undefined && (
+                          <span style={{ fontSize:12, fontWeight:700, color: acima ? "var(--danger-text)" : "var(--success-text)" }}>
+                            {acima ? `▲ +${pct.toFixed(1)}% acima` : `▼ ${Math.abs(pct).toFixed(1)}% abaixo`}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span style={{ fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20, background:cfg.bg, color:cfg.color, border:`1px solid ${cfg.border}`, whiteSpace:"nowrap" }}>
+                      {cfg.icon} {cfg.label}
+                    </span>
+                  </div>
+
+                  {/* Corpo */}
+                  <div style={{ padding:"14px 18px" }}>
+                    {/* Flags localidade/marca */}
+                    {(item.situacao === "verificar" || item.situacao === "renegociar") && (
+                      <div style={{ display:"flex", gap:10, marginBottom:12, flexWrap:"wrap" }}>
+                        {[
+                          { label:"Mercado RJ considerado", val:item.considerou_localidade_rj },
+                          { label:"Marca registrada considerada", val:item.considerou_marca },
+                        ].map(({ label, val }) => {
+                          const color = val === true ? "var(--success-text)" : val === false ? "var(--danger-text)" : "var(--text-muted)";
+                          const icon = val === true ? "✓" : val === false ? "✗" : "?";
+                          return (
+                            <span key={label} style={{ fontSize:11, fontWeight:600, color, background:"var(--surface-2)", padding:"3px 10px", borderRadius:20 }}>
+                              {icon} {label}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Análise */}
+                    <div style={{ marginBottom:10 }}>
+                      <p style={{ fontSize:11, fontWeight:700, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:".05em", marginBottom:4 }}>Análise</p>
+                      <p style={{ fontSize:13, color:"var(--text-secondary)", margin:0, lineHeight:1.6 }}>{item.analise}</p>
+                    </div>
+
+                    {/* Recomendação */}
+                    <div style={{ background: cfg.bg, border:`1px solid ${cfg.border}`, borderRadius:8, padding:"10px 14px" }}>
+                      <p style={{ fontSize:11, fontWeight:700, color:cfg.color, textTransform:"uppercase", letterSpacing:".05em", marginBottom:4 }}>Recomendação ao gestor</p>
+                      <p style={{ fontSize:13, color:cfg.color, margin:0, lineHeight:1.5 }}>{item.recomendacao}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Rodapé legal */}
+            <div style={{ marginTop:8, padding:"12px 16px", background:"var(--surface-2)", borderRadius:8, border:"1px solid var(--card-border)" }}>
+              <p style={{ fontSize:11, color:"var(--text-muted)", margin:0 }}>
+                📖 Base legal: Decreto Estadual nº 48.821/2023, art. 12 (alterado pelo Decreto nº 49.956/2025) — Pesquisa semestral de preços para manutenção de ARPs. Critério adotado: compatibilidade com o mercado.
+              </p>
+            </div>
+          </>
+        );
+      })()}
+    </div>
+  );
+}
+
+  </script>
+
+  <script type="text/babel">
+// ─────────────────────────────────────────────
+// SHELL — NAVEGAÇÃO POR ABAS + TEMA
+// ─────────────────────────────────────────────
+function Shell() {
+  const [aba, setAba] = React.useState(() => localStorage.getItem("doccheck_aba") || "checklist");
+  const [dark, setDark] = React.useState(() => localStorage.getItem("doccheck_theme") === "dark");
+
+  const trocar = (a) => { setAba(a); localStorage.setItem("doccheck_aba", a); };
+  const toggleTheme = () => {
+    const nd = !dark;
+    setDark(nd);
+    localStorage.setItem("doccheck_theme", nd ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", nd ? "dark" : "light");
+  };
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  }, []);
+
+  const abas = [
+    { id:"checklist",   label:"✓",  full:"Checklist" },
+    { id:"vencimentos", label:"📅", full:"Vencimentos" },
+    { id:"comparador",  label:"🔀", full:"Comparador TR" },
+    { id:"pesquisa",    label:"📊", full:"Pesquisa ARP" },
+    { id:"rapp",        label:"🔍", full:"Background RAPP" },
+    { id:"cnpj",        label:"🏢", full:"Consulta CNPJ" },
+  ];
+
+  return (
+    <div style={{ fontFamily:"'Inter',system-ui,sans-serif", minHeight:"100vh", background:"var(--page-bg)" }}>
+      {/* Header */}
+      <header style={{ background:"var(--header-bg)", borderBottom:"1px solid var(--header-border)", padding:"0 24px", position:"sticky", top:0, zIndex:100 }}>
+        <div style={{ maxWidth:1100, margin:"0 auto", display:"flex", alignItems:"center", height:56, gap:16 }}>
+          {/* Logo */}
+          <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
+            <div style={{ width:30, height:30, borderRadius:8, background:"var(--accent)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, color:"#fff", fontWeight:800 }}>✓</div>
+            <div>
+              <span style={{ color:"var(--header-text)", fontWeight:800, fontSize:15, letterSpacing:"-.02em" }}>DocCheck</span>
+              <span style={{ color:"var(--header-muted)", fontSize:11, marginLeft:8 }}>GAB · SUPCL/SESRJ</span>
+            </div>
+          </div>
+
+          {/* Abas */}
+          <nav style={{ display:"flex", gap:2, flex:1, overflowX:"auto", scrollbarWidth:"none" }}>
+            {abas.map(a => (
+              <button key={a.id} onClick={() => trocar(a.id)} style={{
+                display:"flex", alignItems:"center", gap:6,
+                padding:"8px 14px", borderRadius:8, border:"none",
+                background: aba === a.id ? "var(--tab-active-bg)" : "transparent",
+                color: aba === a.id ? "var(--tab-active-color)" : "var(--header-muted)",
+                fontSize:13, fontWeight: aba === a.id ? 700 : 500,
+                cursor:"pointer", transition:"all .15s", whiteSpace:"nowrap",
+                boxShadow: aba === a.id ? "var(--tab-active-shadow)" : "none",
+              }}>
+                <span>{a.label}</span>
+                <span style={{ display:"inline" }}>{a.full}</span>
+              </button>
+            ))}
+          </nav>
+
+          {/* Toggle tema */}
+          <button onClick={toggleTheme} title={dark ? "Modo claro" : "Modo escuro"}
+            style={{ flexShrink:0, width:36, height:36, borderRadius:8, border:"1px solid var(--card-border)", background:"var(--surface-2)", color:"var(--text-secondary)", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            {dark ? "☀️" : "🌙"}
+          </button>
+        </div>
+      </header>
+
+      {/* Conteúdo */}
+      <main>
+        <div style={{ display: aba==="checklist"  ? "block":"none" }}><App /></div>
+        <div style={{ display: aba==="vencimentos" ? "block":"none" }}><VencimentosModule /></div>
+        <div style={{ display: aba==="comparador"  ? "block":"none" }}><ComparadorTR /></div>
+        <div style={{ display: aba==="pesquisa"    ? "block":"none" }}><PesquisaSemestral /></div>
+        <div style={{ display: aba==="rapp"        ? "block":"none" }}><RappCheck /></div>
+        <div style={{ display: aba==="cnpj"        ? "block":"none" }}><BackgroundCheck /></div>
+      </main>
+    </div>
+  );
+}
+
+document.addEventListener("doccheck:auth", () => {
+  const _root = ReactDOM.createRoot(document.getElementById("root"));
+  _root.render(<Shell />);
+});
+if (sessionStorage.getItem("doccheck_auth") === "1") {
+  document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+      const _root = ReactDOM.createRoot(document.getElementById("root"));
+      _root.render(<Shell />);
+    }, 100);
+  });
+}
+
   </script>
 
 </body>
