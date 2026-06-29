@@ -1532,6 +1532,390 @@ function VencimentosModule() {
   );
 }
 
+
+// ─────────────────────────────────────────────
+// MÓDULO — COMPARADOR DE TERMO DE REFERÊNCIA
+// ─────────────────────────────────────────────
+
+function ComparadorTR() {
+  const [apiKey, setApiKey] = React.useState(() => {
+    try { const v = localStorage.getItem("doccheck_gemini_key"); return v ? decodeURIComponent(escape(atob(v))) : ""; } catch(e) { return ""; }
+  });
+  const [apiKeySet, setApiKeySet] = React.useState(() => {
+    try { const v = localStorage.getItem("doccheck_gemini_key"); return !!(v && atob(v).length > 10); } catch(e) { return false; }
+  });
+
+  const [pdfAntes, setPdfAntes] = React.useState(null);
+  const [b64Antes, setB64Antes] = React.useState(null);
+  const [pdfDepois, setPdfDepois] = React.useState(null);
+  const [b64Depois, setB64Depois] = React.useState(null);
+
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [resultado, setResultado] = React.useState(null); // { resumo, clausulas: [] }
+  const [filtro, setFiltro] = React.useState("todos"); // todos | alterada | incluida | removida
+
+  const refAntes = React.useRef();
+  const refDepois = React.useRef();
+
+  const lerPdf = (file, setFile, setB64) => {
+    if (!file || file.type !== "application/pdf") return;
+    setFile(file);
+    const reader = new FileReader();
+    reader.onload = e => setB64(e.target.result.split(",")[1]);
+    reader.readAsDataURL(file);
+  };
+
+  const DropZone = ({ label, versao, file, refEl, onFile }) => (
+    <div
+      onClick={() => refEl.current.click()}
+      onDrop={e => { e.preventDefault(); onFile(e.dataTransfer.files[0]); }}
+      onDragOver={e => e.preventDefault()}
+      style={{
+        border: `2px dashed ${file ? "#4F8EF7" : "#D1D5DB"}`,
+        borderRadius: 10, padding: "28px 16px", textAlign: "center",
+        cursor: "pointer", background: file ? "#EFF6FF" : "#FAFAFA",
+        transition: "all .15s", flex: 1,
+      }}
+    >
+      <input ref={refEl} type="file" accept=".pdf" style={{ display:"none" }}
+        onChange={e => onFile(e.target.files[0])} />
+      <div style={{ fontSize: 22, marginBottom: 6 }}>{file ? "📄" : "📂"}</div>
+      <p style={{ fontSize: 12, fontWeight: 700, color: "#475569", margin: "0 0 4px",
+        textTransform: "uppercase", letterSpacing: ".05em" }}>{versao}</p>
+      {file ? (
+        <>
+          <p style={{ fontSize: 13, fontWeight: 600, color: "#1E40AF", margin: 0 }}>{file.name}</p>
+          <p style={{ fontSize: 11, color: "#6B7280", margin: "4px 0 0" }}>
+            {(file.size/1024).toFixed(0)} KB · clique para trocar
+          </p>
+        </>
+      ) : (
+        <p style={{ fontSize: 12, color: "#6B7280", margin: 0 }}>
+          {label}<br/><strong style={{ color:"#4F8EF7" }}>Clique ou arraste o PDF</strong>
+        </p>
+      )}
+    </div>
+  );
+
+  const analisar = async () => {
+    if (!b64Antes || !b64Depois) { setError("Carregue os dois PDFs antes de comparar."); return; }
+    if (!apiKeySet) { setError("Configure a chave da API Gemini."); return; }
+    setLoading(true); setError(""); setResultado(null);
+
+    const prompt = `Você é um especialista em licitações e contratos públicos, com domínio das seguintes normas federais e estaduais do Estado do Rio de Janeiro:
+
+NORMAS FEDERAIS:
+- Lei nº 14.133/2021 (Nova Lei de Licitações e Contratos — NLLC)
+- Lei nº 8.666/1993 (ainda aplicável a contratos vigentes firmados sob sua égide)
+- Lei nº 10.520/2002 (Pregão — ainda aplicável a contratos vigentes)
+- IN SEGES/ME nº 65/2021 (pesquisa de preços)
+- IN SEGES nº 05/2017 (serviços com dedicação exclusiva de mão de obra — ainda vigente para contratos antigos)
+
+DECRETOS ESTADUAIS DO RIO DE JANEIRO (regulamentação da Lei 14.133/2021):
+- Decreto Estadual nº 48.778/2023 — Regulamenta o Pregão Eletrônico no âmbito estadual
+- Decreto Estadual nº 48.816/2023 — Regulamenta a fase preparatória das contratações (inclui TR, ETP e pesquisa de preços)
+- Decreto Estadual nº 48.817/2023 — Regulamenta a gestão e fiscalização de contratos administrativos
+- Decreto Estadual nº 48.818/2023 — Regulamenta as sanções administrativas
+- Decreto Estadual nº 48.819/2023 — Regulamenta a Concorrência e o Diálogo Competitivo
+- Decreto Estadual nº 48.820/2023 — Regulamenta a Contratação Direta (dispensa e inexigibilidade)
+- Decreto Estadual nº 48.821/2023 (alterado pelo Dec. 49.956/2025) — Regulamenta o Sistema de Registro de Preços (SRP) e adesão a atas
+- Decreto Estadual nº 48.929/2024 — Pesquisa de preços e orçamento de referência para obras e serviços de engenharia
+- Decreto Estadual nº 48.979/2024 — Regulamenta o credenciamento
+- Decreto Estadual nº 49.193/2024 — Institui o SIGA (Sistema Integrado de Gestão de Aquisições) como plataforma obrigatória para licitações estaduais
+- Decreto Estadual nº 49.233/2024 — Diretrizes para contratação de mulheres vítimas de violência doméstica e critério de desempate
+- Decreto Estadual nº 49.316/2024 — Institui o CatELog (Catálogo Eletrônico de Padronização de Logística)
+
+Foram fornecidos dois documentos PDF:
+- DOCUMENTO 1: versão ANTERIOR do Termo de Referência
+- DOCUMENTO 2: versão ATUAL/NOVA do Termo de Referência
+
+Faça uma comparação detalhada e identifique todas as diferenças entre os dois documentos.
+
+Para cada diferença, classifique como:
+- "alterada": cláusula/seção que existia e foi modificada
+- "incluida": cláusula/seção nova que não existia na versão anterior
+- "removida": cláusula/seção que existia e foi retirada
+
+Para cada diferença, avalie também o impacto no processo de contratação segundo estes critérios:
+- "critico": mudança que pode gerar nulidade, impugnação, restrição à competitividade, alteração do objeto ou desequilíbrio econômico-financeiro
+- "relevante": mudança que afeta prazo, valor estimado, critério de julgamento, habilitação, obrigações essenciais ou exige nova pesquisa de preços
+- "baixo": ajuste redacional, correção formal, renumeração ou mudança sem impacto substancial
+
+Retorne APENAS um JSON puro, sem markdown, sem texto antes ou depois, com esta estrutura:
+{
+  "resumo": "Resumo executivo das principais mudanças e seus impactos em 3-4 frases, com avaliação geral do risco do conjunto de alterações",
+  "alerta_geral": "critico" | "relevante" | "baixo",
+  "total_alteradas": 0,
+  "total_incluidas": 0,
+  "total_removidas": 0,
+  "clausulas": [
+    {
+      "tipo": "alterada",
+      "referencia": "Ex: Item 3.1 — Prazo de execução",
+      "antes": "Descrição do conteúdo anterior (máx 300 chars)",
+      "depois": "Descrição do conteúdo novo (máx 300 chars)",
+      "impacto_descricao": "Descrição objetiva do impacto desta mudança no processo de contratação (máx 200 chars)",
+      "impacto_nivel": "critico" | "relevante" | "baixo",
+      "fundamento": "Fundamento legal ou técnico que justifica a classificação, se aplicável (máx 150 chars, ou null)"
+    }
+  ]
+}
+
+Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas relevante. Foque em mudanças substantivas que um gestor ou advogado precisaria avaliar.`;
+
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: "DOCUMENTO 1 — VERSÃO ANTERIOR:" },
+              { inline_data: { mime_type: "application/pdf", data: b64Antes } },
+              { text: "DOCUMENTO 2 — VERSÃO ATUAL:" },
+              { inline_data: { mime_type: "application/pdf", data: b64Depois } },
+              { text: prompt },
+            ]
+          }],
+          generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
+        })
+      });
+
+      if (!resp.ok) {
+        const e = await resp.json();
+        throw new Error(e.error?.message || `Gemini erro ${resp.status}`);
+      }
+
+      const data = await resp.json();
+      const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const clean = raw.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(clean);
+      if (!parsed.clausulas) throw new Error("Resposta inesperada do modelo.");
+      setResultado(parsed);
+    } catch(e) {
+      setError("Erro na análise: " + e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const corTipo = {
+    alterada: { bg:"#FFFBEB", border:"#FDE68A", badge:"#92400E", badgeBg:"#FEF3C7", icon:"✏️", label:"Alterada" },
+    incluida: { bg:"#F0FDF4", border:"#BBF7D0", badge:"#065F46", badgeBg:"#DCFCE7", icon:"➕", label:"Incluída" },
+    removida: { bg:"#FEF2F2", border:"#FEE2E2", badge:"#991B1B", badgeBg:"#FEE2E2", icon:"➖", label:"Removida" },
+  };
+
+  const clausulasFiltradas = resultado?.clausulas?.filter(c => {
+    if (filtro === "todos") return true;
+    if (filtro === "critico" || filtro === "relevante") return c.impacto_nivel === filtro;
+    return c.tipo === filtro;
+  }) || [];
+
+  const confirmarChave = () => {
+    if (apiKey.length > 10) {
+      try { localStorage.setItem("doccheck_gemini_key", btoa(unescape(encodeURIComponent(apiKey)))); } catch(x){}
+      setApiKeySet(true);
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px" }}>
+
+      {/* API Key */}
+      {!apiKeySet ? (
+        <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:12, padding:24, marginBottom:20 }}>
+          <p style={{ fontSize:13, fontWeight:600, color:"#374151", marginBottom:4 }}>Chave de API — Google Gemini</p>
+          <p style={{ fontSize:12, color:"#6B7280", marginBottom:12 }}>Necessária para comparar os documentos.</p>
+          <div style={{ display:"flex", gap:8 }}>
+            <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)}
+              placeholder="AIzaSy…" onKeyDown={e => e.key==="Enter" && confirmarChave()}
+              style={{ flex:1, padding:"9px 12px", border:"1px solid #D1D5DB", borderRadius:8, fontSize:13, outline:"none" }} />
+            <button onClick={confirmarChave}
+              style={{ padding:"9px 20px", background:"#0F172A", color:"#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:600, cursor:"pointer" }}>
+              Confirmar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", gap:16, marginBottom:16 }}>
+          <span style={{ fontSize:12, color:"#10B981" }}>✓ Chave Gemini configurada</span>
+          <button onClick={() => { try { localStorage.removeItem("doccheck_gemini_key"); } catch(x){} setApiKeySet(false); setApiKey(""); }}
+            style={{ fontSize:12, color:"#6B7280", background:"none", border:"none", cursor:"pointer", textDecoration:"underline" }}>
+            Alterar chave
+          </button>
+        </div>
+      )}
+
+      {/* Upload dos dois PDFs */}
+      <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:12, padding:24, marginBottom:20 }}>
+        <p style={{ fontSize:14, fontWeight:700, color:"#0F172A", marginBottom:4 }}>Comparador de Termo de Referência</p>
+        <p style={{ fontSize:12, color:"#6B7280", marginBottom:20 }}>
+          Carregue as duas versões do TR em PDF. O sistema identifica cláusulas alteradas, incluídas e removidas.
+        </p>
+
+        <div style={{ display:"flex", gap:16, marginBottom:20 }}>
+          <DropZone label="Versão anterior do TR" versao="Antes" file={pdfAntes} refEl={refAntes}
+            onFile={f => lerPdf(f, setPdfAntes, setB64Antes)} />
+          <div style={{ display:"flex", alignItems:"center", color:"#9CA3AF", fontSize:20, flexShrink:0 }}>→</div>
+          <DropZone label="Versão atual / nova do TR" versao="Depois" file={pdfDepois} refEl={refDepois}
+            onFile={f => lerPdf(f, setPdfDepois, setB64Depois)} />
+        </div>
+
+        {error && (
+          <div style={{ background:"#FEF2F2", border:"1px solid #FEE2E2", borderRadius:8, padding:"12px 16px", marginBottom:16 }}>
+            <p style={{ fontSize:13, color:"#991B1B", margin:0 }}>⚠ {error}</p>
+          </div>
+        )}
+
+        <button onClick={analisar} disabled={loading || !b64Antes || !b64Depois || !apiKeySet}
+          style={{
+            width:"100%", padding:"13px 24px",
+            background: loading || !b64Antes || !b64Depois || !apiKeySet ? "#E2E8F0" : "#0F172A",
+            color: loading || !b64Antes || !b64Depois || !apiKeySet ? "#9CA3AF" : "#fff",
+            border:"none", borderRadius:10, fontSize:14, fontWeight:700,
+            cursor: loading || !b64Antes || !b64Depois || !apiKeySet ? "not-allowed" : "pointer",
+          }}>
+          {loading ? "Comparando documentos…" : "Comparar TRs"}
+        </button>
+
+        {loading && (
+          <p style={{ fontSize:12, color:"#6B7280", textAlign:"center", marginTop:12 }}>
+            ⏳ Analisando os dois documentos com IA — pode levar alguns segundos…
+          </p>
+        )}
+      </div>
+
+      {/* Resultado */}
+      {resultado && (
+        <>
+          {/* Resumo executivo */}
+          {(() => {
+            const alertaCfg = {
+              critico:   { bg:"#FEF2F2", border:"#FEE2E2", titleColor:"#991B1B", textColor:"#7F1D1D", icon:"🚨", label:"ATENÇÃO — Alterações com impacto crítico identificadas" },
+              relevante: { bg:"#FFFBEB", border:"#FDE68A", titleColor:"#92400E", textColor:"#78350F", icon:"⚠️", label:"Alterações relevantes identificadas — revisão recomendada" },
+              baixo:     { bg:"#EFF6FF", border:"#BFDBFE", titleColor:"#1E40AF", textColor:"#1E3A8A", icon:"📝", label:"Resumo executivo" },
+            }[resultado.alerta_geral] || { bg:"#EFF6FF", border:"#BFDBFE", titleColor:"#1E40AF", textColor:"#1E3A8A", icon:"📝", label:"Resumo executivo" };
+            return (
+              <div style={{ background:alertaCfg.bg, border:`1px solid ${alertaCfg.border}`, borderRadius:12, padding:20, marginBottom:16 }}>
+                <p style={{ fontSize:13, fontWeight:700, color:alertaCfg.titleColor, marginBottom:8 }}>
+                  {alertaCfg.icon} {alertaCfg.label}
+                </p>
+                <p style={{ fontSize:13, color:alertaCfg.textColor, margin:0, lineHeight:1.6 }}>{resultado.resumo}</p>
+              </div>
+            );
+          })()}
+
+          {/* Contadores */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:8, marginBottom:16 }}>
+            {[
+              { label:"Todas",     valor: resultado.clausulas.length,                                                          cor:"#4F8EF7", bg:"#EFF6FF", id:"todos" },
+              { label:"Alteradas", valor: resultado.total_alteradas || resultado.clausulas.filter(c=>c.tipo==="alterada").length, cor:"#D97706", bg:"#FFFBEB", id:"alterada" },
+              { label:"Incluídas", valor: resultado.total_incluidas || resultado.clausulas.filter(c=>c.tipo==="incluida").length, cor:"#059669", bg:"#F0FDF4", id:"incluida" },
+              { label:"Removidas", valor: resultado.total_removidas || resultado.clausulas.filter(c=>c.tipo==="removida").length, cor:"#DC2626", bg:"#FEF2F2", id:"removida" },
+              { label:"Críticas",  valor: resultado.clausulas.filter(c=>c.impacto_nivel==="critico").length,                   cor:"#991B1B", bg:"#FEF2F2", id:"critico" },
+              { label:"Relevantes",valor: resultado.clausulas.filter(c=>c.impacto_nivel==="relevante").length,                 cor:"#92400E", bg:"#FFFBEB", id:"relevante" },
+            ].map(({ label, valor, cor, bg, id }) => (
+              <button key={id} onClick={() => setFiltro(id)}
+                style={{
+                  textAlign:"center", padding:"12px 6px", borderRadius:10, cursor:"pointer",
+                  background: filtro===id ? bg : "#fff",
+                  border: `2px solid ${filtro===id ? cor : "#E5E7EB"}`,
+                  transition:"all .15s",
+                }}>
+                <p style={{ fontSize:20, fontWeight:800, color:cor, margin:0 }}>{valor}</p>
+                <p style={{ fontSize:10, color:"#6B7280", margin:"2px 0 0" }}>{label}</p>
+              </button>
+            ))}
+          </div>
+
+          {/* Cláusulas */}
+          {clausulasFiltradas.length === 0 ? (
+            <div style={{ background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:10, padding:24, textAlign:"center" }}>
+              <p style={{ color:"#9CA3AF", fontSize:13, margin:0 }}>Nenhuma cláusula encontrada para este filtro.</p>
+            </div>
+          ) : (
+            <div>
+              {clausulasFiltradas.map((c, i) => {
+                const cfg = corTipo[c.tipo] || corTipo.alterada;
+                return (
+                  <div key={i} style={{
+                    background: cfg.bg, border:`1px solid ${cfg.border}`,
+                    borderRadius:10, padding:"16px 18px", marginBottom:12,
+                  }}>
+                    {/* Cabeçalho */}
+                    <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+                      <span style={{ fontSize:16 }}>{cfg.icon}</span>
+                      <span style={{ flex:1, fontSize:13, fontWeight:700, color:"#111827" }}>{c.referencia}</span>
+                      <span style={{
+                        fontSize:11, fontWeight:700, padding:"2px 10px", borderRadius:20,
+                        background:cfg.badgeBg, color:cfg.badge,
+                      }}>{cfg.label}</span>
+                    </div>
+
+                    {/* Antes / Depois */}
+                    {c.tipo === "alterada" && (
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:c.impacto ? 10 : 0 }}>
+                        <div style={{ background:"rgba(255,255,255,.6)", borderRadius:8, padding:"10px 12px" }}>
+                          <p style={{ fontSize:10, fontWeight:700, color:"#6B7280", textTransform:"uppercase", letterSpacing:".05em", marginBottom:4 }}>Antes</p>
+                          <p style={{ fontSize:12, color:"#374151", margin:0, lineHeight:1.6 }}>{c.antes}</p>
+                        </div>
+                        <div style={{ background:"rgba(255,255,255,.6)", borderRadius:8, padding:"10px 12px" }}>
+                          <p style={{ fontSize:10, fontWeight:700, color:"#6B7280", textTransform:"uppercase", letterSpacing:".05em", marginBottom:4 }}>Depois</p>
+                          <p style={{ fontSize:12, color:"#374151", margin:0, lineHeight:1.6 }}>{c.depois}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {c.tipo === "incluida" && c.depois && (
+                      <div style={{ background:"rgba(255,255,255,.6)", borderRadius:8, padding:"10px 12px", marginBottom:c.impacto ? 10 : 0 }}>
+                        <p style={{ fontSize:10, fontWeight:700, color:"#6B7280", textTransform:"uppercase", letterSpacing:".05em", marginBottom:4 }}>Conteúdo incluído</p>
+                        <p style={{ fontSize:12, color:"#374151", margin:0, lineHeight:1.6 }}>{c.depois}</p>
+                      </div>
+                    )}
+
+                    {c.tipo === "removida" && c.antes && (
+                      <div style={{ background:"rgba(255,255,255,.6)", borderRadius:8, padding:"10px 12px", marginBottom:c.impacto ? 10 : 0 }}>
+                        <p style={{ fontSize:10, fontWeight:700, color:"#6B7280", textTransform:"uppercase", letterSpacing:".05em", marginBottom:4 }}>Conteúdo removido</p>
+                        <p style={{ fontSize:12, color:"#374151", margin:0, lineHeight:1.6 }}>{c.antes}</p>
+                      </div>
+                    )}
+
+                    {/* Impacto */}
+                    {(c.impacto_descricao || c.impacto) && (() => {
+                      const nivelCfg = {
+                        critico:   { bg:"#FEF2F2", color:"#991B1B", border:"#FEE2E2", icon:"🚨", label:"Impacto Crítico" },
+                        relevante: { bg:"#FFFBEB", color:"#92400E", border:"#FDE68A", icon:"⚠️", label:"Impacto Relevante" },
+                        baixo:     { bg:"#F0FDF4", color:"#065F46", border:"#BBF7D0", icon:"ℹ️", label:"Impacto Baixo" },
+                      }[c.impacto_nivel] || { bg:"#F8FAFC", color:"#475569", border:"#E2E8F0", icon:"⚡", label:"Impacto" };
+                      return (
+                        <div style={{ marginTop:10, background:nivelCfg.bg, border:`1px solid ${nivelCfg.border}`, borderRadius:8, padding:"10px 12px" }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom: c.fundamento ? 6 : 0 }}>
+                            <span style={{ fontSize:13 }}>{nivelCfg.icon}</span>
+                            <span style={{ fontSize:11, fontWeight:700, color:nivelCfg.color, textTransform:"uppercase", letterSpacing:".04em" }}>{nivelCfg.label}</span>
+                          </div>
+                          <p style={{ fontSize:12, color:"#374151", margin:0, lineHeight:1.5 }}>{c.impacto_descricao || c.impacto}</p>
+                          {c.fundamento && (
+                            <p style={{ fontSize:11, color:"#6B7280", margin:"6px 0 0", fontStyle:"italic" }}>
+                              📖 {c.fundamento}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+
 // ─────────────────────────────────────────────
 // SHELL — NAVEGAÇÃO POR ABAS
 // ─────────────────────────────────────────────
@@ -1542,6 +1926,7 @@ function Shell() {
   const abas = [
     { id:"checklist",   label:"✓ Checklist" },
     { id:"vencimentos", label:"📅 Vencimentos" },
+    { id:"comparador",  label:"🔀 Comparador de TR" },
     { id:"rapp",        label:"🔍 Background Check RAPP" },
     { id:"cnpj",        label:"🏢 Consulta CNPJ" },
   ];
@@ -1571,10 +1956,11 @@ function Shell() {
           ))}
         </div>
       </div>
-      <div style={{ display: aba === "checklist"   ? "block" : "none" }}><App /></div>
-      <div style={{ display: aba === "vencimentos"  ? "block" : "none" }}><VencimentosModule /></div>
-      <div style={{ display: aba === "rapp"         ? "block" : "none" }}><RappCheck /></div>
-      <div style={{ display: aba === "cnpj"         ? "block" : "none" }}><BackgroundCheck /></div>
+      <div style={{ display: aba==="checklist"  ? "block":"none" }}><App /></div>
+      <div style={{ display: aba==="vencimentos" ? "block":"none" }}><VencimentosModule /></div>
+      <div style={{ display: aba==="comparador"  ? "block":"none" }}><ComparadorTR /></div>
+      <div style={{ display: aba==="rapp"        ? "block":"none" }}><RappCheck /></div>
+      <div style={{ display: aba==="cnpj"        ? "block":"none" }}><BackgroundCheck /></div>
     </div>
   );
 }
