@@ -80,6 +80,16 @@
       --danger-bg:         #1C0505; --danger-border:  #7F1D1D; --danger-text:  #F87171;
       --info-bg:           #0C1545; --info-border:    #1E3A8A; --info-text:    #93C5FD;
       --orange-bg:         #1C0A00; --orange-border:  #7C2D12; --orange-text:  #FB923C;
+      /* Variáveis adicionais garantidas */
+      --card-header-bg:    #131926;
+      --header-muted:      #6B7A99;
+      --subheader-bg:      #0D1119;
+      --success-border:    #166534;
+      --warning-border:    #713F12;
+      --danger-border:     #7F1D1D;
+      --info-bg:           #0C1545;
+      --info-border:       #1E3A8A;
+      --info-text:         #93C5FD;
     }
 
     /* ── Base ── */
@@ -391,11 +401,11 @@ const PRESET_CHECKLISTS = {
 
 const StatusBadge = ({ status }) => {
   const cfg = {
-    presente:   { bg: "#ECFDF5", color: "#065F46", dot: "#10B981", label: "Presente" },
-    ausente:    { bg: "#FEF2F2", color: "#991B1B", dot: "#EF4444", label: "Ausente" },
-    parcial:    { bg: "#FFFBEB", color: "#92400E", dot: "#F59E0B", label: "Parcial" },
-    analisando: { bg: "#EFF6FF", color: "#1E40AF", dot: "#3B82F6", label: "Analisando…" },
-  }[status] || { bg: "#F3F4F6", color: "var(--text-secondary)", dot: "#9CA3AF", label: "Pendente" };
+    presente:   { bg: "var(--success-bg)", color: "var(--success-text)", dot: "var(--success-text)", label: "Presente" },
+    ausente:    { bg: "var(--danger-bg)", color: "var(--danger-text)", dot: "var(--danger-text)", label: "Ausente" },
+    parcial:    { bg: "var(--warning-bg)", color: "var(--warning-text)", dot: "var(--warning-text)", label: "Parcial" },
+    analisando: { bg: "var(--info-bg)", color: "var(--info-text)", dot: "var(--accent)", label: "Analisando…" },
+  }[status] || { bg: "var(--surface-2)", color: "var(--text-secondary)", dot: "var(--text-subtle)", label: "Pendente" };
 
   return (
     <span style={{
@@ -431,7 +441,7 @@ const ChecklistItem = ({ item, index }) => {
         )}
       </div>
       {open && item.trecho && (
-        <div style={{ background: "var(--surface-2)", borderTop: "1px solid #E5E7EB", padding: "12px 16px 12px 48px" }}>
+        <div style={{ background: "var(--surface-2)", borderTop: "1px solid var(--card-border)", padding: "12px 16px 12px 48px" }}>
           <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em" }}>
             Trecho identificado
           </p>
@@ -446,8 +456,8 @@ const ChecklistItem = ({ item, index }) => {
         </div>
       )}
       {!open && item.status === "ausente" && item.observacao && (
-        <div style={{ background: "#FEF2F2", borderTop: "1px solid #FEE2E2", padding: "8px 16px 8px 48px" }}>
-          <p style={{ fontSize: 12, color: "#991B1B", margin: 0 }}>⚠ {item.observacao}</p>
+        <div style={{ background: "var(--danger-bg)", borderTop: "1px solid #FEE2E2", padding: "8px 16px 8px 48px" }}>
+          <p style={{ fontSize: 12, color: "var(--danger-text)", margin: 0 }}>⚠ {item.observacao}</p>
         </div>
       )}
     </div>
@@ -589,9 +599,9 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
         <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 28, height: 28, borderRadius: 6, background: "#4F8EF7", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ color: "#fff", fontSize: 14 }}>✓</span>
+              <span style={{ color: "var(--card-bg)", fontSize: 14 }}>✓</span>
             </div>
-            <span style={{ color: "#F1F5F9", fontWeight: 700, fontSize: 15, letterSpacing: "-.01em" }}>DocCheck</span>
+            <span style={{ color: "var(--surface-2)", fontWeight: 700, fontSize: 15, letterSpacing: "-.01em" }}>DocCheck</span>
             <span style={{ color: "var(--text-muted)", fontSize: 12, marginLeft: 4 }}>by Ítalo Peixoto</span>
           </div>
           <span style={{ color: "var(--text-muted)", fontSize: 12 }}>Análise de Conformidade Documental · Gemini</span>
@@ -612,7 +622,7 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
               <select
                 value={presetKey}
                 onChange={e => setPresetKey(e.target.value)}
-                style={{ width: "100%", padding: "9px 12px", border: "1px solid #D1D5DB", borderRadius: 8, fontSize: 13, background: "var(--card-bg)", outline: "none" }}
+                style={{ width: "100%", padding: "9px 12px", border: "1px solid var(--input-border)", borderRadius: 8, fontSize: 13, background: "var(--input-bg)", outline: "none" }}
               >
                 {Object.keys(PRESET_CHECKLISTS).map(k => <option key={k}>{k}</option>)}
               </select>
@@ -641,7 +651,7 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "1px solid var(--divider)" }}>
                   <span style={{ color: "#8B5CF6", fontSize: 12 }}>+</span>
                   <span style={{ flex: 1, fontSize: 12, color: "var(--text-secondary)" }}>{item}</span>
-                  <button onClick={() => removeCustomItem(i)} style={{ background: "none", border: "none", color: "#EF4444", cursor: "pointer", fontSize: 14, padding: "0 4px" }}>×</button>
+                  <button onClick={() => removeCustomItem(i)} style={{ background: "none", border: "none", color: "var(--danger-text)", cursor: "pointer", fontSize: 14, padding: "0 4px" }}>×</button>
                 </div>
               ))}
               <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
@@ -650,11 +660,11 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
                   onChange={e => setNewItem(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && addCustomItem()}
                   placeholder="Novo item…"
-                  style={{ flex: 1, padding: "7px 10px", border: "1px solid #D1D5DB", borderRadius: 6, fontSize: 12, outline: "none" }}
+                  style={{ flex: 1, padding: "7px 10px", border: "1px solid var(--input-border)", borderRadius: 6, fontSize: 12, outline: "none" }}
                 />
                 <button
                   onClick={addCustomItem}
-                  style={{ padding: "7px 14px", background: "var(--surface-2)", border: "1px solid #D1D5DB", borderRadius: 6, fontSize: 12, cursor: "pointer", fontWeight: 600 }}
+                  style={{ padding: "7px 14px", background: "var(--surface-2)", border: "1px solid var(--input-border)", borderRadius: 6, fontSize: 12, cursor: "pointer", fontWeight: 600 }}
                 >
                   +
                 </button>
@@ -679,7 +689,7 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
                 style={{
                   border: `2px dashed ${pdfFile ? "#4F8EF7" : "#D1D5DB"}`,
                   borderRadius: 10, padding: "32px 16px", textAlign: "center",
-                  cursor: "pointer", background: pdfFile ? "#EFF6FF" : "#FAFAFA",
+                  cursor: "pointer", background: pdfFile ? "var(--info-bg)" : "var(--surface-2)",
                   transition: "all .15s",
                 }}
               >
@@ -687,7 +697,7 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
                 {pdfFile ? (
                   <>
                     <div style={{ fontSize: 28, marginBottom: 8 }}>📄</div>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#1E40AF" }}>{pdfFile.name}</p>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--info-text)" }}>{pdfFile.name}</p>
                     <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--text-muted)" }}>
                       {(pdfFile.size / 1024).toFixed(0)} KB — clique para trocar
                     </p>
@@ -707,16 +717,16 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Resultado geral</p>
                   <span style={{
                     fontSize: 22, fontWeight: 800,
-                    color: score >= 80 ? "#065F46" : score >= 50 ? "#92400E" : "#991B1B",
+                    color: score >= 80 ? "var(--success-text)" : score >= 50 ? "var(--warning-text)" : "var(--danger-text)",
                   }}>
                     {score}%
                   </span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                   {[
-                    { label: "Presentes", value: summary.presentes, color: "#10B981" },
-                    { label: "Parciais",  value: summary.parciais,  color: "#F59E0B" },
-                    { label: "Ausentes",  value: summary.ausentes,  color: "#EF4444" },
+                    { label: "Presentes", value: summary.presentes, color: "var(--success-text)" },
+                    { label: "Parciais",  value: summary.parciais,  color: "var(--warning-text)" },
+                    { label: "Ausentes",  value: summary.ausentes,  color: "var(--danger-text)" },
                   ].map(({ label, value, color }) => (
                     <div key={label} style={{ textAlign: "center", padding: "10px 8px", background: "var(--page-bg)", borderRadius: 8 }}>
                       <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color }}>{value}</p>
@@ -728,8 +738,8 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
             )}
 
             {error && (
-              <div style={{ background: "#FEF2F2", border: "1px solid #FEE2E2", borderRadius: 8, padding: "12px 16px" }}>
-                <p style={{ margin: 0, fontSize: 13, color: "#991B1B" }}>{error}</p>
+              <div style={{ background: "var(--danger-bg)", border: "1px solid #FEE2E2", borderRadius: 8, padding: "12px 16px" }}>
+                <p style={{ margin: 0, fontSize: 13, color: "var(--danger-text)" }}>{error}</p>
               </div>
             )}
 
@@ -738,8 +748,8 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
               disabled={loading || !pdfFile || !apiKeySet}
               style={{
                 padding: "14px 24px",
-                background: loading || !pdfFile || !apiKeySet ? "#E2E8F0" : "#0F172A",
-                color: loading || !pdfFile || !apiKeySet ? "#9CA3AF" : "#fff",
+                background: loading || !pdfFile || !apiKeySet ? "#E2E8F0" : "var(--text-primary)",
+                color: loading || !pdfFile || !apiKeySet ? "var(--text-subtle)" : "var(--card-bg)",
                 border: "none", borderRadius: 10,
                 fontSize: 14, fontWeight: 700,
                 cursor: loading || !pdfFile || !apiKeySet ? "not-allowed" : "pointer",
@@ -799,13 +809,13 @@ function formatCNPJ(v) {
 
 function Badge({ color, children }) {
   const colors = {
-    red:    { bg:"#FEF2F2", text:"#991B1B", border:"#FEE2E2" },
-    green:  { bg:"#ECFDF5", text:"#065F46", border:"#D1FAE5" },
-    yellow: { bg:"#FFFBEB", text:"#92400E", border:"#FDE68A" },
-    blue:   { bg:"#EFF6FF", text:"#1E40AF", border:"#BFDBFE" },
-    gray:   { bg:"#F3F4F6", text:"#374151", border:"#E5E7EB" },
-    orange: { bg:"#FFF7ED", text:"#9A3412", border:"#FED7AA" },
-  }[color] || { bg:"#F3F4F6", text:"#374151", border:"#E5E7EB" };
+    red:    { bg:"var(--danger-bg)", text:"var(--danger-text)", border:"var(--danger-border)" },
+    green:  { bg:"var(--success-bg)", text:"var(--success-text)", border:"var(--success-border)" },
+    yellow: { bg:"var(--warning-bg)", text:"var(--warning-text)", border:"var(--warning-border)" },
+    blue:   { bg:"var(--info-bg)", text:"var(--info-text)", border:"var(--info-border)" },
+    gray:   { bg:"var(--surface-2)", text:"var(--text-secondary)", border:"#E5E7EB" },
+    orange: { bg:"var(--orange-bg)", text:"var(--orange-text)", border:"var(--orange-border)" },
+  }[color] || { bg:"var(--surface-2)", text:"var(--text-secondary)", border:"#E5E7EB" };
   return (
     <span style={{
       display:"inline-block", padding:"2px 10px", borderRadius:20,
@@ -834,15 +844,15 @@ function ProgressBar({ steps, current, label }) {
         <span style={{ fontSize:12, color:"var(--text-muted)" }}>{label}</span>
         <span style={{ fontSize:12, color:"var(--text-muted)", fontWeight:600 }}>{pct}%</span>
       </div>
-      <div style={{ background:"#E2E8F0", borderRadius:99, height:8, overflow:"hidden" }}>
+      <div style={{ background:"var(--card-border)", borderRadius:99, height:8, overflow:"hidden" }}>
         <div style={{
           height:"100%", borderRadius:99,
-          background: pct === 100 ? "#10B981" : "#4F8EF7",
+          background: pct === 100 ? "var(--success-text)" : "#4F8EF7",
           width: pct + "%",
           transition:"width .4s ease"
         }} />
       </div>
-      <p style={{ fontSize:11, color:"#94A3B8", marginTop:4 }}>
+      <p style={{ fontSize:11, color:"var(--text-subtle)", marginTop:4 }}>
         {current} de {steps} empresa{steps !== 1 ? "s" : ""} consultada{steps !== 1 ? "s" : ""}
       </p>
     </div>
@@ -920,14 +930,14 @@ function BackgroundCheck() {
           <input value={cnpj} onChange={e => setCnpj(formatCNPJ(e.target.value))}
             onKeyDown={e => e.key === "Enter" && buscar()}
             placeholder="00.000.000/0000-00"
-            style={{ flex:1, padding:"10px 14px", border:"1px solid #D1D5DB", borderRadius:8, fontSize:15, outline:"none", letterSpacing:1, fontFamily:"monospace" }} />
+            style={{ flex:1, padding:"10px 14px", border:"1px solid var(--input-border)", borderRadius:8, fontSize:15, outline:"none", letterSpacing:1, fontFamily:"monospace" }} />
           <button onClick={buscar} disabled={loading}
-            style={{ padding:"10px 28px", background: loading ? "#E2E8F0" : "#0F172A", color: loading ? "#9CA3AF" : "#fff", border:"none", borderRadius:8, fontSize:14, fontWeight:700, cursor: loading ? "not-allowed" : "pointer" }}>
+            style={{ padding:"10px 28px", background: loading ? "#E2E8F0" : "var(--text-primary)", color: loading ? "var(--text-subtle)" : "var(--card-bg)", border:"none", borderRadius:8, fontSize:14, fontWeight:700, cursor: loading ? "not-allowed" : "pointer" }}>
             {loading ? "Consultando…" : "Consultar"}
           </button>
         </div>
         {step && <p style={{ marginTop:10, fontSize:12, color:"var(--text-muted)" }}>⏳ {step}</p>}
-        {error && <p style={{ marginTop:10, fontSize:12, color:"#EF4444" }}>⚠ {error}</p>}
+        {error && <p style={{ marginTop:10, fontSize:12, color:"var(--danger-text)" }}>⚠ {error}</p>}
       </div>
 
       {dadosCnpj && (
@@ -947,7 +957,7 @@ function BackgroundCheck() {
               <p style={{ fontSize:12, fontWeight:700, color:"var(--text-secondary)", marginBottom:10 }}>👥 Quadro Societário</p>
               {dadosCnpj.qsa.map((s,i) => (
                 <div key={i} style={{ display:"flex", gap:10, padding:"8px 0", borderBottom:"1px solid var(--divider)", alignItems:"center" }}>
-                  <div style={{ width:32, height:32, borderRadius:"50%", background:"#EFF6FF", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, color:"#3B82F6", flexShrink:0 }}>{(s.nome||"?")[0]}</div>
+                  <div style={{ width:32, height:32, borderRadius:"50%", background:"var(--info-bg)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, color:"var(--accent)", flexShrink:0 }}>{(s.nome||"?")[0]}</div>
                   <div><p style={{ fontSize:13, fontWeight:600, color:"var(--text-primary)", margin:0 }}>{s.nome}</p><p style={{ fontSize:11, color:"var(--text-muted)", margin:0 }}>{s.qual}</p></div>
                 </div>
               ))}
@@ -1108,16 +1118,16 @@ Se não encontrar nenhuma empresa, retorne [].`;
             <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)}
               placeholder="AIzaSy…"
               onKeyDown={e => { if (e.key === "Enter" && apiKey.length > 10) { try { localStorage.setItem("doccheck_gemini_key", btoa(unescape(encodeURIComponent(apiKey)))); } catch(x){} setApiKeySet(true); } }}
-              style={{ flex:1, padding:"9px 12px", border:"1px solid #D1D5DB", borderRadius:8, fontSize:13, outline:"none" }} />
+              style={{ flex:1, padding:"9px 12px", border:"1px solid var(--input-border)", borderRadius:8, fontSize:13, outline:"none" }} />
             <button onClick={() => { if (apiKey.length > 10) { try { localStorage.setItem("doccheck_gemini_key", btoa(unescape(encodeURIComponent(apiKey)))); } catch(x){} setApiKeySet(true); } }}
-              style={{ padding:"9px 20px", background:"var(--header-bg)", color:"#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:600, cursor:"pointer" }}>
+              style={{ padding:"9px 20px", background:"var(--header-bg)", color:"var(--card-bg)", border:"none", borderRadius:8, fontSize:13, fontWeight:600, cursor:"pointer" }}>
               Confirmar
             </button>
           </div>
         </div>
       ) : (
         <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", gap:16, marginBottom:16 }}>
-          <span style={{ fontSize:12, color:"#10B981" }}>✓ Chave Gemini configurada</span>
+          <span style={{ fontSize:12, color:"var(--success-text)" }}>✓ Chave Gemini configurada</span>
           <button onClick={() => { try { localStorage.removeItem("doccheck_gemini_key"); } catch(x){} setApiKeySet(false); setApiKey(""); }}
             style={{ fontSize:12, color:"var(--text-muted)", background:"none", border:"none", cursor:"pointer", textDecoration:"underline" }}>
             Alterar chave
@@ -1135,12 +1145,12 @@ Se não encontrar nenhuma empresa, retorne [].`;
         <div onClick={() => fileRef.current.click()}
           onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }}
           onDragOver={e => e.preventDefault()}
-          style={{ border:`2px dashed ${pdfFile ? "#4F8EF7" : "#D1D5DB"}`, borderRadius:10, padding:"28px 16px", textAlign:"center", cursor:"pointer", background: pdfFile ? "#EFF6FF" : "#FAFAFA", marginBottom:16 }}>
+          style={{ border:`2px dashed ${pdfFile ? "#4F8EF7" : "#D1D5DB"}`, borderRadius:10, padding:"28px 16px", textAlign:"center", cursor:"pointer", background: pdfFile ? "var(--info-bg)" : "var(--surface-2)", marginBottom:16 }}>
           <input ref={fileRef} type="file" accept=".pdf" style={{ display:"none" }} onChange={e => handleFile(e.target.files[0])} />
           {pdfFile ? (
             <>
               <div style={{ fontSize:24, marginBottom:6 }}>📄</div>
-              <p style={{ fontSize:13, fontWeight:600, color:"#1E40AF", margin:0 }}>{pdfFile.name}</p>
+              <p style={{ fontSize:13, fontWeight:600, color:"var(--info-text)", margin:0 }}>{pdfFile.name}</p>
               <p style={{ fontSize:11, color:"var(--text-muted)", margin:"4px 0 0" }}>{(pdfFile.size/1024).toFixed(0)} KB — clique para trocar</p>
             </>
           ) : (
@@ -1159,19 +1169,19 @@ Se não encontrar nenhuma empresa, retorne [].`;
           <p style={{ fontSize:12, color:"var(--text-muted)", marginTop:12 }}>⏳ {progresso.label}</p>
         )}
         {!loading && progresso.label === "Análise concluída!" && (
-          <p style={{ fontSize:12, color:"#10B981", marginTop:12 }}>✓ {progresso.label}</p>
+          <p style={{ fontSize:12, color:"var(--success-text)", marginTop:12 }}>✓ {progresso.label}</p>
         )}
 
-        {error && <p style={{ fontSize:12, color:"#EF4444", marginTop:12 }}>⚠ {error}</p>}
+        {error && <p style={{ fontSize:12, color:"var(--danger-text)", marginTop:12 }}>⚠ {error}</p>}
 
         <div style={{ display:"flex", gap:10, marginTop:16 }}>
           <button onClick={analisar} disabled={loading || !pdfFile || !apiKeySet}
-            style={{ flex:1, padding:"13px 24px", background: loading || !pdfFile || !apiKeySet ? "#E2E8F0" : "#0F172A", color: loading || !pdfFile || !apiKeySet ? "#9CA3AF" : "#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor: loading || !pdfFile || !apiKeySet ? "not-allowed" : "pointer" }}>
+            style={{ flex:1, padding:"13px 24px", background: loading || !pdfFile || !apiKeySet ? "#E2E8F0" : "var(--text-primary)", color: loading || !pdfFile || !apiKeySet ? "var(--text-subtle)" : "var(--card-bg)", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor: loading || !pdfFile || !apiKeySet ? "not-allowed" : "pointer" }}>
             {loading ? "Analisando…" : "Analisar RAPP"}
           </button>
           {temResultado && (
             <button onClick={() => downloadCSV(empresas)}
-              style={{ padding:"13px 20px", background:"#ECFDF5", color:"#065F46", border:"1px solid #D1FAE5", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer" }}>
+              style={{ padding:"13px 20px", background:"var(--success-bg)", color:"var(--success-text)", border:"1px solid #D1FAE5", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer" }}>
               ⬇ Exportar CSV
             </button>
           )}
@@ -1180,17 +1190,17 @@ Se não encontrar nenhuma empresa, retorne [].`;
 
       {/* ALERTAS DE CONLUÍO */}
       {conluios.length > 0 && (
-        <div style={{ background:"#FFF7ED", border:"1px solid #FED7AA", borderRadius:12, padding:24, marginBottom:20 }}>
-          <p style={{ fontSize:14, fontWeight:700, color:"#9A3412", marginBottom:4 }}>
+        <div style={{ background:"var(--orange-bg)", border:"1px solid #FED7AA", borderRadius:12, padding:24, marginBottom:20 }}>
+          <p style={{ fontSize:14, fontWeight:700, color:"var(--orange-text)", marginBottom:4 }}>
             ⚠ {conluios.length} sócio{conluios.length > 1 ? "s" : ""} em comum detectado{conluios.length > 1 ? "s" : ""}
           </p>
-          <p style={{ fontSize:12, color:"#92400E", marginBottom:16 }}>
+          <p style={{ fontSize:12, color:"var(--warning-text)", marginBottom:16 }}>
             Os sócios abaixo aparecem em mais de uma empresa participante do RAPP — possível indício de conluio ou empresas coligadas.
           </p>
           {conluios.map((c, i) => (
             <div key={i} style={{ background:"var(--card-bg)", border:"1px solid #FED7AA", borderRadius:8, padding:"14px 16px", marginBottom:10 }}>
               <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
-                <div style={{ width:36, height:36, borderRadius:"50%", background:"#FFF7ED", border:"2px solid #FB923C", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, color:"#EA580C", fontWeight:700, flexShrink:0 }}>
+                <div style={{ width:36, height:36, borderRadius:"50%", background:"var(--orange-bg)", border:"2px solid #FB923C", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, color:"var(--orange-text)", fontWeight:700, flexShrink:0 }}>
                   {(c.socio||"?")[0]}
                 </div>
                 <div>
@@ -1202,7 +1212,7 @@ Se não encontrar nenhuma empresa, retorne [].`;
                 <div key={j} style={{ display:"flex", gap:8, padding:"6px 0", borderTop:"1px solid #FEF3C7", alignItems:"center" }}>
                   <span style={{ fontSize:11, color:"var(--text-muted)", fontFamily:"monospace", minWidth:160 }}>{e.cnpj}</span>
                   <span style={{ fontSize:12, color:"var(--text-secondary)", flex:1 }}>{e.empresa}</span>
-                  <span style={{ fontSize:11, color:"#9A3412" }}>{e.qual}</span>
+                  <span style={{ fontSize:11, color:"var(--orange-text)" }}>{e.qual}</span>
                 </div>
               ))}
             </div>
@@ -1211,10 +1221,10 @@ Se não encontrar nenhuma empresa, retorne [].`;
       )}
 
       {conluios.length === 0 && temResultado && (
-        <div style={{ background:"#ECFDF5", border:"1px solid #D1FAE5", borderRadius:12, padding:20, marginBottom:20, display:"flex", alignItems:"center", gap:12 }}>
+        <div style={{ background:"var(--success-bg)", border:"1px solid #D1FAE5", borderRadius:12, padding:20, marginBottom:20, display:"flex", alignItems:"center", gap:12 }}>
           <span style={{ fontSize:28 }}>✅</span>
           <div>
-            <p style={{ fontSize:13, fontWeight:700, color:"#065F46", margin:0 }}>Nenhum sócio em comum identificado</p>
+            <p style={{ fontSize:13, fontWeight:700, color:"var(--success-text)", margin:0 }}>Nenhum sócio em comum identificado</p>
             <p style={{ fontSize:12, color:"var(--text-muted)", margin:"2px 0 0" }}>As empresas analisadas não compartilham sócios entre si.</p>
           </div>
         </div>
@@ -1243,19 +1253,19 @@ Se não encontrar nenhuma empresa, retorne [].`;
                 </div>
                 {/* Sócios */}
                 <div style={{ padding:"10px 16px" }}>
-                  {emp.erro && <p style={{ fontSize:12, color:"#EF4444", margin:0 }}>Erro na consulta: {emp.erro}</p>}
+                  {emp.erro && <p style={{ fontSize:12, color:"var(--danger-text)", margin:0 }}>Erro na consulta: {emp.erro}</p>}
                   {!emp.erro && (!emp.qsa || emp.qsa.length === 0) && (
                     <p style={{ fontSize:12, color:"var(--text-subtle)", margin:0 }}>Nenhum sócio encontrado no QSA.</p>
                   )}
                   {(emp.qsa || []).map((s, j) => {
                     const emAlerta = conluios.some(c => c.socio === s.nome);
                     return (
-                      <div key={j} style={{ display:"flex", alignItems:"center", gap:10, padding:"6px 0", borderBottom: j < emp.qsa.length-1 ? "1px solid #F3F4F6" : "none" }}>
-                        <div style={{ width:28, height:28, borderRadius:"50%", background: emAlerta ? "#FFF7ED" : "#EFF6FF", border: emAlerta ? "2px solid #FB923C" : "none", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color: emAlerta ? "#EA580C" : "#3B82F6", fontWeight:700, flexShrink:0 }}>
+                      <div key={j} style={{ display:"flex", alignItems:"center", gap:10, padding:"6px 0", borderBottom: j < emp.qsa.length-1 ? "1px solid var(--divider)" : "none" }}>
+                        <div style={{ width:28, height:28, borderRadius:"50%", background: emAlerta ? "var(--orange-bg)" : "var(--info-bg)", border: emAlerta ? "2px solid #FB923C" : "none", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color: emAlerta ? "var(--orange-text)" : "var(--accent)", fontWeight:700, flexShrink:0 }}>
                           {(s.nome||"?")[0]}
                         </div>
                         <div style={{ flex:1 }}>
-                          <span style={{ fontSize:13, color: emAlerta ? "#9A3412" : "#111827", fontWeight: emAlerta ? 700 : 500 }}>{s.nome}</span>
+                          <span style={{ fontSize:13, color: emAlerta ? "var(--orange-text)" : "var(--text-primary)", fontWeight: emAlerta ? 700 : 500 }}>{s.nome}</span>
                           <span style={{ fontSize:11, color:"var(--text-muted)", marginLeft:8 }}>{s.qual}</span>
                         </div>
                         {emAlerta && <Badge color="orange">⚠ Sócio compartilhado</Badge>}
@@ -1397,39 +1407,39 @@ function normalizarRegistro(r, tipo) {
 function CardEdicao({ reg, idx, onChange }) {
   const dias = diasAteVencer(reg.vencimento);
   const urg = statusUrgencia(dias);
-  const corBorda = { red:"#FEE2E2", orange:"#FED7AA", green:"#D1FAE5", gray:"#E5E7EB" }[urg.cor];
-  const corBg    = { red:"#FEF2F2", orange:"#FFF7ED", green:"#F0FDF4", gray:"#F9FAFB" }[urg.cor];
+  const corBorda = { red:"var(--danger-border)", orange:"var(--orange-border)", green:"var(--success-border)", gray:"#E5E7EB" }[urg.cor];
+  const corBg    = { red:"var(--danger-bg)", orange:"var(--orange-bg)", green:"#F0FDF4", gray:"var(--surface-2)" }[urg.cor];
 
   return (
     <div style={{ border:`1px solid ${corBorda}`, background:corBg, borderRadius:10, padding:"14px 16px", marginBottom:12 }}>
       {/* Cabeçalho */}
       <div style={{ display:"flex", gap:10, alignItems:"flex-start", marginBottom:12 }}>
         <div style={{ flex:1 }}>
-          <p style={{ fontSize:13, fontWeight:700, color:"#111827", margin:"0 0 2px" }}>{reg.empresa || "—"}</p>
-          <p style={{ fontSize:11, color:"#6B7280", margin:0, fontFamily:"monospace" }}>
+          <p style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", margin:"0 0 2px" }}>{reg.empresa || "—"}</p>
+          <p style={{ fontSize:11, color:"var(--text-muted)", margin:0, fontFamily:"monospace" }}>
             SEI: {reg.sei || "—"} · {reg.tipo === "servicos" ? "Serviço" : "Aquisição"} · Vence: <strong>{fmtData(reg.vencimento)}</strong>
           </p>
-          <p style={{ fontSize:11, color:"#374151", margin:"4px 0 0" }}>{reg.objeto}</p>
+          <p style={{ fontSize:11, color:"var(--text-secondary)", margin:"4px 0 0" }}>{reg.objeto}</p>
         </div>
         <span style={{
           fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20,
-          background: { red:"#FEE2E2", orange:"#FED7AA", green:"#D1FAE5", gray:"#E5E7EB" }[urg.cor],
-          color:      { red:"#991B1B", orange:"#9A3412", green:"#065F46", gray:"#374151" }[urg.cor],
+          background: { red:"var(--danger-border)", orange:"var(--orange-border)", green:"var(--success-border)", gray:"#E5E7EB" }[urg.cor],
+          color:      { red:"var(--danger-text)", orange:"var(--orange-text)", green:"var(--success-text)", gray:"var(--text-secondary)" }[urg.cor],
         }}>{urg.label}</span>
       </div>
 
       {/* Campos manuais */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
         <div>
-          <label style={{ fontSize:11, color:"#6B7280", display:"block", marginBottom:3 }}>Vigência Máxima</label>
+          <label style={{ fontSize:11, color:"var(--text-muted)", display:"block", marginBottom:3 }}>Vigência Máxima</label>
           <input value={reg.vigMax} onChange={e => onChange(idx,"vigMax",e.target.value)}
             placeholder="Ex: 60 meses / atingida / —"
-            style={{ width:"100%", padding:"7px 10px", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, outline:"none" }} />
+            style={{ width:"100%", padding:"7px 10px", border:"1px solid var(--input-border)", borderRadius:6, fontSize:12, outline:"none" }} />
         </div>
         <div>
-          <label style={{ fontSize:11, color:"#6B7280", display:"block", marginBottom:3 }}>Status</label>
+          <label style={{ fontSize:11, color:"var(--text-muted)", display:"block", marginBottom:3 }}>Status</label>
           <select value={reg.status} onChange={e => onChange(idx,"status",e.target.value)}
-            style={{ width:"100%", padding:"7px 10px", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, outline:"none", background:"#fff" }}>
+            style={{ width:"100%", padding:"7px 10px", border:"1px solid var(--input-border)", borderRadius:6, fontSize:12, outline:"none", background:"var(--card-bg)" }}>
             <option value="prorrogação">Em prorrogação</option>
             <option value="substituto">Processo substituto</option>
             <option value="encerramento">Encerramento</option>
@@ -1437,16 +1447,16 @@ function CardEdicao({ reg, idx, onChange }) {
           </select>
         </div>
         <div>
-          <label style={{ fontSize:11, color:"#6B7280", display:"block", marginBottom:3 }}>SEI Processo Substituto</label>
+          <label style={{ fontSize:11, color:"var(--text-muted)", display:"block", marginBottom:3 }}>SEI Processo Substituto</label>
           <input value={reg.seiSubst} onChange={e => onChange(idx,"seiSubst",e.target.value)}
             placeholder="Ex: 123456/2025"
-            style={{ width:"100%", padding:"7px 10px", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, outline:"none" }} />
+            style={{ width:"100%", padding:"7px 10px", border:"1px solid var(--input-border)", borderRadius:6, fontSize:12, outline:"none" }} />
         </div>
         <div>
-          <label style={{ fontSize:11, color:"#6B7280", display:"block", marginBottom:3 }}>Andamento</label>
+          <label style={{ fontSize:11, color:"var(--text-muted)", display:"block", marginBottom:3 }}>Andamento</label>
           <input value={reg.andamento} onChange={e => onChange(idx,"andamento",e.target.value)}
             placeholder="Ex: Em elaboração de TR / Aguard. SUBJUR"
-            style={{ width:"100%", padding:"7px 10px", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, outline:"none" }} />
+            style={{ width:"100%", padding:"7px 10px", border:"1px solid var(--input-border)", borderRadius:6, fontSize:12, outline:"none" }} />
         </div>
       </div>
     </div>
@@ -1625,60 +1635,60 @@ function VencimentosModule() {
   // ── ETAPA 1 — Carga ──
   if (etapa === 1) return (
     <div style={{ maxWidth:860, margin:"0 auto", padding:"32px 24px" }}>
-      <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:12, padding:28, marginBottom:20 }}>
-        <p style={{ fontSize:15, fontWeight:700, color:"#0F172A", marginBottom:4 }}>📅 Controle de Vencimentos</p>
-        <p style={{ fontSize:12, color:"#6B7280", marginBottom:24 }}>
+      <div style={{ background:"var(--card-bg)", border:"1px solid var(--card-border)", borderRadius:12, padding:28, marginBottom:20 }}>
+        <p style={{ fontSize:15, fontWeight:700, color:"var(--text-primary)", marginBottom:4 }}>📅 Controle de Vencimentos</p>
+        <p style={{ fontSize:12, color:"var(--text-muted)", marginBottom:24 }}>
           Exibe contratos e ARPs com vencimento no mês atual e nos 2 meses seguintes, com geração de mensagem para WhatsApp.
         </p>
 
         {/* Opção GitHub */}
-        <div style={{ border:"1px solid #E2E8F0", borderRadius:10, padding:20, marginBottom:16 }}>
-          <p style={{ fontSize:13, fontWeight:700, color:"#0F172A", marginBottom:4 }}>Carregar do repositório GitHub</p>
-          <p style={{ fontSize:12, color:"#6B7280", marginBottom:14 }}>
-            Busca automaticamente os arquivos <code style={{ background:"#F1F5F9", padding:"1px 6px", borderRadius:4 }}>vencimento_servicos</code> e <code style={{ background:"#F1F5F9", padding:"1px 6px", borderRadius:4 }}>vencimento_aquisicoes</code> (.json ou .csv) da raiz do repositório.
+        <div style={{ border:"1px solid var(--card-border)", borderRadius:10, padding:20, marginBottom:16 }}>
+          <p style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", marginBottom:4 }}>Carregar do repositório GitHub</p>
+          <p style={{ fontSize:12, color:"var(--text-muted)", marginBottom:14 }}>
+            Busca automaticamente os arquivos <code style={{ background:"var(--surface-2)", padding:"1px 6px", borderRadius:4 }}>vencimento_servicos</code> e <code style={{ background:"var(--surface-2)", padding:"1px 6px", borderRadius:4 }}>vencimento_aquisicoes</code> (.json ou .csv) da raiz do repositório.
           </p>
           <button onClick={carregarDoGithub} disabled={loading}
-            style={{ padding:"10px 24px", background: loading ? "#E2E8F0" : "#0F172A", color: loading ? "#9CA3AF" : "#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor: loading ? "not-allowed" : "pointer" }}>
+            style={{ padding:"10px 24px", background: loading ? "#E2E8F0" : "var(--text-primary)", color: loading ? "var(--text-subtle)" : "var(--card-bg)", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor: loading ? "not-allowed" : "pointer" }}>
             {loading ? "Carregando…" : "⬇ Carregar do GitHub"}
           </button>
         </div>
 
         {/* Opção upload manual */}
-        <div style={{ border:"1px solid #E2E8F0", borderRadius:10, padding:20 }}>
-          <p style={{ fontSize:13, fontWeight:700, color:"#0F172A", marginBottom:4 }}>Ou fazer upload manual</p>
-          <p style={{ fontSize:12, color:"#6B7280", marginBottom:14 }}>Suporta arquivos <strong>.json</strong> ou <strong>.csv</strong> (exportado do Excel via "Salvar como CSV").</p>
+        <div style={{ border:"1px solid var(--card-border)", borderRadius:10, padding:20 }}>
+          <p style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", marginBottom:4 }}>Ou fazer upload manual</p>
+          <p style={{ fontSize:12, color:"var(--text-muted)", marginBottom:14 }}>Suporta arquivos <strong>.json</strong> ou <strong>.csv</strong> (exportado do Excel via "Salvar como CSV").</p>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:14 }}>
             {[
               { ref:fileServRef, label:"vencimento_servicos", tipo:"servicos" },
               { ref:fileAqRef,   label:"vencimento_aquisicoes", tipo:"aquisicoes" },
             ].map(({ ref, label }) => (
               <div key={label}>
-                <p style={{ fontSize:11, color:"#6B7280", marginBottom:5, fontWeight:600 }}>{label}</p>
+                <p style={{ fontSize:11, color:"var(--text-muted)", marginBottom:5, fontWeight:600 }}>{label}</p>
                 <input ref={ref} type="file" accept=".json,.csv"
                   style={{ fontSize:12, width:"100%" }} />
               </div>
             ))}
           </div>
           <button onClick={carregarManual} disabled={loading}
-            style={{ padding:"10px 24px", background: loading ? "#E2E8F0" : "#475569", color: loading ? "#9CA3AF" : "#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor: loading ? "not-allowed" : "pointer" }}>
+            style={{ padding:"10px 24px", background: loading ? "#E2E8F0" : "var(--text-muted)", color: loading ? "var(--text-subtle)" : "var(--card-bg)", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor: loading ? "not-allowed" : "pointer" }}>
             {loading ? "Processando…" : "📂 Carregar arquivos"}
           </button>
         </div>
 
         {error && (
-          <div style={{ background:"#FEF2F2", border:"1px solid #FEE2E2", borderRadius:8, padding:"12px 16px", marginTop:16 }}>
-            <p style={{ fontSize:13, color:"#991B1B", margin:0 }}>⚠ {error}</p>
+          <div style={{ background:"var(--danger-bg)", border:"1px solid #FEE2E2", borderRadius:8, padding:"12px 16px", marginTop:16 }}>
+            <p style={{ fontSize:13, color:"var(--danger-text)", margin:0 }}>⚠ {error}</p>
           </div>
         )}
 
         {/* Template para download */}
-        <div style={{ marginTop:20, padding:"14px 16px", background:"#F8FAFC", border:"1px solid #E2E8F0", borderRadius:8 }}>
-          <p style={{ fontSize:12, fontWeight:600, color:"#374151", marginBottom:6 }}>📄 Formato esperado dos arquivos</p>
-          <p style={{ fontSize:11, color:"#6B7280", marginBottom:8 }}>Colunas obrigatórias (JSON ou CSV com cabeçalho):</p>
-          <code style={{ fontSize:11, color:"#1E40AF", display:"block", background:"#EFF6FF", padding:"8px 12px", borderRadius:6 }}>
+        <div style={{ marginTop:20, padding:"14px 16px", background:"var(--card-header-bg)", border:"1px solid var(--card-border)", borderRadius:8 }}>
+          <p style={{ fontSize:12, fontWeight:600, color:"var(--text-secondary)", marginBottom:6 }}>📄 Formato esperado dos arquivos</p>
+          <p style={{ fontSize:11, color:"var(--text-muted)", marginBottom:8 }}>Colunas obrigatórias (JSON ou CSV com cabeçalho):</p>
+          <code style={{ fontSize:11, color:"var(--info-text)", display:"block", background:"var(--info-bg)", padding:"8px 12px", borderRadius:6 }}>
             sei, contrato, empresa, objeto, valor, vencimento
           </code>
-          <p style={{ fontSize:11, color:"#9CA3AF", marginTop:8 }}>
+          <p style={{ fontSize:11, color:"var(--text-subtle)", marginTop:8 }}>
             Data de vencimento aceita nos formatos: <strong>DD/MM/AAAA</strong> ou <strong>AAAA-MM-DD</strong>
           </p>
           <button onClick={() => {
@@ -1686,7 +1696,7 @@ function VencimentosModule() {
             const blob = new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8;"});
             const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
             a.download = "template_vencimentos.csv"; a.click();
-          }} style={{ marginTop:10, padding:"6px 14px", background:"#fff", border:"1px solid #D1D5DB", borderRadius:6, fontSize:12, cursor:"pointer", color:"#374151" }}>
+          }} style={{ marginTop:10, padding:"6px 14px", background:"var(--card-bg)", border:"1px solid var(--input-border)", borderRadius:6, fontSize:12, cursor:"pointer", color:"var(--text-secondary)" }}>
             ⬇ Baixar template CSV
           </button>
         </div>
@@ -1700,20 +1710,20 @@ function VencimentosModule() {
       {/* Header etapa */}
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
         <div>
-          <p style={{ fontSize:15, fontWeight:700, color:"#0F172A", margin:0 }}>
+          <p style={{ fontSize:15, fontWeight:700, color:"var(--text-primary)", margin:0 }}>
             Etapa 2 — Completar informações
           </p>
-          <p style={{ fontSize:12, color:"#6B7280", margin:"4px 0 0" }}>
+          <p style={{ fontSize:12, color:"var(--text-muted)", margin:"4px 0 0" }}>
             {registros.length} vencimento{registros.length > 1 ? "s" : ""} encontrado{registros.length > 1 ? "s" : ""} nos próximos 3 meses. Preencha os campos de status.
           </p>
         </div>
         <div style={{ display:"flex", gap:8 }}>
           <button onClick={() => setEtapa(1)}
-            style={{ padding:"8px 16px", background:"#fff", border:"1px solid #D1D5DB", borderRadius:8, fontSize:12, cursor:"pointer", color:"#374151" }}>
+            style={{ padding:"8px 16px", background:"var(--card-bg)", border:"1px solid var(--input-border)", borderRadius:8, fontSize:12, cursor:"pointer", color:"var(--text-secondary)" }}>
             ← Voltar
           </button>
           <button onClick={gerarEAvancar}
-            style={{ padding:"8px 20px", background:"#0F172A", color:"#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer" }}>
+            style={{ padding:"8px 20px", background:"var(--text-primary)", color:"var(--card-bg)", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer" }}>
             Gerar mensagem →
           </button>
         </div>
@@ -1722,11 +1732,11 @@ function VencimentosModule() {
       {/* Legenda */}
       <div style={{ display:"flex", gap:12, marginBottom:20, flexWrap:"wrap" }}>
         {[
-          { cor:"#EF4444", bg:"#FEF2F2", label:"Vencido ou ≤ 30 dias — URGENTE (enviar SUBJUR)" },
-          { cor:"#F59E0B", bg:"#FFFBEB", label:"31–60 dias — Atenção" },
-          { cor:"#10B981", bg:"#ECFDF5", label:"Mais de 60 dias" },
+          { cor:"var(--danger-text)", bg:"var(--danger-bg)", label:"Vencido ou ≤ 30 dias — URGENTE (enviar SUBJUR)" },
+          { cor:"var(--warning-text)", bg:"var(--warning-bg)", label:"31–60 dias — Atenção" },
+          { cor:"var(--success-text)", bg:"var(--success-bg)", label:"Mais de 60 dias" },
         ].map(({ cor, bg, label }) => (
-          <div key={label} style={{ display:"flex", alignItems:"center", gap:6, fontSize:11, color:"#374151" }}>
+          <div key={label} style={{ display:"flex", alignItems:"center", gap:6, fontSize:11, color:"var(--text-secondary)" }}>
             <span style={{ width:10, height:10, borderRadius:"50%", background:cor, flexShrink:0 }} />
             {label}
           </div>
@@ -1740,7 +1750,7 @@ function VencimentosModule() {
         const idxsDoMes = doMes.map(r => registros.indexOf(r));
         return (
           <div key={`${mes}-${ano}`} style={{ marginBottom:24 }}>
-            <p style={{ fontSize:13, fontWeight:700, color:"#475569", marginBottom:12, textTransform:"uppercase", letterSpacing:".05em" }}>
+            <p style={{ fontSize:13, fontWeight:700, color:"var(--text-muted)", marginBottom:12, textTransform:"uppercase", letterSpacing:".05em" }}>
               📅 {nomeMes(mes, ano)}
             </p>
             {idxsDoMes.map(idx => (
@@ -1752,7 +1762,7 @@ function VencimentosModule() {
 
       <div style={{ display:"flex", justifyContent:"flex-end", marginTop:8 }}>
         <button onClick={gerarEAvancar}
-          style={{ padding:"12px 28px", background:"#0F172A", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}>
+          style={{ padding:"12px 28px", background:"var(--text-primary)", color:"var(--card-bg)", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}>
           Gerar mensagem WhatsApp →
         </button>
       </div>
@@ -1764,30 +1774,30 @@ function VencimentosModule() {
     <div style={{ maxWidth:860, margin:"0 auto", padding:"32px 24px" }}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
         <div>
-          <p style={{ fontSize:15, fontWeight:700, color:"#0F172A", margin:0 }}>Etapa 3 — Mensagem gerada</p>
-          <p style={{ fontSize:12, color:"#6B7280", margin:"4px 0 0" }}>Copie e cole no WhatsApp.</p>
+          <p style={{ fontSize:15, fontWeight:700, color:"var(--text-primary)", margin:0 }}>Etapa 3 — Mensagem gerada</p>
+          <p style={{ fontSize:12, color:"var(--text-muted)", margin:"4px 0 0" }}>Copie e cole no WhatsApp.</p>
         </div>
         <div style={{ display:"flex", gap:8 }}>
           <button onClick={() => setEtapa(2)}
-            style={{ padding:"8px 16px", background:"#fff", border:"1px solid #D1D5DB", borderRadius:8, fontSize:12, cursor:"pointer", color:"#374151" }}>
+            style={{ padding:"8px 16px", background:"var(--card-bg)", border:"1px solid var(--input-border)", borderRadius:8, fontSize:12, cursor:"pointer", color:"var(--text-secondary)" }}>
             ← Editar
           </button>
           <button onClick={copiar}
-            style={{ padding:"8px 20px", background: copiado ? "#10B981" : "#4F8EF7", color:"#fff", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", transition:"background .2s" }}>
+            style={{ padding:"8px 20px", background: copiado ? "var(--success-text)" : "#4F8EF7", color:"var(--card-bg)", border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", transition:"background .2s" }}>
             {copiado ? "✓ Copiado!" : "📋 Copiar mensagem"}
           </button>
         </div>
       </div>
 
-      <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:12, padding:24 }}>
-        <pre style={{ fontFamily:"'Courier New', monospace", fontSize:12.5, color:"#1E293B", lineHeight:1.7, whiteSpace:"pre-wrap", wordBreak:"break-word", margin:0 }}>
+      <div style={{ background:"var(--card-bg)", border:"1px solid var(--card-border)", borderRadius:12, padding:24 }}>
+        <pre style={{ fontFamily:"'Courier New', monospace", fontSize:12.5, color:"var(--text-primary)", lineHeight:1.7, whiteSpace:"pre-wrap", wordBreak:"break-word", margin:0 }}>
           {mensagem}
         </pre>
       </div>
 
       <div style={{ marginTop:16, display:"flex", justifyContent:"center" }}>
         <button onClick={copiar}
-          style={{ padding:"14px 48px", background: copiado ? "#10B981" : "#0F172A", color:"#fff", border:"none", borderRadius:10, fontSize:15, fontWeight:700, cursor:"pointer", transition:"background .2s" }}>
+          style={{ padding:"14px 48px", background: copiado ? "var(--success-text)" : "var(--text-primary)", color:"var(--card-bg)", border:"none", borderRadius:10, fontSize:15, fontWeight:700, cursor:"pointer", transition:"background .2s" }}>
           {copiado ? "✓ Copiado para a área de transferência!" : "📋 Copiar mensagem"}
         </button>
       </div>
@@ -1848,7 +1858,7 @@ function ComparadorTR() {
       style={{
         border: `2px dashed ${file ? "#4F8EF7" : "#D1D5DB"}`,
         borderRadius: 10, padding: "28px 16px", textAlign: "center",
-        cursor: "pointer", background: file ? "#EFF6FF" : "#FAFAFA",
+        cursor: "pointer", background: file ? "var(--info-bg)" : "var(--surface-2)",
         transition: "all .15s", flex: 1,
       }}
     >
@@ -1859,7 +1869,7 @@ function ComparadorTR() {
         textTransform: "uppercase", letterSpacing: ".05em" }}>{versao}</p>
       {file ? (
         <>
-          <p style={{ fontSize: 13, fontWeight: 600, color: "#1E40AF", margin: 0 }}>{file.name}</p>
+          <p style={{ fontSize: 13, fontWeight: 600, color: "var(--info-text)", margin: 0 }}>{file.name}</p>
           <p style={{ fontSize: 11, color: "var(--text-muted)", margin: "4px 0 0" }}>
             {(file.size/1024).toFixed(0)} KB · clique para trocar
           </p>
@@ -1976,9 +1986,9 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
   };
 
   const corTipo = {
-    alterada: { bg:"#FFFBEB", border:"#FDE68A", badge:"#92400E", badgeBg:"#FEF3C7", icon:"✏️", label:"Alterada" },
-    incluida: { bg:"#F0FDF4", border:"#BBF7D0", badge:"#065F46", badgeBg:"#DCFCE7", icon:"➕", label:"Incluída" },
-    removida: { bg:"#FEF2F2", border:"#FEE2E2", badge:"#991B1B", badgeBg:"#FEE2E2", icon:"➖", label:"Removida" },
+    alterada: { bg:"var(--warning-bg)", border:"var(--warning-border)", badge:"var(--warning-text)", badgeBg:"var(--warning-bg)", icon:"✏️", label:"Alterada" },
+    incluida: { bg:"#F0FDF4", border:"#BBF7D0", badge:"var(--success-text)", badgeBg:"#DCFCE7", icon:"➕", label:"Incluída" },
+    removida: { bg:"var(--danger-bg)", border:"var(--danger-border)", badge:"var(--danger-text)", badgeBg:"var(--danger-border)", icon:"➖", label:"Removida" },
   };
 
   const clausulasFiltradas = resultado?.clausulas?.filter(c => {
@@ -2013,16 +2023,16 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
         </div>
 
         {error && (
-          <div style={{ background:"#FEF2F2", border:"1px solid #FEE2E2", borderRadius:8, padding:"12px 16px", marginBottom:16 }}>
-            <p style={{ fontSize:13, color:"#991B1B", margin:0 }}>⚠ {error}</p>
+          <div style={{ background:"var(--danger-bg)", border:"1px solid #FEE2E2", borderRadius:8, padding:"12px 16px", marginBottom:16 }}>
+            <p style={{ fontSize:13, color:"var(--danger-text)", margin:0 }}>⚠ {error}</p>
           </div>
         )}
 
         <button onClick={analisar} disabled={loading || !b64Antes || !b64Depois || !apiKeySet}
           style={{
             width:"100%", padding:"13px 24px",
-            background: loading || !b64Antes || !b64Depois || !apiKeySet ? "#E2E8F0" : "#0F172A",
-            color: loading || !b64Antes || !b64Depois || !apiKeySet ? "#9CA3AF" : "#fff",
+            background: loading || !b64Antes || !b64Depois || !apiKeySet ? "#E2E8F0" : "var(--text-primary)",
+            color: loading || !b64Antes || !b64Depois || !apiKeySet ? "var(--text-subtle)" : "var(--card-bg)",
             border:"none", borderRadius:10, fontSize:14, fontWeight:700,
             cursor: loading || !b64Antes || !b64Depois || !apiKeySet ? "not-allowed" : "pointer",
           }}>
@@ -2042,10 +2052,10 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
           {/* Resumo executivo */}
           {(() => {
             const alertaCfg = {
-              critico:   { bg:"#FEF2F2", border:"#FEE2E2", titleColor:"#991B1B", textColor:"#7F1D1D", icon:"🚨", label:"ATENÇÃO — Alterações com impacto crítico identificadas" },
-              relevante: { bg:"#FFFBEB", border:"#FDE68A", titleColor:"#92400E", textColor:"#78350F", icon:"⚠️", label:"Alterações relevantes identificadas — revisão recomendada" },
-              baixo:     { bg:"#EFF6FF", border:"#BFDBFE", titleColor:"#1E40AF", textColor:"#1E3A8A", icon:"📝", label:"Resumo executivo" },
-            }[resultado.alerta_geral] || { bg:"#EFF6FF", border:"#BFDBFE", titleColor:"#1E40AF", textColor:"#1E3A8A", icon:"📝", label:"Resumo executivo" };
+              critico:   { bg:"var(--danger-bg)", border:"var(--danger-border)", titleColor:"var(--danger-text)", textColor:"#7F1D1D", icon:"🚨", label:"ATENÇÃO — Alterações com impacto crítico identificadas" },
+              relevante: { bg:"var(--warning-bg)", border:"var(--warning-border)", titleColor:"var(--warning-text)", textColor:"#78350F", icon:"⚠️", label:"Alterações relevantes identificadas — revisão recomendada" },
+              baixo:     { bg:"var(--info-bg)", border:"var(--info-border)", titleColor:"var(--info-text)", textColor:"var(--info-text)", icon:"📝", label:"Resumo executivo" },
+            }[resultado.alerta_geral] || { bg:"var(--info-bg)", border:"var(--info-border)", titleColor:"var(--info-text)", textColor:"var(--info-text)", icon:"📝", label:"Resumo executivo" };
             return (
               <div style={{ background:alertaCfg.bg, border:`1px solid ${alertaCfg.border}`, borderRadius:12, padding:20, marginBottom:16 }}>
                 <p style={{ fontSize:13, fontWeight:700, color:alertaCfg.titleColor, marginBottom:8 }}>
@@ -2059,17 +2069,17 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
           {/* Contadores */}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:8, marginBottom:16 }}>
             {[
-              { label:"Todas",     valor: resultado.clausulas.length,                                                          cor:"#4F8EF7", bg:"#EFF6FF", id:"todos" },
-              { label:"Alteradas", valor: resultado.total_alteradas || resultado.clausulas.filter(c=>c.tipo==="alterada").length, cor:"#D97706", bg:"#FFFBEB", id:"alterada" },
-              { label:"Incluídas", valor: resultado.total_incluidas || resultado.clausulas.filter(c=>c.tipo==="incluida").length, cor:"#059669", bg:"#F0FDF4", id:"incluida" },
-              { label:"Removidas", valor: resultado.total_removidas || resultado.clausulas.filter(c=>c.tipo==="removida").length, cor:"#DC2626", bg:"#FEF2F2", id:"removida" },
-              { label:"Críticas",  valor: resultado.clausulas.filter(c=>c.impacto_nivel==="critico").length,                   cor:"#991B1B", bg:"#FEF2F2", id:"critico" },
-              { label:"Relevantes",valor: resultado.clausulas.filter(c=>c.impacto_nivel==="relevante").length,                 cor:"#92400E", bg:"#FFFBEB", id:"relevante" },
+              { label:"Todas",     valor: resultado.clausulas.length,                                                          cor:"#4F8EF7", bg:"var(--info-bg)", id:"todos" },
+              { label:"Alteradas", valor: resultado.total_alteradas || resultado.clausulas.filter(c=>c.tipo==="alterada").length, cor:"var(--warning-text)", bg:"var(--warning-bg)", id:"alterada" },
+              { label:"Incluídas", valor: resultado.total_incluidas || resultado.clausulas.filter(c=>c.tipo==="incluida").length, cor:"var(--success-text)", bg:"#F0FDF4", id:"incluida" },
+              { label:"Removidas", valor: resultado.total_removidas || resultado.clausulas.filter(c=>c.tipo==="removida").length, cor:"var(--danger-text)", bg:"var(--danger-bg)", id:"removida" },
+              { label:"Críticas",  valor: resultado.clausulas.filter(c=>c.impacto_nivel==="critico").length,                   cor:"var(--danger-text)", bg:"var(--danger-bg)", id:"critico" },
+              { label:"Relevantes",valor: resultado.clausulas.filter(c=>c.impacto_nivel==="relevante").length,                 cor:"var(--warning-text)", bg:"var(--warning-bg)", id:"relevante" },
             ].map(({ label, valor, cor, bg, id }) => (
               <button key={id} onClick={() => setFiltro(id)}
                 style={{
                   textAlign:"center", padding:"12px 6px", borderRadius:10, cursor:"pointer",
-                  background: filtro===id ? bg : "#fff",
+                  background: filtro===id ? bg : "var(--card-bg)",
                   border: `2px solid ${filtro===id ? cor : "#E5E7EB"}`,
                   transition:"all .15s",
                 }}>
@@ -2134,10 +2144,10 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
                     {/* Impacto */}
                     {(c.impacto_descricao || c.impacto) && (() => {
                       const nivelCfg = {
-                        critico:   { bg:"#FEF2F2", color:"#991B1B", border:"#FEE2E2", icon:"🚨", label:"Impacto Crítico" },
-                        relevante: { bg:"#FFFBEB", color:"#92400E", border:"#FDE68A", icon:"⚠️", label:"Impacto Relevante" },
-                        baixo:     { bg:"#F0FDF4", color:"#065F46", border:"#BBF7D0", icon:"ℹ️", label:"Impacto Baixo" },
-                      }[c.impacto_nivel] || { bg:"#F8FAFC", color:"var(--text-muted)", border:"#E2E8F0", icon:"⚡", label:"Impacto" };
+                        critico:   { bg:"var(--danger-bg)", color:"var(--danger-text)", border:"var(--danger-border)", icon:"🚨", label:"Impacto Crítico" },
+                        relevante: { bg:"var(--warning-bg)", color:"var(--warning-text)", border:"var(--warning-border)", icon:"⚠️", label:"Impacto Relevante" },
+                        baixo:     { bg:"#F0FDF4", color:"var(--success-text)", border:"#BBF7D0", icon:"ℹ️", label:"Impacto Baixo" },
+                      }[c.impacto_nivel] || { bg:"var(--card-header-bg)", color:"var(--text-muted)", border:"#E2E8F0", icon:"⚡", label:"Impacto" };
                       return (
                         <div style={{ marginTop:10, background:nivelCfg.bg, border:`1px solid ${nivelCfg.border}`, borderRadius:8, padding:"10px 12px" }}>
                           <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom: c.fundamento ? 6 : 0 }}>
@@ -3332,7 +3342,7 @@ function ReajusteModule() {
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                 <div style={{ width:28, height:28, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:800,
                   background: feito ? "var(--success-text)" : ativo ? "var(--accent)" : "var(--surface-2)",
-                  color: feito || ativo ? "#fff" : "var(--text-muted)" }}>
+                  color: feito || ativo ? "var(--card-bg)" : "var(--text-muted)" }}>
                   {feito ? "✓" : num}
                 </div>
                 <span style={{ fontSize:12, fontWeight: ativo ? 700 : 500, color: ativo ? "var(--text-primary)" : "var(--text-muted)" }}>{s}</span>
@@ -3803,7 +3813,7 @@ function RepactuacaoModule() {
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                 <div style={{ width:28, height:28, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:800,
                   background: feito?"var(--success-text)":ativo?"var(--accent)":"var(--surface-2)",
-                  color: feito||ativo?"#fff":"var(--text-muted)" }}>
+                  color: feito||ativo?"var(--card-bg)":"var(--text-muted)" }}>
                   {feito?"✓":num}
                 </div>
                 <span style={{ fontSize:12, fontWeight:ativo?700:500, color:ativo?"var(--text-primary)":"var(--text-muted)" }}>{s}</span>
@@ -4071,7 +4081,7 @@ function ApiKeyPanel() {
   if (saved && !editing) return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 18px", background:"var(--success-bg)", border:"1px solid var(--success-border)", borderRadius:12 }}>
       <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-        <div style={{ width:32, height:32, borderRadius:8, background:"var(--success-text)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, color:"#fff" }}>✓</div>
+        <div style={{ width:32, height:32, borderRadius:8, background:"var(--success-text)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, color:"var(--card-bg)" }}>✓</div>
         <div>
           <p style={{ fontSize:13, fontWeight:700, color:"var(--success-text)", margin:0 }}>API Gemini configurada</p>
           <p style={{ fontSize:11, color:"var(--text-muted)", margin:0 }}>Chave salva no navegador · Todos os módulos de IA estão ativos</p>
@@ -4133,7 +4143,7 @@ function HomePage({ onNavigate }) {
       ]
     },
     {
-      id:"pesquisa", label:"Pesquisa & Background", icon:"🔍", color:"#10B981",
+      id:"pesquisa", label:"Pesquisa & Background", icon:"🔍", color:"var(--success-text)",
       desc:"Pesquisa de preços e verificação de antecedentes",
       items:[
         { id:"pesquisa", icon:"📊", label:"Pesquisa Semestral ARP",   desc:"Analise compatibilidade de preços (Dec. 48.821/2023)" },
@@ -4148,7 +4158,7 @@ function HomePage({ onNavigate }) {
 
       {/* Hero */}
       <div style={{ textAlign:"center", marginBottom:48 }}>
-        <div style={{ display:"inline-flex", width:72, height:72, borderRadius:20, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", alignItems:"center", justifyContent:"center", marginBottom:20, fontSize:30, color:"#fff", boxShadow:"0 12px 40px rgba(99,102,241,.35)" }}>✓</div>
+        <div style={{ display:"inline-flex", width:72, height:72, borderRadius:20, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", alignItems:"center", justifyContent:"center", marginBottom:20, fontSize:30, color:"var(--card-bg)", boxShadow:"0 12px 40px rgba(99,102,241,.35)" }}>✓</div>
         <h1 style={{ fontSize:34, fontWeight:900, color:"var(--text-primary)", margin:"0 0 10px", letterSpacing:"-.03em" }}>DocCheck</h1>
         <p style={{ fontSize:15, color:"var(--text-muted)", margin:"0 0 4px" }}>Plataforma de análise documental · GAB — SUPCL/SESRJ</p>
         <p style={{ fontSize:13, color:"var(--text-subtle)", margin:0 }}>Selecione um módulo ou use a navegação no topo</p>
@@ -4245,7 +4255,7 @@ function Shell() {
         <div style={{ maxWidth:1200, margin:"0 auto", padding:"0 20px", display:"flex", alignItems:"center", height:56, gap:8 }}>
           <button onClick={() => navGrupo("home")}
             style={{ display:"flex", alignItems:"center", gap:10, background:"none", border:"none", cursor:"pointer", padding:"4px 8px 4px 0", borderRadius:8, flexShrink:0 }}>
-            <div style={{ width:32, height:32, borderRadius:9, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, color:"#fff", fontWeight:900, boxShadow:"0 2px 8px rgba(99,102,241,.4)" }}>✓</div>
+            <div style={{ width:32, height:32, borderRadius:9, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, color:"var(--card-bg)", fontWeight:900, boxShadow:"0 2px 8px rgba(99,102,241,.4)" }}>✓</div>
             <div style={{ lineHeight:1.2, textAlign:"left" }}>
               <div style={{ fontSize:14, fontWeight:900, color:"var(--text-primary)", letterSpacing:"-.02em" }}>DocCheck</div>
               <div style={{ fontSize:10, color:"var(--text-subtle)" }}>GAB · SUPCL/SESRJ</div>
@@ -4259,7 +4269,7 @@ function Shell() {
               <button key={g.id} onClick={() => navGrupo(g.id, g.abas[0]?.id)}
                 style={{ padding:"6px 14px", borderRadius:8, border:"none", cursor:"pointer", whiteSpace:"nowrap", flexShrink:0, fontSize:13, fontWeight: grupo===g.id ? 700 : 500, transition:"all .15s",
                   background: grupo===g.id ? "var(--accent)" : "transparent",
-                  color: grupo===g.id ? "#fff" : "var(--header-muted)",
+                  color: grupo===g.id ? "var(--card-bg)" : "var(--header-muted)",
                 }}>
                 {g.label}
               </button>
