@@ -314,7 +314,9 @@
   
   
   
+  
   <script type="text/babel">
+
 
 
 
@@ -344,9 +346,11 @@ function clearGeminiKey() {
   
   
   
+  
   </script>
 
   <script type="text/babel">
+
 
 
 
@@ -791,9 +795,11 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
   
   
   
+  
   </script>
 
   <script type="text/babel">
+
 
 
 
@@ -1296,9 +1302,11 @@ Se não encontrar nenhuma empresa, retorne [].`;
   
   
   
+  
   </script>
 
   <script type="text/babel">
+
 
 
 
@@ -1821,9 +1829,11 @@ function VencimentosModule() {
   
   
   
+  
   </script>
 
   <script type="text/babel">
+
 
 
 
@@ -2192,9 +2202,11 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
   
   
   
+  
   </script>
 
   <script type="text/babel">
+
 
 
 // ─────────────────────────────────────────────
@@ -2749,9 +2761,11 @@ function ResultadoImpugnacao({ resultado, onVoltar }) {
 
   
   
+  
   </script>
 
   <script type="text/babel">
+
 
 
 
@@ -3118,79 +3132,43 @@ Retorne APENAS um JSON puro com esta estrutura (sem markdown):
   
   
   
+  
   </script>
 
   <script type="text/babel">
 // ─────────────────────────────────────────────
-// MÓDULO — REAJUSTE CONTRATUAL (v2)
-// Lógica correta: período aquisitivo 12 meses,
-// período de cômputo do índice, prazo 60 dias
+// MÓDULO — REAJUSTE CONTRATUAL (v3)
 // ─────────────────────────────────────────────
-
 function ReajusteModule() {
   const apiKey = useGeminiKey();
   const apiKeySet = apiKey.length > 10;
-
   const [etapa, setEtapa] = React.useState(1);
   const [loading, setLoading] = React.useState(false);
   const [loadingIbge, setLoadingIbge] = React.useState(false);
   const [error, setError] = React.useState("");
-
   const [pdfContrato, setPdfContrato] = React.useState(null);
   const [b64Contrato, setB64Contrato] = React.useState(null);
   const [contratoInfo, setContratoInfo] = React.useState(null);
-
   const [campos, setCampos] = React.useState({
-    dataBase: "",
-    indice: "IPCA",
-    indiceCustom: "",
-    dataPublicacaoIndice: "",
-    dataPublicacaoAjustada: false,
-    dataUltimoReajuste: "",
+    dataBase: "", indice: "IPCA", indiceCustom: "",
+    reajustesAnteriores: [], // [{dataConcessao, cicloNumero}]
     dataPedido: "",
+    dataPublicacaoManual: "", pubManualAtiva: false,
   });
-
   const [resultado, setResultado] = React.useState(null);
   const refContrato = React.useRef();
 
-  const lerPdf = (f) => new Promise(r => { const rd = new FileReader(); rd.onload = e => r(e.target.result.split(",")[1]); rd.readAsDataURL(f); });
-  const set = (k,v) => setCampos(p => ({...p,[k]:v}));
+  const lerPdf = f => new Promise(r => { const rd = new FileReader(); rd.onload = e => r(e.target.result.split(",")[1]); rd.readAsDataURL(f); });
+  const set = (k, v) => setCampos(p => ({ ...p, [k]: v }));
+  const pd = s => { if (!s) return null; if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) { const [d,m,y]=s.split("/"); return new Date(+y,+m-1,+d); } if (/^\d{4}-\d{2}-\d{2}$/.test(s)) { const [y,m,d]=s.split("-"); return new Date(+y,+m-1,+d); } return null; };
+  const fd = d => d instanceof Date && !isNaN(d) ? d.toLocaleDateString("pt-BR") : "—";
+  const fMes = d => d instanceof Date && !isNaN(d) ? d.toLocaleDateString("pt-BR",{month:"long",year:"numeric"}) : "—";
+  const addM = (d,n) => { const r=new Date(d.getFullYear(),d.getMonth()+n,1); return r; };
+  const addD = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
+  const hoje = () => { const d=new Date(); d.setHours(0,0,0,0); return d; };
 
-  const parseDate = (s) => {
-    if (!s) return null;
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) { const [d,m,y]=s.split("/"); return new Date(y,m-1,d); }
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) { const [y,m,d]=s.split("-"); return new Date(y,m-1,d); }
-    return null;
-  };
-  const fmtDate = (d) => d ? d.toLocaleDateString("pt-BR") : "—";
-  const fmtMesAno = (d) => d ? d.toLocaleDateString("pt-BR",{month:"long",year:"numeric"}) : "—";
-  const addMonths = (d,n) => { const r=new Date(d); r.setMonth(r.getMonth()+n); return r; };
-  const addDays = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
-  const diffDays = (a,b) => Math.ceil((b-a)/86400000);
-
-  // Busca data de divulgação do IPCA no IBGE (retorna valor do índice + estima data)
-  const buscarIBGE = async (mesFim) => {
-    // mesFim = Date do último mês do período de cômputo
-    const periodo = `${mesFim.getFullYear()}${String(mesFim.getMonth()+1).padStart(2,"0")}`;
-    const indice = campos.indice === "IPCA" ? "7060" : campos.indice === "INPC" ? "7062" : null;
-    if (!indice) return null;
-    setLoadingIbge(true);
-    try {
-      const url = `https://servicodados.ibge.gov.br/api/v3/agregados/${indice}/periodos/${periodo}/variaveis/63?localidades=N1[all]`;
-      const r = await fetch(url);
-      if (!r.ok) return null;
-      const data = await r.json();
-      const valor = data?.[0]?.resultados?.[0]?.series?.[0]?.serie?.[periodo];
-      if (!valor) return null;
-      // Data de divulgação: IBGE publica o IPCA do mês M no dia ~10 do mês M+1
-      const divulgacao = new Date(mesFim.getFullYear(), mesFim.getMonth()+1, 10);
-      return { valor: parseFloat(valor), divulgacao };
-    } catch(e) { return null; }
-    finally { setLoadingIbge(false); }
-  };
-
-  const handleContrato = async (f) => {
-    if (!f || f.type !== "application/pdf") return;
+  const handleContrato = async f => {
+    if (!f||f.type!=="application/pdf") return;
     setPdfContrato(f); setB64Contrato(await lerPdf(f)); setError(""); setContratoInfo(null); setEtapa(1);
   };
 
@@ -3199,128 +3177,116 @@ function ReajusteModule() {
     if (!apiKeySet) { setError("Configure a chave Gemini na página inicial."); return; }
     setLoading(true); setError("");
     try {
-      const prompt = `Analise este contrato e retorne APENAS JSON puro sem markdown:
-{"lei_aplicavel":"8666"|"14133"|"indeterminado","numero_contrato":"...","objeto":"até 10 palavras","contratada":"...","data_assinatura":"DD/MM/AAAA ou null","data_abertura_pregao":"DD/MM/AAAA ou null","data_proposta":"DD/MM/AAAA ou null","data_rapp":"DD/MM/AAAA ou null","indice_reajuste":"IPCA|INPC|IGP-M|outro ou null","tem_clausula_reajuste":true|false,"clausula_reajuste":"texto resumido ou null","justificativa_lei":"por que identificou essa lei","observacoes":"alertas ou null"}`;
+      const prompt = `Analise este contrato administrativo e extraia as informações abaixo. Retorne APENAS JSON puro sem markdown:
+{"lei_aplicavel":"8666"|"14133"|"indeterminado","numero_contrato":"...","objeto":"resumo em até 10 palavras","contratada":"nome da empresa","data_assinatura":"DD/MM/AAAA ou null","data_abertura_pregao":"DD/MM/AAAA ou null","data_proposta":"DD/MM/AAAA ou null","data_rapp":"DD/MM/AAAA ou null","indice_reajuste":"nome exato do índice previsto no contrato (ex: IPCA, INPC, IGP-M, IPC-A) ou null","tem_clausula_reajuste":true|false,"clausula_reajuste":"transcrição resumida da cláusula de reajuste ou null","periodicidade_reajuste":"12 meses ou outro prazo se previsto expressamente","justificativa_lei":"por que identificou esta lei — cite elementos do contrato","observacoes":"alertas sobre cláusulas incomuns, vedações ou particularidades relevantes, ou null"}
+Atenção: o índice de reajuste DEVE ser extraído da cláusula contratual. Não assuma IPCA se não estiver expresso.`;
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-      const resp = await fetch(url, { method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64Contrato}},{text:prompt}]}], generationConfig:{temperature:0.1,maxOutputTokens:1024} })});
+      const resp = await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64Contrato}},{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:1024}})});
       const data = await resp.json();
       const parsed = JSON.parse((data.candidates?.[0]?.content?.parts?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
       setContratoInfo(parsed);
-      const db = parsed.lei_aplicavel==="8666" ? (parsed.data_proposta||"") : (parsed.data_rapp||"");
-      setCampos(p => ({...p, dataBase:db, indice:parsed.indice_reajuste||"IPCA"}));
+      const db = parsed.lei_aplicavel==="8666"?(parsed.data_proposta||""):(parsed.data_rapp||"");
+      setCampos(p=>({...p, dataBase:db, indice:parsed.indice_reajuste||"IPCA"}));
       setEtapa(2);
     } catch(e) { setError("Erro: "+e.message); }
     finally { setLoading(false); }
   };
 
-  // Calcula os ciclos de reajuste a partir da data base
+  const buscarIndiceIbge = async (mesRef, nomeIndice) => {
+    const codigos = {"IPCA":"7060","INPC":"7062","IGP-M":"IGP-M","IPCA-E":"10764"};
+    const cod = codigos[nomeIndice];
+    if (!cod || !["IPCA","INPC","IPCA-E"].includes(nomeIndice)) return null;
+    const periodo = `${mesRef.getFullYear()}${String(mesRef.getMonth()+1).padStart(2,"0")}`;
+    try {
+      const url = `https://servicodados.ibge.gov.br/api/v3/agregados/${cod}/periodos/${periodo}/variaveis/63?localidades=N1[all]`;
+      const r = await fetch(url);
+      if (!r.ok) return null;
+      const d = await r.json();
+      const valor = d?.[0]?.resultados?.[0]?.series?.[0]?.serie?.[periodo];
+      if (!valor) return null;
+      // IBGE divulga IPCA/INPC do mês M no dia ~10 do mês M+1
+      const divulgacao = new Date(mesRef.getFullYear(), mesRef.getMonth()+1, 10);
+      return {valor: parseFloat(valor), divulgacao, fonte:"IBGE"};
+    } catch { return null; }
+  };
+
   const calcular = async () => {
     setError("");
-    const dataBase = parseDate(campos.dataBase);
+    const dataBase = pd(campos.dataBase);
     if (!dataBase) { setError("Informe a data base no formato DD/MM/AAAA."); return; }
-    const dataUltimo = campos.dataUltimoReajuste ? parseDate(campos.dataUltimoReajuste) : null;
-    const dataPedido = campos.dataPedido ? parseDate(campos.dataPedido) : new Date();
-    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const dataPedido = campos.dataPedido ? pd(campos.dataPedido) : hoje();
+    const indice = campos.indice==="Outro" ? campos.indiceCustom : campos.indice;
 
-    // A referência de cada ciclo começa na data base (ou na data do último reajuste)
-    const refInicio = dataUltimo || dataBase;
-    // Quantos ciclos já completaram? (a cada 12 meses a partir da dataBase)
-    // Mesmo que houve reajuste anterior, os 12 meses são sempre contados da dataBase original
-    
+    // Determina quantos ciclos já foram concedidos
+    const concedidos = campos.reajustesAnteriores
+      .map(r => pd(r.dataConcessao))
+      .filter(Boolean)
+      .length;
+
+    // Mês de início da data base (dia 1 do mês)
+    const mesBase = new Date(dataBase.getFullYear(), dataBase.getMonth(), 1);
+
     const ciclos = [];
-    let ciclo = 1;
-    while (ciclo <= 10) {
-      // Data em que o direito ao N-ésimo reajuste é adquirido
-      const dataAquisicao = addMonths(dataBase, ciclo * 12);
-      // Não projeta mais de 1 mês no futuro
-      if (dataAquisicao > addMonths(hoje, 1)) break;
+    setLoadingIbge(true);
+    try {
+      for (let n = 1; n <= 10; n++) {
+        // Período aquisitivo N: de mesBase+(n-1)*12 a mesBase+n*12 (exclusive)
+        // Direito adquirido ao completar n*12 meses a partir do mesBase
+        const mesAquisicao = addM(mesBase, n * 12); // mês em que completa o direito
+        const dataAquisicao = mesAquisicao; // primeiro dia do mês
 
-      // Período de cômputo do índice:
-      // Início = mês da data base (mês/ano)
-      // Fim = mês ANTERIOR ao mês de aquisição do direito
-      // Ex: base jun/2025, aquisição jun/2026 → cômputo jun/2025 a mai/2026
-      const mesInicioCom = new Date(dataBase.getFullYear(), dataBase.getMonth() + (ciclo-1)*12, 1);
-      const mesFimCom    = new Date(dataAquisicao.getFullYear(), dataAquisicao.getMonth()-1, 1); // mês anterior à aquisição
+        // Não projeta mais que 1 mês no futuro
+        if (dataAquisicao > addM(hoje(), 1)) break;
 
-      // Data estimada de divulgação do índice do mês fim do cômputo
-      // IBGE publica IPCA do mês M no dia ~10 do mês M+1
-      let dataPublicacao = null;
-      let valorIndice = null;
-      let ibgeConsultado = false;
+        // Período de cômputo: do mês base+(n-1)*12 ao mês anterior ao da aquisição
+        // Ex n=1, base=jun/24: cômputo jun/24 a mai/25
+        const mesInicioCom = addM(mesBase, (n-1)*12);
+        const mesFimCom = addM(mesBase, n*12 - 1); // mês anterior ao da aquisição
 
-      if (campos.dataPublicacaoIndice && campos.dataPublicacaoAjustada) {
-        // Usuário ajustou manualmente — usa só para o ciclo mais recente
-        if (ciclo === ciclos.length + 1 || ciclos.length === 0) {
-          dataPublicacao = parseDate(campos.dataPublicacaoIndice);
+        // Busca o índice do mês fim do cômputo
+        let pubInfo = null;
+        if (campos.pubManualAtiva && campos.dataPublicacaoManual && n === ciclos.length + 1) {
+          pubInfo = { divulgacao: pd(campos.dataPublicacaoManual), valor:null, fonte:"manual" };
+        } else {
+          pubInfo = await buscarIndiceIbge(mesFimCom, indice);
         }
+        // Fallback: dia 10 do mês seguinte ao fim do cômputo
+        if (!pubInfo) {
+          pubInfo = { divulgacao: new Date(mesFimCom.getFullYear(), mesFimCom.getMonth()+1, 10), valor:null, fonte:"estimado" };
+        }
+
+        const prazoRetro = addD(pubInfo.divulgacao, 60);
+        const adquirido = dataAquisicao <= hoje();
+        const jaConcedido = n <= concedidos;
+        const temRetro = adquirido && !jaConcedido ? (dataPedido <= prazoRetro) : null;
+
+        ciclos.push({ n, mesInicioCom, mesFimCom, dataAquisicao, pubInfo, prazoRetro, adquirido, jaConcedido, temRetro, dataPedido });
       }
+    } finally { setLoadingIbge(false); }
 
-      if (!dataPublicacao) {
-        // Tenta buscar IBGE (só se IPCA ou INPC)
-        if ((campos.indice === "IPCA" || campos.indice === "INPC") && mesFimCom <= hoje) {
-          const ibge = await buscarIBGE(mesFimCom);
-          if (ibge) {
-            dataPublicacao = ibge.divulgacao;
-            valorIndice = ibge.valor;
-            ibgeConsultado = true;
-          }
-        }
-        // Fallback: estima dia 10 do mês seguinte ao fim do cômputo
-        if (!dataPublicacao) {
-          dataPublicacao = new Date(mesFimCom.getFullYear(), mesFimCom.getMonth()+1, 10);
-        }
-      }
-
-      const prazoRetro = addDays(dataPublicacao, 60);
-      const adquirido = dataAquisicao <= hoje;
-      const temRetro = adquirido ? (dataPedido <= prazoRetro) : null;
-      const efeitosDe = temRetro === true ? dataAquisicao : temRetro === false ? dataPedido : dataAquisicao;
-
-      ciclos.push({
-        ciclo,
-        dataAquisicao,
-        mesInicioCom,
-        mesFimCom,
-        dataPublicacao,
-        valorIndice,
-        ibgeConsultado,
-        prazoRetro,
-        adquirido,
-        temRetro,
-        dataPedido,
-        efeitosDe,
-        diasParaAquisicao: adquirido ? 0 : diffDays(hoje, dataAquisicao),
-        diasParaRetro: adquirido && !temRetro ? diffDays(prazoRetro, hoje) : null,
-      });
-
-      ciclo++;
+    if (ciclos.length === 0) {
+      // Nenhum adquirido — mostra o próximo
     }
 
-    // Próximo ciclo (ainda não adquirido)
-    const proxCiclo = ciclo;
-    const proxAquisicao = addMonths(dataBase, proxCiclo * 12);
-    const proxMesFimCom = new Date(proxAquisicao.getFullYear(), proxAquisicao.getMonth()-1, 1);
-    const proxPublicacao = new Date(proxMesFimCom.getFullYear(), proxMesFimCom.getMonth()+1, 10);
+    // Próximo a adquirir
+    const ultimoN = ciclos.length > 0 ? ciclos[ciclos.length-1].n : 0;
+    const proxN = ultimoN + 1;
+    const proxMesAq = addM(mesBase, proxN*12);
+    const proxMesFimCom = addM(mesBase, proxN*12-1);
+    const proxPubEst = new Date(proxMesFimCom.getFullYear(), proxMesFimCom.getMonth()+1, 10);
 
     setResultado({
       lei: contratoInfo?.lei_aplicavel,
       contrato: contratoInfo,
-      dataBase: fmtDate(dataBase),
-      dataBaseObj: dataBase,
-      indice: campos.indice === "Outro" ? campos.indiceCustom : campos.indice,
+      dataBase: fd(dataBase),
+      mesBase: fMes(mesBase),
+      indice,
       ciclos,
-      proximoCiclo: {
-        numero: proxCiclo,
-        dataAquisicao: proxAquisicao,
-        mesInicioCom: new Date(dataBase.getFullYear(), dataBase.getMonth()+(proxCiclo-1)*12, 1),
-        mesFimCom: proxMesFimCom,
-        dataPublicacaoEstimada: proxPublicacao,
-        prazoRetroEstimado: addDays(proxPublicacao, 60),
-      },
+      proximo: { n:proxN, mesAquisicao:proxMesAq, mesInicioCom:addM(mesBase,(proxN-1)*12), mesFimCom:proxMesFimCom, pubEst:proxPubEst, prazoRetroEst:addD(proxPubEst,60) },
       alertas: [
         !contratoInfo?.tem_clausula_reajuste && "⚠️ Cláusula de reajuste não identificada — verificar previsão editalícia",
-        contratoInfo?.lei_aplicavel === "indeterminado" && "⚠️ Lei não identificada com certeza — confirme manualmente",
+        contratoInfo?.lei_aplicavel==="indeterminado" && "⚠️ Lei não identificada com certeza — confirme manualmente",
+        !contratoInfo?.indice_reajuste && "⚠️ Índice de reajuste não identificado na cláusula contratual — confirme manualmente",
         contratoInfo?.observacoes,
       ].filter(Boolean),
     });
@@ -3328,8 +3294,8 @@ function ReajusteModule() {
   };
 
   const Stepper = () => (
-    <div style={{display:"flex",alignItems:"center",gap:0,marginBottom:28}}>
-      {["Contrato","Dados","Resultado"].map((s,i)=>{
+    <div style={{display:"flex",alignItems:"center",marginBottom:28}}>
+      {["Contrato","Dados","Resultado"].map((s,i) => {
         const n=i+1,at=etapa===n,fe=etapa>n;
         return (<React.Fragment key={s}>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -3342,31 +3308,30 @@ function ReajusteModule() {
     </div>
   );
 
-  if (etapa===3 && resultado) return <ResultadoReajuste resultado={resultado} onVoltar={()=>{setEtapa(2);setResultado(null);}} />;
+  if (etapa===3&&resultado) return <ResultadoReajuste resultado={resultado} onVoltar={()=>{setEtapa(2);setResultado(null);}}/>;
 
   return (
     <div className="module-container">
       <div style={{marginBottom:24}}>
         <h2 style={{fontSize:18,fontWeight:900,color:"var(--text-primary)",margin:"0 0 6px",letterSpacing:"-.02em"}}>📈 Reajuste Contratual</h2>
-        <p style={{fontSize:13,color:"var(--text-muted)",margin:0}}>Cálculo do período aquisitivo (12 meses), período de cômputo do índice e prazo de 60 dias para retroatividade.</p>
+        <p style={{fontSize:13,color:"var(--text-muted)",margin:0}}>Período aquisitivo de 12 meses, cômputo do índice e prazo de 60 dias para retroatividade dos efeitos financeiros.</p>
       </div>
-      <Stepper />
+      <Stepper/>
+      {!apiKeySet&&<div className="info-box" style={{marginBottom:20}}><p style={{fontSize:13,color:"var(--info-text)",margin:0}}>🔑 Configure a chave Gemini na página inicial.</p></div>}
+      {error&&<div className="error-box" style={{marginBottom:16}}><p style={{margin:0}}>⚠ {error}</p></div>}
 
-      {!apiKeySet && <div className="info-box" style={{marginBottom:20}}><p style={{fontSize:13,color:"var(--info-text)",margin:0}}>🔑 Configure a chave Gemini na página inicial.</p></div>}
-      {error && <div className="error-box" style={{marginBottom:16}}><p style={{margin:0}}>⚠ {error}</p></div>}
-
-      {/* ETAPA 1 */}
+      {/* ETAPA 1 — só o contrato */}
       <div className="card" style={{marginBottom:20,opacity:etapa>1?.65:1}}>
         <p className="card-title">Etapa 1 — Contrato inicial</p>
-        <p className="card-subtitle" style={{marginBottom:14}}>O sistema identifica a lei aplicável e extrai a data base automaticamente.</p>
+        <p className="card-subtitle" style={{marginBottom:14}}>O sistema identificará automaticamente a lei aplicável, o índice contratual e a data base.</p>
         <div onClick={()=>refContrato.current.click()} onDrop={e=>{e.preventDefault();handleContrato(e.dataTransfer.files[0]);}} onDragOver={e=>e.preventDefault()} className="dropzone" style={{marginBottom:14}}>
           <input ref={refContrato} type="file" accept=".pdf" style={{display:"none"}} onChange={e=>handleContrato(e.target.files[0])}/>
-          {pdfContrato?(<><div style={{fontSize:22}}>📄</div><p style={{fontSize:13,fontWeight:600,color:"var(--accent)",margin:"6px 0 2px"}}>{pdfContrato.name}</p><p className="text-muted" style={{fontSize:11}}>Clique para trocar</p></>):(<><div style={{fontSize:22}}>📂</div><p style={{fontSize:12,color:"var(--text-muted)",margin:"6px 0 0"}}>Arraste ou <strong style={{color:"var(--accent)"}}>clique</strong> para selecionar</p></>)}
+          {pdfContrato?(<><div style={{fontSize:22}}>📄</div><p style={{fontSize:13,fontWeight:600,color:"var(--accent)",margin:"6px 0 2px"}}>{pdfContrato.name}</p><p className="text-muted" style={{fontSize:11}}>Clique para trocar</p></>):(<><div style={{fontSize:22}}>📂</div><p style={{fontSize:12,color:"var(--text-muted)",margin:"6px 0 0"}}>Arraste ou <strong style={{color:"var(--accent)"}}>clique</strong> para selecionar o PDF do contrato</p></>)}
         </div>
-        {etapa===1&&<button onClick={analisarContrato} disabled={loading||!b64Contrato||!apiKeySet} className="btn-primary" style={{width:"100%"}}>{loading?"Analisando…":"Analisar contrato →"}</button>}
+        {etapa===1&&<button onClick={analisarContrato} disabled={loading||!b64Contrato||!apiKeySet} className="btn-primary" style={{width:"100%"}}>{loading?"Analisando contrato…":"Analisar contrato →"}</button>}
         {contratoInfo&&etapa>1&&(
           <div style={{marginTop:12,padding:"10px 14px",background:"var(--surface-2)",borderRadius:8,fontSize:12,color:"var(--text-secondary)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span>✓ <strong>{contratoInfo.numero_contrato||"Contrato"}</strong> · Lei <strong>{contratoInfo.lei_aplicavel==="14133"?"14.133/2021":contratoInfo.lei_aplicavel==="8666"?"8.666/1993":"a confirmar"}</strong> · {contratoInfo.contratada}</span>
+            <span>✓ <strong>{contratoInfo.numero_contrato||"Contrato"}</strong> · Lei <strong>{contratoInfo.lei_aplicavel==="14133"?"14.133/2021":contratoInfo.lei_aplicavel==="8666"?"8.666/1993":"a confirmar"}</strong> · Índice: <strong>{contratoInfo.indice_reajuste||"verificar"}</strong></span>
             <button onClick={()=>setEtapa(1)} className="btn-link">Trocar</button>
           </div>
         )}
@@ -3375,55 +3340,521 @@ function ReajusteModule() {
       {/* ETAPA 2 */}
       {etapa>=2&&contratoInfo&&(
         <div className="card" style={{marginBottom:20}}>
-          <p className="card-title" style={{marginBottom:12}}>Etapa 2 — Dados para cálculo</p>
+          <p className="card-title" style={{marginBottom:12}}>Etapa 2 — Confirmar dados e reajustes anteriores</p>
 
           <div style={{marginBottom:16,padding:"12px 16px",borderRadius:10,background:"var(--info-bg)",border:"1px solid var(--info-border)"}}>
             <p style={{fontSize:12,fontWeight:700,color:"var(--info-text)",margin:"0 0 4px"}}>
-              {contratoInfo.lei_aplicavel==="14133"?"⚖️ Lei 14.133/2021 — Data base: data do RAPP (orçamento estimativo)":contratoInfo.lei_aplicavel==="8666"?"⚖️ Lei 8.666/93 — Data base: data da proposta apresentada no pregão":"⚠️ Lei não identificada — informe a data base correta"}
+              {contratoInfo.lei_aplicavel==="14133"?"⚖️ Lei 14.133/2021 — Data base: data do RAPP":contratoInfo.lei_aplicavel==="8666"?"⚖️ Lei 8.666/93 — Data base: data da proposta":"⚠️ Lei não identificada — verifique a data base"}
             </p>
-            <p style={{fontSize:11,color:"var(--text-muted)",margin:0}}>O período aquisitivo é de 12 meses a partir desta data. O período de cômputo do índice vai do mês da data base até o mês anterior ao da aquisição do direito.</p>
+            <p style={{fontSize:11,color:"var(--text-muted)",margin:"0 0 4px"}}>
+              Os períodos aquisitivos correm em ciclos de 12 meses a partir do mês da data base:<br/>
+              Ciclo 1: mês base → mês base+12 · Ciclo 2: mês base+12 → mês base+24 etc.
+            </p>
+            {contratoInfo.clausula_reajuste&&<p style={{fontSize:11,color:"var(--text-muted)",margin:"6px 0 0",fontStyle:"italic"}}>📋 Cláusula: "{contratoInfo.clausula_reajuste}"</p>}
           </div>
 
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 20px"}}>
+            <div style={{marginBottom:14}}>
+              <label className="label-text" style={{display:"block",marginBottom:5}}>📅 Data base ({contratoInfo.lei_aplicavel==="8666"?"data da proposta":"data do RAPP"})</label>
+              <input value={campos.dataBase} onChange={e=>set("dataBase",e.target.value)} placeholder="DD/MM/AAAA" className="input-field"/>
+            </div>
+            <div style={{marginBottom:14}}>
+              <label className="label-text" style={{display:"block",marginBottom:5}}>📊 Índice de reajuste</label>
+              <select value={campos.indice} onChange={e=>set("indice",e.target.value)} className="input-field">
+                {["IPCA","INPC","IGP-M","IGP-DI","IPCA-E","IPC","ICV","Outro"].map(i=><option key={i}>{i}</option>)}
+              </select>
+              {campos.indice==="Outro"&&<input value={campos.indiceCustom} onChange={e=>set("indiceCustom",e.target.value)} placeholder="Nome do índice" className="input-field" style={{marginTop:8}}/>}
+              {contratoInfo.indice_reajuste&&campos.indice!==contratoInfo.indice_reajuste&&<p style={{fontSize:11,color:"var(--warning-text)",marginTop:4}}>⚠ Contrato prevê {contratoInfo.indice_reajuste}</p>}
+            </div>
+            <div style={{marginBottom:14}}>
+              <label className="label-text" style={{display:"block",marginBottom:5}}>📋 Data do pedido da empresa</label>
+              <input value={campos.dataPedido} onChange={e=>set("dataPedido",e.target.value)} placeholder="DD/MM/AAAA (vazio = hoje)" className="input-field"/>
+            </div>
+          </div>
+
+          {/* Reajustes anteriores concedidos */}
+          <div style={{padding:"14px 16px",background:"var(--surface-2)",borderRadius:10,border:"1px solid var(--card-border)",marginBottom:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <div>
+                <p style={{fontSize:12,fontWeight:700,color:"var(--text-primary)",margin:0}}>🔄 Reajustes anteriores já concedidos</p>
+                <p style={{fontSize:11,color:"var(--text-muted)",margin:"3px 0 0"}}>Se já houve reajuste(s) anterior(es), informe para calcular o ciclo correto.</p>
+              </div>
+              <button onClick={()=>set("reajustesAnteriores",[...campos.reajustesAnteriores,{dataConcessao:"",cicloNumero:campos.reajustesAnteriores.length+1}])} className="btn-secondary" style={{fontSize:12,whiteSpace:"nowrap"}}>+ Adicionar</button>
+            </div>
+            {campos.reajustesAnteriores.length===0&&<p style={{fontSize:12,color:"var(--text-subtle)",margin:0}}>Nenhum reajuste anterior — este será o primeiro.</p>}
+            {campos.reajustesAnteriores.map((r,i)=>(
+              <div key={i} style={{display:"flex",gap:10,alignItems:"center",marginTop:8}}>
+                <span style={{fontSize:12,color:"var(--text-muted)",minWidth:16}}>{i+1}º</span>
+                <input value={r.dataConcessao} onChange={e=>{const arr=[...campos.reajustesAnteriores];arr[i]={...arr[i],dataConcessao:e.target.value};set("reajustesAnteriores",arr);}} placeholder="Data de concessão DD/MM/AAAA" className="input-field" style={{flex:1}}/>
+                <button onClick={()=>set("reajustesAnteriores",campos.reajustesAnteriores.filter((_,j)=>j!==i))} style={{background:"none",border:"none",color:"var(--danger-text)",cursor:"pointer",fontSize:18,padding:"0 4px"}}>×</button>
+              </div>
+            ))}
+          </div>
+
+          {/* Publicação manual do índice */}
+          <div style={{padding:"14px 16px",background:"var(--surface-2)",borderRadius:10,border:"1px solid var(--card-border)",marginBottom:16}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+              <input type="checkbox" id="pubManual" checked={campos.pubManualAtiva} onChange={e=>set("pubManualAtiva",e.target.checked)} style={{width:14,height:14,cursor:"pointer"}}/>
+              <label htmlFor="pubManual" style={{fontSize:12,fontWeight:700,color:"var(--text-primary)",cursor:"pointer"}}>📰 Informar manualmente a data de publicação do índice</label>
+            </div>
+            <p style={{fontSize:11,color:"var(--text-muted)",margin:"0 0 8px"}}>Por padrão, o sistema busca no IBGE (IPCA/INPC) e estima o dia 10 do mês seguinte como data de publicação. Ative para ajustar.</p>
+            {campos.pubManualAtiva&&<input value={campos.dataPublicacaoManual} onChange={e=>set("dataPublicacaoManual",e.target.value)} placeholder="DD/MM/AAAA" className="input-field"/>}
+          </div>
+
+          {loadingIbge&&<div className="info-box" style={{marginBottom:12}}><p style={{fontSize:12,color:"var(--info-text)",margin:0}}>⏳ Consultando IBGE…</p></div>}
+
+          <div style={{display:"flex",gap:10}}>
+            <button onClick={()=>setEtapa(1)} className="btn-secondary">← Voltar</button>
+            <button onClick={calcular} disabled={loadingIbge} className="btn-primary" style={{flex:1}}>Calcular direitos →</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResultadoReajuste({ resultado, onVoltar }) {
+  const [copiado, setCopiado] = React.useState(false);
+  const { ciclos, proximo, contrato, lei, dataBase, mesBase, indice, alertas } = resultado;
+  const leiLabel = lei==="14133"?"Lei 14.133/2021":lei==="8666"?"Lei 8.666/1993":"Lei a confirmar";
+  const hoje = new Date().toLocaleDateString("pt-BR");
+  const fd = d => d instanceof Date && !isNaN(d) ? d.toLocaleDateString("pt-BR") : d||"—";
+  const fMes = d => d instanceof Date && !isNaN(d) ? d.toLocaleDateString("pt-BR",{month:"long",year:"numeric"}) : "—";
+
+  const pendentes = ciclos.filter(c=>!c.jaConcedido);
+  const concedidos = ciclos.filter(c=>c.jaConcedido);
+
+  const gerarTexto = () => {
+    let t=`ANÁLISE DE REAJUSTE CONTRATUAL\nGerado em: ${hoje}\n${"─".repeat(55)}\n\n`;
+    t+=`CONTRATO: ${contrato?.numero_contrato||"—"}\nCONTRATADA: ${contrato?.contratada||"—"}\nOBJETO: ${contrato?.objeto||"—"}\nLEI: ${leiLabel}\nDATA BASE: ${dataBase} · MÊS BASE: ${mesBase}\nÍNDICE: ${indice}\n\n`;
+    if(concedidos.length>0){t+=`${"─".repeat(55)}\nREAJUSTES JÁ CONCEDIDOS: ${concedidos.length}\n${concedidos.map(c=>`• ${c.n}º reajuste — período ${fMes(c.mesInicioCom)} a ${fMes(c.mesFimCom)}`).join("\n")}\n\n`;}
+    t+=`${"─".repeat(55)}\nDIREITOS PENDENTES: ${pendentes.length}\n\n`;
+    pendentes.forEach((c,i)=>{
+      t+=`${c.n}º REAJUSTE (${c.n*12} meses da data base)\n`;
+      t+=`  Direito adquirido em: ${fMes(c.dataAquisicao)}\n`;
+      t+=`  Período de cômputo: ${fMes(c.mesInicioCom)} a ${fMes(c.mesFimCom)}\n`;
+      t+=`  Publicação do ${indice} de ${fMes(c.mesFimCom)}: ${fd(c.pubInfo.divulgacao)} (${c.pubInfo.fonte})\n`;
+      if(c.pubInfo.valor) t+=`  Valor acumulado: ${c.pubInfo.valor.toFixed(2)}%\n`;
+      t+=`  Prazo retroatividade (60d): ${fd(c.prazoRetro)}\n`;
+      t+=`  Data do pedido: ${fd(c.dataPedido)}\n`;
+      t+=`  Retroatividade: ${c.temRetro===true?"SIM — efeitos retroagem a "+fMes(c.dataAquisicao):c.temRetro===false?"NÃO — prazo expirado (efeitos a partir do pedido)":"—"}\n\n`;
+    });
+    t+=`${"─".repeat(55)}\nPRÓXIMO CICLO (${proximo.n}º reajuste — estimativas)\n`;
+    t+=`  Direito a adquirir em: ${fMes(proximo.mesAquisicao)}\n`;
+    t+=`  Período de cômputo: ${fMes(proximo.mesInicioCom)} a ${fMes(proximo.mesFimCom)}\n`;
+    t+=`  Publicação est. do ${indice}: ${fd(proximo.pubEst)}\n`;
+    t+=`  Prazo retro. estimado: ${fd(proximo.prazoRetroEst)}\n`;
+    if(alertas?.length) t+=`\n${"─".repeat(55)}\nALERTAS:\n${alertas.map(a=>`• ${a}`).join("\n")}\n`;
+    return t;
+  };
+
+  const gerarDespacho = () => {
+    const c0 = pendentes[0];
+    if (!c0) return "Nenhum direito pendente identificado.";
+    const multi = pendentes.length>1;
+    return `DESPACHO\n\nTrata-se de pedido de reajuste contratual apresentado pela empresa ${contrato?.contratada||"___"}, referente ao Contrato nº ${contrato?.numero_contrato||"___"}, cujo objeto é ${contrato?.objeto||"___"}.\n\nO contrato foi celebrado com fundamento na ${leiLabel}. A data base para fins de reajuste é ${dataBase} (${lei==="8666"?"data da proposta apresentada no certame licitatório":"data de elaboração do orçamento estimativo — RAPP"}), nos termos do ${lei==="8666"?"art. 40, XI e art. 55, III, da Lei nº 8.666/1993":"art. 92, §§ 1º e 2º, da Lei nº 14.133/2021"}. O índice de reajuste previsto contratualmente é o ${indice}.\n\nO período aquisitivo do ${c0.n}º direito de reajuste completou-se em ${fMes(c0.dataAquisicao)}, com ${c0.n*12} (${c0.n*12}) meses contados da data base. O cômputo do ${indice} abrange o período de ${fMes(c0.mesInicioCom)} a ${fMes(c0.mesFimCom)}${c0.pubInfo.valor?`, acumulando ${c0.pubInfo.valor.toFixed(2)}% no período`:""}.${multi?`\n\nVerificam-se ainda ${pendentes.length-1} direito(s) adicional(is): ${pendentes.slice(1).map(c=>`${c.n}º (período ${fMes(c.mesInicioCom)} a ${fMes(c.mesFimCom)}, adquirido em ${fMes(c.dataAquisicao)})`).join("; ")}.`:""}\n\nO ${indice} de ${fMes(c0.mesFimCom)} foi divulgado em ${fd(c0.pubInfo.divulgacao)}${c0.pubInfo.fonte==="estimado"?" (data estimada — confirmar no site do IBGE)":""}, de modo que o prazo de 60 (sessenta) dias para pedido com efeito retroativo encerrou-se em ${fd(c0.prazoRetro)}. ${c0.temRetro===true?`O pedido foi apresentado em ${fd(c0.dataPedido)}, dentro do prazo, razão pela qual os efeitos financeiros retroagem ao início do período aquisitivo (${fMes(c0.dataAquisicao)}).`:`O pedido foi apresentado em ${fd(c0.dataPedido)}, após o prazo de 60 dias, razão pela qual os efeitos financeiros somente serão contados a partir desta data (TCU, Acórdão 1.827/2018-Plenário).`}\n\n${alertas?.length?`OBSERVAÇÕES:\n${alertas.join("\n")}\n\n`:""}Encaminhe-se para as providências cabíveis.\n\nRio de Janeiro, ${hoje}.`;
+  };
+
+  const copiar = t => navigator.clipboard.writeText(t).then(()=>{setCopiado(true);setTimeout(()=>setCopiado(false),2500);});
+
+  return (
+    <div className="module-container">
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24,gap:16,flexWrap:"wrap"}}>
+        <div>
+          <h2 style={{fontSize:18,fontWeight:900,color:"var(--text-primary)",margin:"0 0 4px"}}>{pendentes.length} direito{pendentes.length!==1?"s":""} pendente{pendentes.length!==1?"s":""} · {concedidos.length} já concedido{concedidos.length!==1?"s":""}</h2>
+          <p style={{fontSize:13,color:"var(--text-muted)",margin:0}}>{contrato?.numero_contrato} · {leiLabel} · Base: {dataBase} · {indice}</p>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={onVoltar} className="btn-secondary" style={{fontSize:12}}>← Editar</button>
+          <button onClick={()=>copiar(gerarTexto())} className="btn-primary" style={{fontSize:12}}>{copiado?"✓ Copiado":"📋 Copiar análise"}</button>
+        </div>
+      </div>
+
+      {alertas?.length>0&&<div className="error-box" style={{marginBottom:16}}>{alertas.map((a,i)=><p key={i} style={{margin:i>0?"6px 0 0":0,fontSize:12}}>{a}</p>)}</div>}
+
+      {/* Já concedidos */}
+      {concedidos.length>0&&(
+        <div style={{padding:"12px 16px",background:"var(--surface-2)",border:"1px solid var(--card-border)",borderRadius:12,marginBottom:16}}>
+          <p style={{fontSize:12,fontWeight:700,color:"var(--text-muted)",margin:"0 0 8px",textTransform:"uppercase",letterSpacing:".05em"}}>✓ Reajustes já concedidos ({concedidos.length})</p>
+          {concedidos.map((c,i)=>(
+            <div key={i} style={{display:"flex",gap:12,padding:"6px 0",borderBottom:i<concedidos.length-1?"1px solid var(--divider)":"none",alignItems:"center"}}>
+              <span style={{fontSize:12,fontWeight:700,color:"var(--success-text)",minWidth:20}}>{c.n}º</span>
+              <span style={{fontSize:12,color:"var(--text-secondary)"}}>{fMes(c.mesInicioCom)} a {fMes(c.mesFimCom)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Pendentes */}
+      {pendentes.map((c,i)=>{
+        const cor = c.temRetro===true?"var(--success-text)":c.temRetro===false?"var(--warning-text)":"var(--info-text)";
+        const bg  = c.temRetro===true?"var(--success-bg)":c.temRetro===false?"var(--warning-bg)":"var(--info-bg)";
+        const bd  = c.temRetro===true?"var(--success-border)":c.temRetro===false?"var(--warning-border)":"var(--info-border)";
+        return (
+          <div key={i} style={{background:"var(--card-bg)",border:"1px solid var(--card-border)",borderRadius:14,marginBottom:12,overflow:"hidden",boxShadow:"var(--card-shadow)"}}>
+            <div style={{display:"flex",alignItems:"center",gap:12,padding:"13px 18px",background:"var(--card-header-bg)",borderBottom:"1px solid var(--card-border)"}}>
+              <div style={{width:32,height:32,borderRadius:8,background:bg,border:`1.5px solid ${bd}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:cor,flexShrink:0}}>{c.n}º</div>
+              <div style={{flex:1}}>
+                <p style={{fontSize:13,fontWeight:700,color:"var(--text-primary)",margin:0}}>{c.n}º Reajuste — adquirido em {fMes(c.dataAquisicao)}</p>
+                <p style={{fontSize:11,color:"var(--text-muted)",margin:"2px 0 0"}}>Cômputo: {fMes(c.mesInicioCom)} a {fMes(c.mesFimCom)}</p>
+              </div>
+              <span style={{fontSize:11,fontWeight:700,padding:"4px 12px",borderRadius:20,background:bg,color:cor,border:`1px solid ${bd}`,whiteSpace:"nowrap"}}>
+                {c.temRetro===true?"✓ Com retroatividade":c.temRetro===false?"⚠ Sem retroatividade":"—"}
+              </span>
+            </div>
+            <div style={{padding:"14px 18px",display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:10}}>
+              {[
+                {l:`Publicação ${indice}\n${fMes(c.mesFimCom)} (${c.pubInfo.fonte})`,v:fd(c.pubInfo.divulgacao)+(c.pubInfo.valor?`\n${c.pubInfo.valor.toFixed(2)}%`:"")},
+                {l:"Prazo retroatividade\n(60 dias)",v:fd(c.prazoRetro)},
+                {l:"Data do pedido",v:fd(c.dataPedido)},
+              ].map(({l,v})=>(
+                <div key={l} style={{background:"var(--surface-2)",borderRadius:9,padding:"10px 12px"}}>
+                  <p style={{fontSize:10,color:"var(--text-subtle)",fontWeight:700,textTransform:"uppercase",letterSpacing:".04em",margin:"0 0 4px",whiteSpace:"pre-line"}}>{l}</p>
+                  <p style={{fontSize:12,fontWeight:700,color:"var(--text-primary)",margin:0,whiteSpace:"pre-line"}}>{v}</p>
+                </div>
+              ))}
+            </div>
+            <div style={{margin:"0 18px 14px",padding:"10px 14px",background:bg,border:`1px solid ${bd}`,borderRadius:9}}>
+              <p style={{fontSize:11,fontWeight:700,color:cor,textTransform:"uppercase",letterSpacing:".04em",margin:"0 0 3px"}}>Efeitos financeiros</p>
+              <p style={{fontSize:13,fontWeight:600,color:cor,margin:0}}>
+                {c.temRetro===true?`Retroagem a ${fMes(c.dataAquisicao)}`:c.temRetro===false?`A partir de ${fd(c.dataPedido)} — prazo expirou em ${fd(c.prazoRetro)}`:"—"}
+              </p>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Próximo */}
+      <div style={{background:"var(--surface-2)",border:"1px solid var(--card-border)",borderRadius:14,padding:"16px 18px",marginBottom:16}}>
+        <p style={{fontSize:12,fontWeight:700,color:"var(--text-muted)",margin:"0 0 12px",textTransform:"uppercase",letterSpacing:".05em"}}>📅 {proximo.n}º ciclo — estimativas futuras</p>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+          {[
+            {l:"Direito em",v:fMes(proximo.mesAquisicao)},
+            {l:"Cômputo",v:`${fMes(proximo.mesInicioCom)}\na ${fMes(proximo.mesFimCom)}`},
+            {l:`Publ. est. (${indice})`,v:fd(proximo.pubEst)},
+            {l:"Prazo retro. est.",v:fd(proximo.prazoRetroEst)},
+          ].map(({l,v})=>(
+            <div key={l} style={{background:"var(--card-bg)",borderRadius:8,padding:"9px 12px",border:"1px solid var(--card-border)"}}>
+              <p style={{fontSize:10,color:"var(--text-subtle)",fontWeight:700,textTransform:"uppercase",letterSpacing:".04em",margin:"0 0 3px",whiteSpace:"pre-line"}}>{l}</p>
+              <p style={{fontSize:12,fontWeight:700,color:"var(--text-primary)",margin:0,whiteSpace:"pre-line"}}>{v}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Documentos */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+        {[{label:"📋 Análise técnica",texto:gerarTexto()},{label:"📝 Minuta de despacho",texto:gerarDespacho()}].map(({label,texto})=>(
+          <div key={label} className="card">
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <p style={{fontSize:13,fontWeight:700,color:"var(--text-primary)",margin:0}}>{label}</p>
+              <button onClick={()=>copiar(texto)} className="btn-primary" style={{fontSize:12,padding:"6px 14px"}}>{copiado?"✓":"Copiar"}</button>
+            </div>
+            <pre style={{fontSize:11.5,color:"var(--text-secondary)",lineHeight:1.7,whiteSpace:"pre-wrap",wordBreak:"break-word",margin:0,maxHeight:300,overflowY:"auto"}}>{texto}</pre>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+  </script>
+
+  <script type="text/babel">
+// ─────────────────────────────────────────────
+// MÓDULO — REPACTUAÇÃO (v3)
+// Etapa 1: só contrato
+// Etapa 2: CCT atual + nova CCT + dados
+// Múltiplos direitos = múltiplas CCTs posteriores
+// ─────────────────────────────────────────────
+
+function RepactuacaoModule() {
+  const apiKey = useGeminiKey();
+  const apiKeySet = apiKey.length > 10;
+  const [etapa, setEtapa] = React.useState(1);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  // Etapa 1
+  const [pdfContrato, setPdfContrato] = React.useState(null);
+  const [b64Contrato, setB64Contrato] = React.useState(null);
+  const [contratoInfo, setContratoInfo] = React.useState(null);
+
+  // Etapa 2
+  const [pdfCctBase, setPdfCctBase] = React.useState(null);
+  const [b64CctBase, setB64CctBase] = React.useState(null);
+  const [cctBaseInfo, setCctBaseInfo] = React.useState(null);
+  const [novasCcts, setNovasCcts] = React.useState([]); // [{file, b64, info, analisado}]
+  const [campos, setCampos] = React.useState({
+    dataReferencia: "",
+    categoriaProfissional: "",
+    descricaoCctBase: "",
+    dataCctBase: "",
+    dataPedido: "",
+  });
+  const [resultado, setResultado] = React.useState(null);
+
+  const refContrato = React.useRef();
+  const refCctBase = React.useRef();
+  const refNovaCct = React.useRef();
+
+  const lerPdf = f => new Promise(r => { const rd=new FileReader(); rd.onload=e=>r(e.target.result.split(",")[1]); rd.readAsDataURL(f); });
+  const set = (k,v) => setCampos(p=>({...p,[k]:v}));
+  const pd = s => { if(!s)return null; if(/^\d{2}\/\d{2}\/\d{4}$/.test(s)){const[d,m,y]=s.split("/");return new Date(+y,+m-1,+d);}if(/^\d{4}-\d{2}-\d{2}$/.test(s)){const[y,m,d]=s.split("-");return new Date(+y,+m-1,+d);}return null;};
+  const fd = d => d instanceof Date&&!isNaN(d)?d.toLocaleDateString("pt-BR"):d||"—";
+  const addD = (d,n) => {const r=new Date(d);r.setDate(r.getDate()+n);return r;};
+  const hoje = () => {const d=new Date();d.setHours(0,0,0,0);return d;};
+
+  const handleContrato = async f => {
+    if(!f||f.type!=="application/pdf")return;
+    setPdfContrato(f);setB64Contrato(await lerPdf(f));setError("");setContratoInfo(null);setEtapa(1);
+  };
+  const handleCctBase = async f => {
+    if(!f||f.type!=="application/pdf")return;
+    setPdfCctBase(f);setB64CctBase(await lerPdf(f));setCctBaseInfo(null);
+  };
+  const handleNovaCct = async f => {
+    if(!f||f.type!=="application/pdf")return;
+    const b64 = await lerPdf(f);
+    setNovasCcts(prev=>[...prev,{file:f,b64,info:null,analisado:false}]);
+  };
+  const removerNovaCct = i => setNovasCcts(prev=>prev.filter((_,j)=>j!==i));
+
+  // Etapa 1 — analisa só o contrato
+  const analisarContrato = async () => {
+    if(!b64Contrato){setError("Carregue o contrato.");return;}
+    if(!apiKeySet){setError("Configure a chave Gemini na página inicial.");return;}
+    setLoading(true);setError("");
+    try {
+      const prompt=`Analise este contrato administrativo. Retorne APENAS JSON puro sem markdown:
+{"lei_aplicavel":"8666"|"14133"|"indeterminado","numero_contrato":"...","objeto":"até 10 palavras","contratada":"nome","data_abertura_pregao":"DD/MM/AAAA ou null","data_rapp":"DD/MM/AAAA ou null","tem_clausula_repactuacao":true|false,"clausula_repactuacao":"texto resumido ou null","categoria_profissional":"categoria ou null","tem_planilha_custos":true|false,"justificativa_lei":"...","observacoes":"alertas ou null"}`;
+      const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const resp=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64Contrato}},{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:1024}})});
+      const data=await resp.json();
+      const c=JSON.parse((data.candidates?.[0]?.content?.parts?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
+      setContratoInfo(c);
+      const ref=c.lei_aplicavel==="8666"?(c.data_abertura_pregao||""):(c.data_rapp||"");
+      setCampos(p=>({...p,dataReferencia:ref,categoriaProfissional:c.categoria_profissional||""}));
+      setEtapa(2);
+    } catch(e){setError("Erro: "+e.message);}
+    finally{setLoading(false);}
+  };
+
+  // Etapa 2 — analisa CCTs
+  const analisarCcts = async () => {
+    if(!apiKeySet)return;
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const promptCct=`Analise este instrumento normativo trabalhista (CCT/ACT/Acordo Coletivo/Lei do Piso/Dissídio). Retorne APENAS JSON puro sem markdown:
+{"tipo":"CCT"|"ACT"|"Lei do Piso"|"Dissídio"|"outro","descricao":"identificação completa (ex: CCT 2024/2025 — Vigilantes SP)","data_publicacao":"DD/MM/AAAA ou null","data_vigencia_inicio":"DD/MM/AAAA ou null","data_base_categoria":"mês/ano ou null","categoria":"categoria profissional","sindicato_laboral":"nome do sindicato dos trabalhadores","sindicato_patronal":"nome ou null","piso_salarial":"valor se informado ou null","percentual_reajuste":"percentual se informado ou null","regra_retroatividade":"descrição da regra de retroatividade prevista no próprio documento, se houver (ex: 'efeitos retroativos a 01/01/2024 conforme cláusula 3ª') ou null","vigencia_fim":"DD/MM/AAAA ou null","observacoes":"alertas sobre cláusulas especiais, retroatividade diferente do padrão de 60 dias, ou outros pontos relevantes para a repactuação, ou null"}`;
+
+    // Analisa CCT base se ainda não analisou
+    if(b64CctBase&&!cctBaseInfo){
+      setLoading(true);
+      try {
+        const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64CctBase}},{text:promptCct}]}],generationConfig:{temperature:0.1,maxOutputTokens:512}})});
+        const d=await r.json();
+        const c=JSON.parse((d.candidates?.[0]?.content?.parts?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
+        setCctBaseInfo(c);
+        setCampos(p=>({...p,descricaoCctBase:c.descricao||"",dataCctBase:c.data_publicacao||c.data_vigencia_inicio||"",categoriaProfissional:c.categoria||p.categoriaProfissional}));
+      } finally{setLoading(false);}
+    }
+
+    // Analisa novas CCTs ainda não analisadas
+    const atualizadas=[...novasCcts];
+    for(let i=0;i<atualizadas.length;i++){
+      if(!atualizadas[i].analisado){
+        setLoading(true);
+        try {
+          const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:atualizadas[i].b64}},{text:promptCct}]}],generationConfig:{temperature:0.1,maxOutputTokens:512}})});
+          const d=await r.json();
+          const c=JSON.parse((d.candidates?.[0]?.content?.parts?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
+          atualizadas[i]={...atualizadas[i],info:c,analisado:true};
+        } finally{setLoading(false);}
+      }
+    }
+    setNovasCcts(atualizadas);
+  };
+
+  const calcular = () => {
+    setError("");
+    const dataRef=pd(campos.dataReferencia);
+    if(!dataRef){setError(`Informe a data de referência (${contratoInfo?.lei_aplicavel==="8666"?"abertura do pregão":"RAPP"}).`);return;}
+    if(novasCcts.length===0){setError("Adicione ao menos uma nova CCT/ACT posterior à data de referência.");return;}
+    const dataPedido=campos.dataPedido?pd(campos.dataPedido):hoje();
+    const h=hoje();
+
+    // Calcula um direito para cada nova CCT posterior à data de referência
+    const direitos=novasCcts.map((cct,i)=>{
+      const info=cct.info||{};
+      const dataCct=pd(info.data_publicacao||info.data_vigencia_inicio||"");
+      if(!dataCct)return null;
+
+      // Verifica retroatividade especial do documento
+      const retroEspecial=info.regra_retroatividade||null;
+      const adquirido=dataCct<=h;
+      const prazoRetro=addD(dataCct,60);
+      const temRetro=adquirido?(dataPedido<=prazoRetro):null;
+
+      return {
+        numero:i+1,
+        descricao:info.descricao||cct.file?.name||`CCT ${i+1}`,
+        tipo:info.tipo||"CCT",
+        dataPublicacao:fd(dataCct),
+        dataPublicacaoObj:dataCct,
+        percentualReajuste:info.percentual_reajuste||null,
+        pisoSalarial:info.piso_salarial||null,
+        prazoRetro:fd(prazoRetro),
+        prazoRetroObj:prazoRetro,
+        adquirido,
+        temRetro,
+        dataPedido:fd(dataPedido),
+        retroEspecial,
+        observacoes:info.observacoes||null,
+      };
+    }).filter(Boolean);
+
+    if(direitos.length===0){setError("Não foi possível identificar datas válidas nas CCTs/ACTs fornecidas. Verifique os documentos.");return;}
+
+    const alertas=[
+      !contratoInfo?.tem_clausula_repactuacao&&"⚠️ Cláusula de repactuação não identificada no contrato — verificar previsão editalícia",
+      !contratoInfo?.tem_planilha_custos&&"⚠️ Planilha de custos e formação de preços não identificada — documento essencial para a repactuação",
+      direitos.some(d=>d.retroEspecial)&&"📌 Uma ou mais CCTs/ACTs preveem regras de retroatividade específicas — verificar abaixo",
+      contratoInfo?.observacoes,
+    ].filter(Boolean);
+
+    setResultado({lei:contratoInfo?.lei_aplicavel,contrato:contratoInfo,dataReferencia:fd(dataRef),tipoRef:contratoInfo?.lei_aplicavel==="8666"?"abertura do pregão/edital":"elaboração do RAPP",descricaoCctBase:campos.descricaoCctBase,dataCctBase:campos.dataCctBase,categoriaProfissional:campos.categoriaProfissional,direitos,alertas});
+    setEtapa(3);
+  };
+
+  const Stepper=()=>(
+    <div style={{display:"flex",alignItems:"center",marginBottom:28}}>
+      {["Contrato","Documentos CCT/ACT","Resultado"].map((s,i)=>{
+        const n=i+1,at=etapa===n,fe=etapa>n;
+        return(<React.Fragment key={s}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:28,height:28,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,background:fe?"var(--success-text)":at?"var(--accent)":"var(--surface-2)",color:fe||at?"#fff":"var(--text-muted)"}}>{fe?"✓":n}</div>
+            <span style={{fontSize:12,fontWeight:at?700:500,color:at?"var(--text-primary)":"var(--text-muted)"}}>{s}</span>
+          </div>
+          {i<2&&<div style={{flex:1,height:2,background:fe?"var(--success-text)":"var(--card-border)",margin:"0 10px"}}/>}
+        </React.Fragment>);
+      })}
+    </div>
+  );
+
+  if(etapa===3&&resultado)return<ResultadoRepactuacao resultado={resultado} onVoltar={()=>{setEtapa(2);setResultado(null);}}/>;
+
+  return(
+    <div className="module-container">
+      <div style={{marginBottom:24}}>
+        <h2 style={{fontSize:18,fontWeight:900,color:"var(--text-primary)",margin:"0 0 6px",letterSpacing:"-.02em"}}>🔄 Repactuação Contratual</h2>
+        <p style={{fontSize:13,color:"var(--text-muted)",margin:0}}>Direito a repactuação por novas CCT/ACT/Lei do Piso posteriores à data de referência — um direito por instrumento normativo.</p>
+      </div>
+      <Stepper/>
+
+      {!apiKeySet&&<div className="info-box" style={{marginBottom:20}}><p style={{fontSize:13,color:"var(--info-text)",margin:0}}>🔑 Configure a chave Gemini na página inicial.</p></div>}
+      {error&&<div className="error-box" style={{marginBottom:16}}><p style={{margin:0}}>⚠ {error}</p></div>}
+
+      {/* Link o conciliador */}
+      <div style={{padding:"12px 16px",background:"var(--surface-2)",border:"1px solid var(--card-border)",borderRadius:10,marginBottom:20,display:"flex",alignItems:"center",gap:12}}>
+        <span style={{fontSize:20}}>🔗</span>
+        <div>
+          <p style={{fontSize:12,fontWeight:700,color:"var(--text-primary)",margin:"0 0 2px"}}>Portal O Conciliador</p>
+          <p style={{fontSize:11,color:"var(--text-muted)",margin:0}}>Consulte CCTs e ACTs vigentes por categoria e localidade: <strong style={{color:"var(--accent)"}}>oconciliador.com.br</strong> — útil para identificar todos os instrumentos normativos posteriores à data de referência.</p>
+        </div>
+      </div>
+
+      {/* ETAPA 1 — só o contrato */}
+      <div className="card" style={{marginBottom:20,opacity:etapa>1?.65:1}}>
+        <p className="card-title">Etapa 1 — Contrato inicial</p>
+        <p className="card-subtitle" style={{marginBottom:14}}>O sistema identificará a lei aplicável, a data de referência e a categoria profissional.</p>
+        <div onClick={()=>refContrato.current.click()} onDrop={e=>{e.preventDefault();handleContrato(e.dataTransfer.files[0]);}} onDragOver={e=>e.preventDefault()} className="dropzone" style={{marginBottom:14}}>
+          <input ref={refContrato} type="file" accept=".pdf" style={{display:"none"}} onChange={e=>handleContrato(e.target.files[0])}/>
+          {pdfContrato?(<><div style={{fontSize:22}}>📄</div><p style={{fontSize:13,fontWeight:600,color:"var(--accent)",margin:"6px 0 2px"}}>{pdfContrato.name}</p><p className="text-muted" style={{fontSize:11}}>Clique para trocar</p></>):(<><div style={{fontSize:22}}>📂</div><p style={{fontSize:12,color:"var(--text-muted)",margin:"6px 0 0"}}>Arraste ou <strong style={{color:"var(--accent)"}}>clique</strong> para selecionar</p></>)}
+        </div>
+        {etapa===1&&<button onClick={analisarContrato} disabled={loading||!b64Contrato||!apiKeySet} className="btn-primary" style={{width:"100%"}}>{loading?"Analisando contrato…":"Analisar contrato →"}</button>}
+        {contratoInfo&&etapa>1&&(
+          <div style={{marginTop:12,padding:"10px 14px",background:"var(--surface-2)",borderRadius:8,fontSize:12,color:"var(--text-secondary)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span>✓ <strong>{contratoInfo.numero_contrato}</strong> · Lei <strong>{contratoInfo.lei_aplicavel==="14133"?"14.133/2021":contratoInfo.lei_aplicavel==="8666"?"8.666/1993":"a confirmar"}</strong></span>
+            <button onClick={()=>setEtapa(1)} className="btn-link">Trocar</button>
+          </div>
+        )}
+      </div>
+
+      {/* ETAPA 2 — CCTs + dados */}
+      {etapa>=2&&contratoInfo&&(
+        <div className="card" style={{marginBottom:20}}>
+          <p className="card-title" style={{marginBottom:12}}>Etapa 2 — CCT/ACT e dados</p>
+
+          <div style={{marginBottom:16,padding:"12px 16px",borderRadius:10,background:"var(--info-bg)",border:"1px solid var(--info-border)"}}>
+            <p style={{fontSize:12,fontWeight:700,color:"var(--info-text)",margin:"0 0 4px"}}>
+              {contratoInfo.lei_aplicavel==="14133"?"⚖️ Lei 14.133/2021 — Data de referência: data do RAPP":contratoInfo.lei_aplicavel==="8666"?"⚖️ Lei 8.666/93 — Data de referência: abertura do edital":"⚠️ Lei não identificada"}
+            </p>
+            <p style={{fontSize:11,color:"var(--text-muted)",margin:0}}>
+              A CCT/ACT <strong>vigente na data de referência</strong> estabelece o piso inicial. Cada nova CCT/ACT <strong>publicada após esta data</strong> gera um direito de repactuação. Quanto mais documentos posteriores, mais direitos.
+            </p>
+          </div>
+
+          {/* Dados básicos */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 20px",marginBottom:16}}>
             {[
-              {k:"dataBase",label:`📅 Data base (${contratoInfo.lei_aplicavel==="8666"?"data da proposta":"data do RAPP"})`,hint:contratoInfo.lei_aplicavel==="8666"?"Data em que a empresa apresentou a proposta no pregão":"Data de elaboração do orçamento estimativo"},
-              {k:"dataUltimoReajuste",label:"🔄 Data do último reajuste concedido",hint:"Deixe em branco se nunca houve reajuste anterior",placeholder:"DD/MM/AAAA (vazio = sem reajuste anterior)"},
+              {k:"dataReferencia",label:`📅 Data de referência (${contratoInfo.lei_aplicavel==="8666"?"abertura do pregão":"RAPP"})`,hint:"Confirme ou corrija a data identificada pelo sistema"},
+              {k:"categoriaProfissional",label:"👷 Categoria profissional",placeholder:"Ex: vigilantes, limpeza, recepcionistas",hint:""},
+              {k:"descricaoCctBase",label:"📋 CCT/ACT vigente à época",placeholder:"Ex: CCT 2023/2024 — Vigilantes RJ",hint:`Vigente na ${contratoInfo.lei_aplicavel==="8666"?"abertura do edital":"data do RAPP"}`},
+              {k:"dataCctBase",label:"📅 Data da CCT/ACT vigente à época",hint:"Data de publicação ou início de vigência"},
+              {k:"dataPedido",label:"📋 Data do pedido da empresa",placeholder:"DD/MM/AAAA (vazio = hoje)",hint:"Deixe em branco para usar hoje"},
             ].map(({k,label,hint,placeholder})=>(
-              <div key={k} style={{marginBottom:14}}>
+              <div key={k} style={{marginBottom:12}}>
                 <label className="label-text" style={{display:"block",marginBottom:5}}>{label}</label>
                 <input value={campos[k]} onChange={e=>set(k,e.target.value)} placeholder={placeholder||"DD/MM/AAAA"} className="input-field"/>
                 {hint&&<p style={{fontSize:11,color:"var(--text-muted)",marginTop:4}}>{hint}</p>}
               </div>
             ))}
+          </div>
 
-            <div style={{marginBottom:14}}>
-              <label className="label-text" style={{display:"block",marginBottom:5}}>📊 Índice de reajuste</label>
-              <select value={campos.indice} onChange={e=>set("indice",e.target.value)} className="input-field">
-                {["IPCA","INPC","IGP-M","IGP-DI","IPCA-E","Outro"].map(i=><option key={i}>{i}</option>)}
-              </select>
-              {campos.indice==="Outro"&&<input value={campos.indiceCustom} onChange={e=>set("indiceCustom",e.target.value)} placeholder="Nome do índice" className="input-field" style={{marginTop:8}}/>}
+          {/* Upload CCT base */}
+          <div style={{marginBottom:16}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+              <p className="label-text" style={{margin:0}}>📋 CCT/ACT vigente à época (opcional — para análise automática)</p>
+              <span style={{fontSize:10,color:"var(--text-subtle)",background:"var(--surface-2)",padding:"1px 7px",borderRadius:99}}>Opcional</span>
             </div>
-
-            <div style={{marginBottom:14}}>
-              <label className="label-text" style={{display:"block",marginBottom:5}}>📋 Data do pedido da empresa</label>
-              <input value={campos.dataPedido} onChange={e=>set("dataPedido",e.target.value)} placeholder="DD/MM/AAAA (vazio = hoje)" className="input-field"/>
-              <p style={{fontSize:11,color:"var(--text-muted)",marginTop:4}}>Deixe em branco para usar a data de hoje</p>
+            <div onClick={()=>refCctBase.current.click()} onDrop={e=>{e.preventDefault();handleCctBase(e.dataTransfer.files[0]);}} onDragOver={e=>e.preventDefault()} className={`dropzone${pdfCctBase?" active":""}`} style={{minHeight:72,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"12px"}}>
+              <input ref={refCctBase} type="file" accept=".pdf" style={{display:"none"}} onChange={e=>handleCctBase(e.target.files[0])}/>
+              {pdfCctBase?(<><span style={{fontSize:16}}>📄</span><p style={{fontSize:12,fontWeight:600,color:"var(--accent)",margin:"4px 0 0"}}>{pdfCctBase.name}</p></>):(<><span style={{fontSize:16}}>📂</span><p style={{fontSize:11,color:"var(--text-muted)",margin:"4px 0 0"}}>CCT/ACT de referência — arraste ou clique</p></>)}
             </div>
           </div>
 
-          {/* Data de publicação do índice */}
-          <div style={{padding:"14px 16px",background:"var(--surface-2)",borderRadius:10,border:"1px solid var(--card-border)",marginBottom:16}}>
-            <p style={{fontSize:12,fontWeight:700,color:"var(--text-primary)",margin:"0 0 6px"}}>📰 Data de publicação do índice</p>
-            <p style={{fontSize:11,color:"var(--text-muted)",margin:"0 0 10px"}}>
-              O sistema buscará automaticamente no IBGE (IPCA/INPC) e estimará o dia 10 do mês seguinte ao fim do período de cômputo como default. Ajuste manualmente se necessário.
-            </p>
-            <div style={{display:"flex",gap:8,alignItems:"center"}}>
-              <input value={campos.dataPublicacaoIndice} onChange={e=>{set("dataPublicacaoIndice",e.target.value);set("dataPublicacaoAjustada",true);}}
-                placeholder="DD/MM/AAAA (automático — ajuste se necessário)" className="input-field" style={{flex:1}}/>
-              {campos.dataPublicacaoIndice&&<button onClick={()=>{set("dataPublicacaoIndice","");set("dataPublicacaoAjustada",false);}} className="btn-link">Limpar</button>}
+          {/* Novas CCTs */}
+          <div style={{marginBottom:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+              <div>
+                <p className="label-text" style={{margin:0}}>📋 Novas CCTs/ACTs posteriores à data de referência</p>
+                <p style={{fontSize:11,color:"var(--text-muted)",marginTop:3}}>Cada documento adicionado = 1 direito de repactuação. Adicione todos os instrumentos normativos publicados após a data de referência.</p>
+              </div>
+              <div style={{display:"flex",gap:8,flexShrink:0}}>
+                <button onClick={()=>refNovaCct.current.click()} className="btn-primary" style={{fontSize:12}}>+ Adicionar CCT</button>
+                <input ref={refNovaCct} type="file" accept=".pdf" style={{display:"none"}} onChange={e=>{Array.from(e.target.files).forEach(handleNovaCct);e.target.value="";}}/>
+              </div>
             </div>
-            {loadingIbge&&<p style={{fontSize:11,color:"var(--info-text)",marginTop:6}}>⏳ Consultando IBGE…</p>}
+            {novasCcts.length===0&&<div style={{padding:"16px",background:"var(--surface-2)",borderRadius:10,textAlign:"center"}}><p style={{fontSize:12,color:"var(--text-subtle)",margin:0}}>Nenhuma nova CCT/ACT adicionada ainda</p></div>}
+            {novasCcts.map((cct,i)=>(
+              <div key={i} style={{display:"flex",gap:10,alignItems:"center",padding:"10px 14px",background:"var(--surface-2)",border:"1px solid var(--card-border)",borderRadius:10,marginTop:8}}>
+                <span style={{fontSize:16}}>📄</span>
+                <div style={{flex:1}}>
+                  <p style={{fontSize:12,fontWeight:600,color:"var(--text-primary)",margin:0}}>{cct.info?.descricao||cct.file.name}</p>
+                  {cct.info?.data_publicacao&&<p style={{fontSize:11,color:"var(--text-muted)",margin:"2px 0 0"}}>Publicação: {cct.info.data_publicacao} · {cct.info.tipo}</p>}
+                  {cct.info?.retroEspecial&&<p style={{fontSize:11,color:"var(--warning-text)",margin:"2px 0 0"}}>⚠ Retroatividade especial: {cct.info.retroEspecial}</p>}
+                  {!cct.analisado&&<p style={{fontSize:11,color:"var(--text-subtle)",margin:"2px 0 0"}}>Não analisado — clique em "Analisar documentos"</p>}
+                </div>
+                <button onClick={()=>removerNovaCct(i)} style={{background:"none",border:"none",color:"var(--danger-text)",cursor:"pointer",fontSize:18}}>×</button>
+              </div>
+            ))}
           </div>
+
+          {novasCcts.some(c=>!c.analisado)&&(
+            <button onClick={analisarCcts} disabled={loading} className="btn-secondary" style={{width:"100%",marginBottom:12}}>
+              {loading?"Analisando CCTs/ACTs…":"🔍 Analisar documentos CCT/ACT"}
+            </button>
+          )}
 
           <div style={{display:"flex",gap:10}}>
             <button onClick={()=>setEtapa(1)} className="btn-secondary">← Voltar</button>
@@ -3435,58 +3866,49 @@ function ReajusteModule() {
   );
 }
 
-function ResultadoReajuste({ resultado, onVoltar }) {
+function ResultadoRepactuacao({ resultado, onVoltar }) {
   const [copiado, setCopiado] = React.useState(false);
-  const { ciclos, proximoCiclo, contrato, lei, dataBase, indice, alertas } = resultado;
+  const { lei, contrato, dataReferencia, tipoRef, descricaoCctBase, dataCctBase, categoriaProfissional, direitos, alertas } = resultado;
   const leiLabel = lei==="14133"?"Lei 14.133/2021":lei==="8666"?"Lei 8.666/1993":"Lei a confirmar";
   const hoje = new Date().toLocaleDateString("pt-BR");
-  const fmtDate = (d) => d ? (d instanceof Date ? d.toLocaleDateString("pt-BR") : d) : "—";
-  const fmtMes = (d) => d ? d.toLocaleDateString("pt-BR",{month:"long",year:"numeric"}) : "—";
-  const addDays = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
 
   const gerarTexto = () => {
-    let t = `ANÁLISE DE DIREITO A REAJUSTE CONTRATUAL\nGerado em: ${hoje}\n${"─".repeat(55)}\n\n`;
-    t += `CONTRATO: ${contrato?.numero_contrato||"—"}\nCONTRATADA: ${contrato?.contratada||"—"}\nOBJETO: ${contrato?.objeto||"—"}\nLEI: ${leiLabel}\nDATA BASE: ${dataBase}\nÍNDICE: ${indice}\n\n`;
-    t += `${"─".repeat(55)}\nDIREITOS IDENTIFICADOS: ${ciclos.length}\n\n`;
-    ciclos.forEach((c,i)=>{
-      t+=`${i+1}º REAJUSTE (${c.ciclo*12} meses a partir da data base)\n`;
-      t+=`  Direito adquirido em: ${fmtDate(c.dataAquisicao)}\n`;
-      t+=`  Período de cômputo: ${fmtMes(c.mesInicioCom)} a ${fmtMes(c.mesFimCom)}\n`;
-      t+=`  Publicação do ${indice} de ${fmtMes(c.mesFimCom)}: ${fmtDate(c.dataPublicacao)}${c.ibgeConsultado?" (IBGE)":c.ibgeConsultado===false?" (estimado — ajustar se necessário)":""}\n`;
-      if(c.valorIndice) t+=`  Valor do ${indice}: ${c.valorIndice.toFixed(2)}%\n`;
-      t+=`  Prazo para retroatividade (60d): ${fmtDate(c.prazoRetro)}\n`;
-      t+=`  Data do pedido: ${fmtDate(c.dataPedido)}\n`;
-      t+=`  Retroatividade: ${c.temRetro===true?"SIM — efeitos retroagem a "+fmtDate(c.dataAquisicao):c.temRetro===false?"NÃO — prazo expirado; efeitos a partir de "+fmtDate(c.dataPedido):"—"}\n\n`;
+    let t=`ANÁLISE DE REPACTUAÇÃO CONTRATUAL\nGerado em: ${hoje}\n${"─".repeat(55)}\n\n`;
+    t+=`CONTRATO: ${contrato?.numero_contrato||"—"}\nCONTRATADA: ${contrato?.contratada||"—"}\nOBJETO: ${contrato?.objeto||"—"}\nCATEGORIA: ${categoriaProfissional||"—"}\nLEI: ${leiLabel}\nDATA DE REFERÊNCIA (${tipoRef}): ${dataReferencia}\n`;
+    t+=`CCT/ACT DE REFERÊNCIA: ${descricaoCctBase||"—"}${dataCctBase?` (${dataCctBase})`:""}\n\n`;
+    t+=`${"─".repeat(55)}\nDIREITOS DE REPACTUAÇÃO: ${direitos.length}\n\n`;
+    direitos.forEach((d,i)=>{
+      t+=`${d.numero}º REPACTUAÇÃO — ${d.descricao}\n`;
+      t+=`  Tipo: ${d.tipo}\n`;
+      t+=`  Publicação: ${d.dataPublicacao}\n`;
+      if(d.percentualReajuste) t+=`  Percentual: ${d.percentualReajuste}\n`;
+      if(d.pisoSalarial) t+=`  Piso salarial: ${d.pisoSalarial}\n`;
+      t+=`  Prazo retroatividade padrão (60d): ${d.prazoRetro}\n`;
+      if(d.retroEspecial) t+=`  ⚠ Regra de retroatividade específica: ${d.retroEspecial}\n`;
+      t+=`  Data do pedido: ${d.dataPedido}\n`;
+      t+=`  Retroatividade: ${d.temRetro===true?"SIM":d.temRetro===false?"NÃO — prazo expirado":"—"}\n`;
+      if(d.observacoes) t+=`  Obs: ${d.observacoes}\n`;
+      t+="\n";
     });
-    if(proximoCiclo){
-      t+=`${"─".repeat(55)}\nPRÓXIMO CICLO (${proximoCiclo.numero}º reajuste)\n`;
-      t+=`  Direito a adquirir em: ${fmtDate(proximoCiclo.dataAquisicao)}\n`;
-      t+=`  Período de cômputo estimado: ${fmtMes(proximoCiclo.mesInicioCom)} a ${fmtMes(proximoCiclo.mesFimCom)}\n`;
-      t+=`  Publicação estimada do índice: ${fmtDate(proximoCiclo.dataPublicacaoEstimada)} (dia 10 do mês seguinte ao fim do período)\n`;
-      t+=`  Prazo estimado para retroatividade: ${fmtDate(proximoCiclo.prazoRetroEstimado)}\n\n`;
-    }
     if(alertas?.length) t+=`${"─".repeat(55)}\nALERTAS:\n${alertas.map(a=>`• ${a}`).join("\n")}\n`;
     return t;
   };
 
   const gerarDespacho = () => {
-    const c0 = ciclos[0];
-    const multiciclo = ciclos.length > 1;
-    return `DESPACHO\n\nTrata-se de pedido de reajuste apresentado pela empresa ${contrato?.contratada||"___"}, referente ao Contrato nº ${contrato?.numero_contrato||"___"}, objeto: ${contrato?.objeto||"___"}.\n\nO contrato foi celebrado com fundamento na ${leiLabel}. A data base é ${dataBase} (${lei==="8666"?"data da proposta apresentada no certame":"data de elaboração do orçamento estimativo — RAPP"}), nos termos do ${lei==="8666"?"art. 40, XI, e art. 55, III, da Lei nº 8.666/1993":"art. 92, §§ 1º e 2º, da Lei nº 14.133/2021"}.\n\nO período aquisitivo do ${multiciclo?`1º`:"primeiro e único"} direito de reajuste completou-se em ${fmtDate(c0?.dataAquisicao)}, com 12 (doze) meses contados da data base. O índice aplicável é o ${indice}, cujo período de cômputo abrange ${fmtMes(c0?.mesInicioCom)} a ${fmtMes(c0?.mesFimCom)}, correspondendo à variação acumulada neste intervalo${c0?.valorIndice?` (${c0.valorIndice.toFixed(2)}% conforme IBGE)`:""}.${multiciclo?`\n\nVerificam-se ainda ${ciclos.length-1} direito(s) adicional(is) de reajuste, relativos a ciclos subsequentes, conforme detalhado abaixo:\n${ciclos.slice(1).map((c,i)=>`${i+2}º direito: adquirido em ${fmtDate(c.dataAquisicao)}, período de cômputo ${fmtMes(c.mesInicioCom)} a ${fmtMes(c.mesFimCom)}.`).join("\n")}`:""}\n\nO ${indice} de ${fmtMes(c0?.mesFimCom)} foi divulgado em ${fmtDate(c0?.dataPublicacao)}, de modo que o prazo de 60 (sessenta) dias para formulação do pedido com efeito retroativo encerrou-se em ${fmtDate(c0?.prazoRetro)}. ${c0?.temRetro===true?`O pedido foi apresentado em ${fmtDate(c0?.dataPedido)}, dentro do prazo, razão pela qual os efeitos financeiros retroagem a ${fmtDate(c0?.dataAquisicao)}.`:c0?.temRetro===false?`O pedido foi apresentado em ${fmtDate(c0?.dataPedido)}, após o prazo de 60 dias, de modo que os efeitos financeiros somente serão contados a partir desta data, nos termos do art. 57 da Lei nº 9.784/1999 e da jurisprudência do TCU (Acórdão 1.827/2018-Plenário).`:""}\n\n${alertas?.length?`OBSERVAÇÕES:\n${alertas.map(a=>`${a}`).join("\n")}\n\n`:""}Encaminhe-se para as providências cabíveis.\n\nRio de Janeiro, ${hoje}.`;
+    const d0=direitos[0];
+    return `DESPACHO\n\nTrata-se de pedido de repactuação contratual apresentado pela empresa ${contrato?.contratada||"___"}, referente ao Contrato nº ${contrato?.numero_contrato||"___"}, cujo objeto é ${contrato?.objeto||"___"}${categoriaProfissional?`, com emprego de mão de obra da categoria de ${categoriaProfissional}`:""}, celebrado com fundamento na ${leiLabel}.\n\nO marco temporal para fins de repactuação é a data de ${tipoRef}, fixada em ${dataReferencia}, quando vigorava o instrumento normativo ${descricaoCctBase||"CCT/ACT de referência"}${dataCctBase?` (publicado em ${dataCctBase})`:""}, que estabelecia o piso salarial da categoria.\n\n${direitos.length===1?`A nova ${d0?.descricao||"CCT/ACT"} foi publicada em ${d0?.dataPublicacao}, gerando um direito de repactuação a partir desta data.`:`Foram identificados ${direitos.length} instrumentos normativos posteriores à data de referência, gerando ${direitos.length} direitos de repactuação:\n${direitos.map(d=>`${d.numero}º ${d.descricao} — publicado em ${d.dataPublicacao}`).join(";\n")}.`}\n\n${d0?`O prazo de 60 (sessenta) dias para formulação do pedido com efeito retroativo encerrou-se em ${d0.prazoRetro}. ${d0.temRetro===true?`O pedido foi apresentado em ${d0.dataPedido}, dentro do prazo, razão pela qual os efeitos financeiros retroagem à data de publicação da ${d0.descricao}.`:`O pedido foi apresentado em ${d0.dataPedido}, após o prazo de 60 dias (TCU, Acórdão 1.827/2018-Plenário), de modo que os efeitos serão contados a partir desta data.`}`:""}\n\n${direitos.some(d=>d.retroEspecial)?`ATENÇÃO — RETROATIVIDADE ESPECIAL:\n${direitos.filter(d=>d.retroEspecial).map(d=>`${d.descricao}: ${d.retroEspecial}`).join("\n")}\n\n`:""}${alertas?.length?`OBSERVAÇÕES:\n${alertas.join("\n")}\n\n`:""}Encaminhe-se para as providências cabíveis.\n\nRio de Janeiro, ${hoje}.`;
   };
 
-  const copiar = (t) => navigator.clipboard.writeText(t).then(()=>{setCopiado(true);setTimeout(()=>setCopiado(false),2500);});
+  const copiar = t => navigator.clipboard.writeText(t).then(()=>{setCopiado(true);setTimeout(()=>setCopiado(false),2500);});
 
   return (
     <div className="module-container">
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24,gap:16}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24,gap:16,flexWrap:"wrap"}}>
         <div>
-          <h2 style={{fontSize:18,fontWeight:900,color:"var(--text-primary)",margin:"0 0 4px"}}>
-            {ciclos.length} direito{ciclos.length>1?"s":""} de reajuste identificado{ciclos.length>1?"s":""}
-          </h2>
-          <p style={{fontSize:13,color:"var(--text-muted)",margin:0}}>{contrato?.numero_contrato} · {leiLabel} · Base: {dataBase} · {indice}</p>
+          <h2 style={{fontSize:18,fontWeight:900,color:"var(--text-primary)",margin:"0 0 4px"}}>{direitos.length} direito{direitos.length!==1?"s":""} de repactuação identificado{direitos.length!==1?"s":""}</h2>
+          <p style={{fontSize:13,color:"var(--text-muted)",margin:0}}>{contrato?.numero_contrato} · {leiLabel} · Ref: {dataReferencia}</p>
         </div>
-        <div style={{display:"flex",gap:8,flexShrink:0}}>
+        <div style={{display:"flex",gap:8}}>
           <button onClick={onVoltar} className="btn-secondary" style={{fontSize:12}}>← Editar</button>
           <button onClick={()=>copiar(gerarTexto())} className="btn-primary" style={{fontSize:12}}>{copiado?"✓ Copiado":"📋 Copiar análise"}</button>
         </div>
@@ -3494,75 +3916,75 @@ function ResultadoReajuste({ resultado, onVoltar }) {
 
       {alertas?.length>0&&<div className="error-box" style={{marginBottom:16}}>{alertas.map((a,i)=><p key={i} style={{margin:i>0?"6px 0 0":0,fontSize:12}}>{a}</p>)}</div>}
 
-      {/* Ciclos adquiridos */}
-      {ciclos.map((c,i)=>{
-        const cor = c.temRetro===true?"var(--success-text)":c.temRetro===false?"var(--warning-text)":"var(--text-muted)";
-        const bg  = c.temRetro===true?"var(--success-bg)":c.temRetro===false?"var(--warning-bg)":"var(--surface-2)";
-        const bd  = c.temRetro===true?"var(--success-border)":c.temRetro===false?"var(--warning-border)":"var(--card-border)";
-        return (
-          <div key={i} style={{background:"var(--card-bg)",border:"1px solid var(--card-border)",borderRadius:14,marginBottom:14,overflow:"hidden",boxShadow:"var(--card-shadow)"}}>
-            {/* Header */}
+      {/* Link o conciliador */}
+      <div style={{padding:"10px 14px",background:"var(--surface-2)",border:"1px solid var(--card-border)",borderRadius:10,marginBottom:16,display:"flex",gap:10,alignItems:"center"}}>
+        <span style={{fontSize:16}}>🔗</span>
+        <p style={{fontSize:12,color:"var(--text-muted)",margin:0}}>Consulte CCTs e ACTs: <strong style={{color:"var(--accent)"}}>oconciliador.com.br</strong> — verifique se há instrumentos normativos adicionais ainda não incluídos nesta análise.</p>
+      </div>
+
+      {/* Cards por direito */}
+      {direitos.map((d,i)=>{
+        const cor=d.temRetro===true?"var(--success-text)":d.temRetro===false?"var(--warning-text)":"var(--info-text)";
+        const bg =d.temRetro===true?"var(--success-bg)":d.temRetro===false?"var(--warning-bg)":"var(--info-bg)";
+        const bd =d.temRetro===true?"var(--success-border)":d.temRetro===false?"var(--warning-border)":"var(--info-border)";
+        return(
+          <div key={i} style={{background:"var(--card-bg)",border:"1px solid var(--card-border)",borderRadius:14,marginBottom:12,overflow:"hidden",boxShadow:"var(--card-shadow)"}}>
             <div style={{display:"flex",alignItems:"center",gap:12,padding:"13px 18px",background:"var(--card-header-bg)",borderBottom:"1px solid var(--card-border)"}}>
-              <div style={{width:32,height:32,borderRadius:8,background:bg,border:`1.5px solid ${bd}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:cor,flexShrink:0}}>{c.ciclo}</div>
+              <div style={{width:32,height:32,borderRadius:8,background:bg,border:`1.5px solid ${bd}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:cor,flexShrink:0}}>{d.numero}º</div>
               <div style={{flex:1}}>
-                <p style={{fontSize:13,fontWeight:700,color:"var(--text-primary)",margin:0}}>{c.ciclo}º Reajuste — {c.ciclo*12} meses a partir da data base</p>
-                <p style={{fontSize:11,color:"var(--text-muted)",margin:"2px 0 0"}}>Adquirido em {fmtDate(c.dataAquisicao)}</p>
+                <p style={{fontSize:13,fontWeight:700,color:"var(--text-primary)",margin:0}}>{d.descricao}</p>
+                <p style={{fontSize:11,color:"var(--text-muted)",margin:"2px 0 0"}}>{d.tipo} · Publicação: {d.dataPublicacao}</p>
               </div>
-              <span style={{fontSize:11,fontWeight:700,padding:"4px 12px",borderRadius:20,background:bg,color:cor,border:`1px solid ${bd}`}}>
-                {c.temRetro===true?"✓ Com retroatividade":c.temRetro===false?"⚠ Sem retroatividade":"—"}
+              <span style={{fontSize:11,fontWeight:700,padding:"4px 12px",borderRadius:20,background:bg,color:cor,border:`1px solid ${bd}`,whiteSpace:"nowrap"}}>
+                {d.temRetro===true?"✓ Com retro.":d.temRetro===false?"⚠ Sem retro.":"—"}
               </span>
             </div>
-            {/* Body */}
-            <div style={{padding:"14px 18px",display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-              {[
-                {l:"Período de cômputo",v:`${fmtMes(c.mesInicioCom)}\na ${fmtMes(c.mesFimCom)}`},
-                {l:`Publicação do ${indice}${c.ibgeConsultado?" (IBGE)":c.mesFimCom<=new Date()?" (estimado)":""}\n${fmtMes(c.mesFimCom)}`,v:fmtDate(c.dataPublicacao)+(c.valorIndice?`\n${c.valorIndice.toFixed(2)}%`:"")},
-                {l:"Prazo retroatividade (60d)",v:fmtDate(c.prazoRetro)},
-              ].map(({l,v})=>(
-                <div key={l} style={{background:"var(--surface-2)",borderRadius:9,padding:"10px 12px"}}>
-                  <p style={{fontSize:10,color:"var(--text-subtle)",fontWeight:700,textTransform:"uppercase",letterSpacing:".04em",margin:"0 0 4px",whiteSpace:"pre-line"}}>{l}</p>
-                  <p style={{fontSize:12,fontWeight:700,color:"var(--text-primary)",margin:0,whiteSpace:"pre-line"}}>{v}</p>
+            <div style={{padding:"12px 18px"}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:10}}>
+                {[
+                  {l:"Prazo retro. padrão (60d)",v:d.prazoRetro},
+                  {l:"Data do pedido",v:d.dataPedido},
+                  {l:d.percentualReajuste?"Percentual":d.pisoSalarial?"Piso salarial":"",v:d.percentualReajuste||d.pisoSalarial||"—"},
+                ].filter(x=>x.l).map(({l,v})=>(
+                  <div key={l} style={{background:"var(--surface-2)",borderRadius:8,padding:"8px 12px"}}>
+                    <p style={{fontSize:10,color:"var(--text-subtle)",fontWeight:700,textTransform:"uppercase",letterSpacing:".04em",margin:"0 0 3px"}}>{l}</p>
+                    <p style={{fontSize:12,fontWeight:700,color:"var(--text-primary)",margin:0}}>{v}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Retroatividade especial */}
+              {d.retroEspecial&&(
+                <div style={{padding:"10px 12px",background:"var(--warning-bg)",border:"1px solid var(--warning-border)",borderRadius:8,marginBottom:8}}>
+                  <p style={{fontSize:11,fontWeight:700,color:"var(--warning-text)",margin:"0 0 3px",textTransform:"uppercase",letterSpacing:".04em"}}>⚠ Regra de retroatividade prevista no documento</p>
+                  <p style={{fontSize:12,color:"var(--warning-text)",margin:0}}>{d.retroEspecial}</p>
                 </div>
-              ))}
-            </div>
-            {/* Efeitos */}
-            <div style={{margin:"0 18px 14px",padding:"10px 14px",background:bg,border:`1px solid ${bd}`,borderRadius:9}}>
-              <p style={{fontSize:11,fontWeight:700,color:cor,textTransform:"uppercase",letterSpacing:".04em",margin:"0 0 3px"}}>Efeitos financeiros</p>
-              <p style={{fontSize:13,fontWeight:600,color:cor,margin:0}}>
-                {c.temRetro===true?`A partir de ${fmtDate(c.dataAquisicao)} (retroativo)`:c.temRetro===false?`A partir de ${fmtDate(c.dataPedido)} — prazo de 60 dias expirou em ${fmtDate(c.prazoRetro)}`:"—"}
-              </p>
+              )}
+
+              {d.observacoes&&(
+                <div style={{padding:"8px 12px",background:"var(--surface-2)",borderRadius:8,borderLeft:"3px solid var(--text-subtle)",marginBottom:8}}>
+                  <p style={{fontSize:12,color:"var(--text-muted)",margin:0,fontStyle:"italic"}}>{d.observacoes}</p>
+                </div>
+              )}
+
+              <div style={{padding:"10px 14px",background:bg,border:`1px solid ${bd}`,borderRadius:8}}>
+                <p style={{fontSize:11,fontWeight:700,color:cor,textTransform:"uppercase",letterSpacing:".04em",margin:"0 0 3px"}}>Efeitos financeiros</p>
+                <p style={{fontSize:13,fontWeight:600,color:cor,margin:0}}>
+                  {d.temRetro===true?`A partir de ${d.dataPublicacao} (retroativo)`:d.temRetro===false?`A partir de ${d.dataPedido} — prazo 60d expirou em ${d.prazoRetro}`:"—"}
+                </p>
+              </div>
             </div>
           </div>
         );
       })}
 
-      {/* Próximo ciclo */}
-      {proximoCiclo&&(
-        <div style={{background:"var(--surface-2)",border:"1px solid var(--card-border)",borderRadius:14,padding:"16px 18px",marginBottom:16}}>
-          <p style={{fontSize:12,fontWeight:700,color:"var(--text-muted)",margin:"0 0 12px",textTransform:"uppercase",letterSpacing:".05em"}}>📅 Próximo ciclo — {proximoCiclo.numero}º reajuste (estimativas)</p>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:10}}>
-            {[
-              {l:"Direito em",v:fmtDate(proximoCiclo.dataAquisicao)},
-              {l:"Cômputo",v:`${fmtMes(proximoCiclo.mesInicioCom)}\na ${fmtMes(proximoCiclo.mesFimCom)}`},
-              {l:`Publicação est. (${indice})`,v:fmtDate(proximoCiclo.dataPublicacaoEstimada)},
-              {l:"Prazo retro. est.",v:fmtDate(proximoCiclo.prazoRetroEstimado)},
-            ].map(({l,v})=>(
-              <div key={l} style={{background:"var(--card-bg)",borderRadius:8,padding:"9px 12px",border:"1px solid var(--card-border)"}}>
-                <p style={{fontSize:10,color:"var(--text-subtle)",fontWeight:700,textTransform:"uppercase",letterSpacing:".04em",margin:"0 0 3px",whiteSpace:"pre-line"}}>{l}</p>
-                <p style={{fontSize:12,fontWeight:700,color:"var(--text-primary)",margin:0,whiteSpace:"pre-line"}}>{v}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Textos gerados */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginTop:8}}>
         {[{label:"📋 Análise técnica",texto:gerarTexto()},{label:"📝 Minuta de despacho",texto:gerarDespacho()}].map(({label,texto})=>(
           <div key={label} className="card">
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <p style={{fontSize:13,fontWeight:700,color:"var(--text-primary)",margin:0}}>{label}</p>
-              <button onClick={()=>copiar(texto)} className="btn-primary" style={{fontSize:12,padding:"6px 14px"}}>{copiado?"✓ Copiado":"Copiar"}</button>
+              <button onClick={()=>copiar(texto)} className="btn-primary" style={{fontSize:12,padding:"6px 14px"}}>{copiado?"✓":"Copiar"}</button>
             </div>
             <pre style={{fontSize:11.5,color:"var(--text-secondary)",lineHeight:1.7,whiteSpace:"pre-wrap",wordBreak:"break-word",margin:0,maxHeight:300,overflowY:"auto"}}>{texto}</pre>
           </div>
@@ -3575,348 +3997,7 @@ function ResultadoReajuste({ resultado, onVoltar }) {
   </script>
 
   <script type="text/babel">
-// ─────────────────────────────────────────────
-// MÓDULO — REPACTUAÇÃO (v2)
-// CCT/ACT vigente na data do RAPP (14133)
-// ou da abertura do edital (8666)
-// ─────────────────────────────────────────────
 
-function RepactuacaoModule() {
-  const apiKey = useGeminiKey();
-  const apiKeySet = apiKey.length > 10;
-
-  const [etapa, setEtapa] = React.useState(1);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState("");
-  const [pdfContrato, setPdfContrato] = React.useState(null);
-  const [b64Contrato, setB64Contrato] = React.useState(null);
-  const [pdfCctAtual, setPdfCctAtual] = React.useState(null);
-  const [b64CctAtual, setB64CctAtual] = React.useState(null);
-  const [pdfNovaCct, setPdfNovaCct] = React.useState(null);
-  const [b64NovaCct, setB64NovaCct] = React.useState(null);
-  const [contratoInfo, setContratoInfo] = React.useState(null);
-  const [cctAtualInfo, setCctAtualInfo] = React.useState(null);
-  const [novaCctInfo, setNovaCctInfo] = React.useState(null);
-  const [campos, setCampos] = React.useState({
-    dataReferencia: "",
-    descricaoCctAtual: "",
-    dataCctAtual: "",
-    descricaoNovaCct: "",
-    dataNovaCct: "",
-    dataPedido: "",
-    categoriaProfissional: "",
-  });
-  const [resultado, setResultado] = React.useState(null);
-
-  const refContrato = React.useRef();
-  const refCctAtual = React.useRef();
-  const refNovaCct = React.useRef();
-
-  const lerPdf = (f) => new Promise(r => { const rd=new FileReader(); rd.onload=e=>r(e.target.result.split(",")[1]); rd.readAsDataURL(f); });
-  const set = (k,v) => setCampos(p=>({...p,[k]:v}));
-
-  const parseDate = (s) => {
-    if (!s) return null;
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) { const [d,m,y]=s.split("/"); return new Date(y,m-1,d); }
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) { const [y,m,d]=s.split("-"); return new Date(y,m-1,d); }
-    return null;
-  };
-  const fmtDate = (d) => d instanceof Date ? d.toLocaleDateString("pt-BR") : d || "—";
-  const addDays = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
-
-  const handleContrato = async (f) => {
-    if (!f||f.type!=="application/pdf") return;
-    setPdfContrato(f); setB64Contrato(await lerPdf(f)); setError(""); setContratoInfo(null); setEtapa(1);
-  };
-  const handleCctAtual = async (f) => {
-    if (!f||f.type!=="application/pdf") return;
-    setPdfCctAtual(f); setB64CctAtual(await lerPdf(f));
-  };
-  const handleNovaCct = async (f) => {
-    if (!f||f.type!=="application/pdf") return;
-    setPdfNovaCct(f); setB64NovaCct(await lerPdf(f));
-  };
-
-  const analisarDocs = async () => {
-    if (!b64Contrato) { setError("Carregue o contrato."); return; }
-    if (!apiKeySet) { setError("Configure a chave Gemini na página inicial."); return; }
-    setLoading(true); setError("");
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-      const prompt1 = `Analise este contrato administrativo. Retorne APENAS JSON puro sem markdown:
-{"lei_aplicavel":"8666"|"14133"|"indeterminado","numero_contrato":"...","objeto":"até 10 palavras","contratada":"...","data_abertura_pregao":"DD/MM/AAAA ou null","data_rapp":"DD/MM/AAAA ou null","tem_clausula_repactuacao":true|false,"clausula_repactuacao":"texto resumido ou null","categoria_profissional":"categoria ou null","tem_planilha_custos":true|false,"justificativa_lei":"...","observacoes":"alertas ou null"}`;
-      const r1 = await fetch(url, { method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64Contrato}},{text:prompt1}]}], generationConfig:{temperature:0.1,maxOutputTokens:1024}}) });
-      const d1 = await r1.json();
-      const c1 = JSON.parse((d1.candidates?.[0]?.content?.parts?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
-      setContratoInfo(c1);
-
-      const refDate = c1.lei_aplicavel==="8666" ? (c1.data_abertura_pregao||"") : (c1.data_rapp||"");
-      setCampos(p=>({...p, dataReferencia:refDate, categoriaProfissional:c1.categoria_profissional||""}));
-
-      // Analisa CCT atual (vigente à época do RAPP/edital), se fornecida
-      if (b64CctAtual) {
-        const prompt2 = `Analise este instrumento normativo (CCT/ACT/Lei do Piso/Acordo Coletivo). Retorne APENAS JSON puro sem markdown:
-{"tipo":"CCT"|"ACT"|"Lei do Piso"|"outro","descricao":"identificação completa","data_publicacao":"DD/MM/AAAA ou null","data_vigencia_inicio":"DD/MM/AAAA ou null","data_base_categoria":"DD/MM/AAAA ou null","categoria":"categoria profissional","sindicato":"entidade","piso_salarial":"valor se informado ou null","observacoes":"alertas ou null"}`;
-        const r2 = await fetch(url, { method:"POST", headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({ contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64CctAtual}},{text:prompt2}]}], generationConfig:{temperature:0.1,maxOutputTokens:512}}) });
-        const d2 = await r2.json();
-        const c2 = JSON.parse((d2.candidates?.[0]?.content?.parts?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
-        setCctAtualInfo(c2);
-        setCampos(p=>({...p, descricaoCctAtual:c2.descricao||"", dataCctAtual:c2.data_publicacao||c2.data_vigencia_inicio||"", categoriaProfissional:c2.categoria||p.categoriaProfissional}));
-      }
-
-      // Analisa nova CCT, se fornecida
-      if (b64NovaCct) {
-        const r3 = await fetch(url, { method:"POST", headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({ contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64NovaCct}},{text:prompt2||`Analise este instrumento normativo (CCT/ACT/Lei do Piso). Retorne APENAS JSON puro: {"tipo":"CCT","descricao":"...","data_publicacao":"DD/MM/AAAA ou null","data_vigencia_inicio":"DD/MM/AAAA ou null","categoria":"...","sindicato":"...","percentual_reajuste":"...% ou null","piso_salarial":"valor ou null","observacoes":"ou null"}`}]}], generationConfig:{temperature:0.1,maxOutputTokens:512}}) });
-        const d3 = await r3.json();
-        const c3 = JSON.parse((d3.candidates?.[0]?.content?.parts?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
-        setNovaCctInfo(c3);
-        setCampos(p=>({...p, descricaoNovaCct:c3.descricao||"", dataNovaCct:c3.data_publicacao||c3.data_vigencia_inicio||""}));
-      }
-      setEtapa(2);
-    } catch(e) { setError("Erro: "+e.message); }
-    finally { setLoading(false); }
-  };
-
-  const calcular = () => {
-    setError("");
-    const dataRef = parseDate(campos.dataReferencia);
-    const dataNovaCct = parseDate(campos.dataNovaCct);
-    const dataPedido = campos.dataPedido ? parseDate(campos.dataPedido) : new Date();
-    if (!dataRef) { setError(`Informe a data de referência (${contratoInfo?.lei_aplicavel==="8666"?"abertura do pregão":"RAPP"}).`); return; }
-    if (!dataNovaCct) { setError("Informe a data de publicação da nova CCT/ACT/Lei do Piso."); return; }
-
-    // A empresa tem direito à repactuação a partir da publicação da nova CCT
-    // que seja posterior à data de referência (RAPP/abertura do edital)
-    const prazoRetro = addDays(dataNovaCct, 60);
-    const hoje = new Date(); hoje.setHours(0,0,0,0);
-    const adquirido = dataNovaCct <= hoje;
-    const temRetro = adquirido ? (dataPedido <= prazoRetro) : null;
-
-    const alertas = [
-      !contratoInfo?.tem_clausula_repactuacao && "⚠️ Cláusula de repactuação não identificada — verificar previsão editalícia",
-      !contratoInfo?.tem_planilha_custos && "⚠️ Planilha de custos e formação de preços não identificada — documento essencial para a repactuação",
-      contratoInfo?.observacoes,
-      cctAtualInfo?.observacoes,
-    ].filter(Boolean);
-
-    setResultado({
-      lei: contratoInfo?.lei_aplicavel,
-      contrato: contratoInfo,
-      dataReferencia: fmtDate(dataRef),
-      tipoRef: contratoInfo?.lei_aplicavel==="8666"?"abertura do pregão/edital":"elaboração do RAPP",
-      descricaoCctAtual: campos.descricaoCctAtual,
-      dataCctAtual: campos.dataCctAtual,
-      descricaoNovaCct: campos.descricaoNovaCct,
-      dataNovaCct: fmtDate(dataNovaCct),
-      dataNovaCctObj: dataNovaCct,
-      prazoRetro: fmtDate(prazoRetro),
-      prazoRetroObj: prazoRetro,
-      adquirido,
-      temRetro,
-      dataPedido: fmtDate(dataPedido),
-      dataPedidoObj: dataPedido,
-      categoriaProfissional: campos.categoriaProfissional,
-      alertas,
-    });
-    setEtapa(3);
-  };
-
-  const Stepper = () => (
-    <div style={{display:"flex",alignItems:"center",gap:0,marginBottom:28}}>
-      {["Documentos","Dados","Resultado"].map((s,i)=>{
-        const n=i+1,at=etapa===n,fe=etapa>n;
-        return (<React.Fragment key={s}>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <div style={{width:28,height:28,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,background:fe?"var(--success-text)":at?"var(--accent)":"var(--surface-2)",color:fe||at?"#fff":"var(--text-muted)"}}>{fe?"✓":n}</div>
-            <span style={{fontSize:12,fontWeight:at?700:500,color:at?"var(--text-primary)":"var(--text-muted)"}}>{s}</span>
-          </div>
-          {i<2&&<div style={{flex:1,height:2,background:fe?"var(--success-text)":"var(--card-border)",margin:"0 10px"}}/>}
-        </React.Fragment>);
-      })}
-    </div>
-  );
-
-  const DropZone = ({label,file,refEl,handler,hint,obrigatorio}) => (
-    <div>
-      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:7}}>
-        <p className="label-text" style={{margin:0}}>{label}</p>
-        {obrigatorio?<span style={{fontSize:10,fontWeight:700,color:"var(--danger-text)",background:"var(--danger-bg)",padding:"1px 7px",borderRadius:99}}>Obrigatório</span>:<span style={{fontSize:10,color:"var(--text-subtle)",background:"var(--surface-2)",padding:"1px 7px",borderRadius:99}}>Opcional</span>}
-      </div>
-      <div onClick={()=>refEl.current.click()} onDrop={e=>{e.preventDefault();handler(e.dataTransfer.files[0]);}} onDragOver={e=>e.preventDefault()} className={`dropzone${file?" active":""}`} style={{minHeight:90,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"14px 12px"}}>
-        <input ref={refEl} type="file" accept=".pdf" style={{display:"none"}} onChange={e=>handler(e.target.files[0])}/>
-        {file?(<><div style={{fontSize:20}}>📄</div><p style={{fontSize:12,fontWeight:600,color:"var(--accent)",margin:"4px 0 2px",textAlign:"center",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{file.name}</p><p style={{fontSize:10,color:"var(--text-subtle)",margin:0}}>Clique para trocar</p></>):(<><div style={{fontSize:20}}>📂</div><p style={{fontSize:11,color:"var(--text-muted)",margin:"4px 0 0",textAlign:"center"}}>Arraste ou <strong style={{color:"var(--accent)"}}>clique</strong></p>{hint&&<p style={{fontSize:10,color:"var(--text-subtle)",margin:"3px 0 0",textAlign:"center"}}>{hint}</p>}</>)}
-      </div>
-    </div>
-  );
-
-  if (etapa===3&&resultado) return <ResultadoRepactuacao resultado={resultado} onVoltar={()=>{setEtapa(2);setResultado(null);}}/>;
-
-  return (
-    <div className="module-container">
-      <div style={{marginBottom:24}}>
-        <h2 style={{fontSize:18,fontWeight:900,color:"var(--text-primary)",margin:"0 0 6px",letterSpacing:"-.02em"}}>🔄 Repactuação Contratual</h2>
-        <p style={{fontSize:13,color:"var(--text-muted)",margin:0}}>Direito à repactuação por nova CCT/ACT/Lei do Piso posterior à data de referência do contrato.</p>
-      </div>
-      <Stepper/>
-
-      {!apiKeySet&&<div className="info-box" style={{marginBottom:20}}><p style={{fontSize:13,color:"var(--info-text)",margin:0}}>🔑 Configure a chave Gemini na página inicial.</p></div>}
-      {error&&<div className="error-box" style={{marginBottom:16}}><p style={{margin:0}}>⚠ {error}</p></div>}
-
-      {/* ETAPA 1 */}
-      <div className="card" style={{marginBottom:20,opacity:etapa>1?.65:1}}>
-        <p className="card-title">Etapa 1 — Documentos</p>
-        <div className="info-box" style={{margin:"12px 0 16px"}}>
-          <p style={{fontSize:12,fontWeight:700,color:"var(--info-text)",margin:"0 0 4px"}}>📌 Documentos necessários</p>
-          <p style={{fontSize:12,color:"var(--text-secondary)",margin:0,lineHeight:1.6}}>
-            <strong>Contrato:</strong> identifica a lei aplicável e a data de referência (abertura do edital para 8.666/93 ou data do RAPP para 14.133/2021).<br/>
-            <strong>CCT/ACT vigente à época:</strong> instrumento normativo que vigorava na data de referência — define o piso de comparação.<br/>
-            <strong>Nova CCT/ACT:</strong> instrumento posterior que gera o direito à repactuação.
-          </p>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14,marginBottom:14}}>
-          <DropZone label="📄 Contrato inicial" file={pdfContrato} refEl={refContrato} handler={handleContrato} obrigatorio hint="Lei aplicável e data de referência"/>
-          <DropZone label="📋 CCT/ACT vigente à época" file={pdfCctAtual} refEl={refCctAtual} handler={handleCctAtual} hint="Vigente na abertura do edital (8666) ou na data do RAPP (14133)"/>
-          <DropZone label="📋 Nova CCT/ACT" file={pdfNovaCct} refEl={refNovaCct} handler={handleNovaCct} hint="Ato normativo posterior que gera o direito"/>
-        </div>
-        {etapa===1&&<button onClick={analisarDocs} disabled={loading||!b64Contrato||!apiKeySet} className="btn-primary" style={{width:"100%"}}>{loading?"Analisando documentos…":"Analisar documentos →"}</button>}
-        {contratoInfo&&etapa>1&&(
-          <div style={{marginTop:12,padding:"10px 14px",background:"var(--surface-2)",borderRadius:8,fontSize:12,color:"var(--text-secondary)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span>✓ <strong>{contratoInfo.numero_contrato}</strong> · Lei <strong>{contratoInfo.lei_aplicavel==="14133"?"14.133/2021":contratoInfo.lei_aplicavel==="8666"?"8.666/1993":"a confirmar"}</strong> · {contratoInfo.contratada}</span>
-            <button onClick={()=>setEtapa(1)} className="btn-link">Trocar</button>
-          </div>
-        )}
-      </div>
-
-      {/* ETAPA 2 */}
-      {etapa>=2&&contratoInfo&&(
-        <div className="card" style={{marginBottom:20}}>
-          <p className="card-title" style={{marginBottom:12}}>Etapa 2 — Confirmar dados</p>
-          <div style={{marginBottom:16,padding:"12px 16px",borderRadius:10,background:"var(--info-bg)",border:"1px solid var(--info-border)"}}>
-            <p style={{fontSize:12,fontWeight:700,color:"var(--info-text)",margin:"0 0 4px"}}>
-              {contratoInfo.lei_aplicavel==="14133"?"⚖️ Lei 14.133/2021 — Data de referência: data do RAPP":contratoInfo.lei_aplicavel==="8666"?"⚖️ Lei 8.666/93 — Data de referência: data de abertura do pregão/edital":"⚠️ Lei não identificada — informe a data de referência"}
-            </p>
-            <p style={{fontSize:11,color:"var(--text-muted)",margin:0}}>A CCT/ACT <strong>vigente nesta data</strong> é o piso de referência. Qualquer nova CCT/ACT publicada <strong>após</strong> esta data gera direito à repactuação.</p>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 20px"}}>
-            {[
-              {k:"dataReferencia",label:`📅 Data de referência (${contratoInfo.lei_aplicavel==="8666"?"abertura do pregão":"RAPP"})`,hint:contratoInfo.lei_aplicavel==="8666"?"Data de abertura do certame licitatório":"Data de elaboração do orçamento estimativo"},
-              {k:"categoriaProfissional",label:"👷 Categoria profissional",placeholder:"Ex: vigilantes, limpeza, TI",hint:"Para identificar a CCT/ACT aplicável"},
-              {k:"descricaoCctAtual",label:"📋 CCT/ACT vigente na data de referência",placeholder:"Ex: CCT 2024 — Vigilantes RJ",hint:"Instrumento vigente na abertura do edital (8666) ou no RAPP (14133)"},
-              {k:"dataCctAtual",label:"📅 Data da CCT/ACT vigente à época",hint:"Data de publicação ou início de vigência"},
-              {k:"descricaoNovaCct",label:"📋 Nova CCT/ACT/Lei do Piso",placeholder:"Ex: CCT 2025 — Vigilantes RJ",hint:"Instrumento posterior que gera o direito à repactuação"},
-              {k:"dataNovaCct",label:"📅 Data de publicação da nova CCT/ACT",hint:"A partir desta data contam os 60 dias para retroatividade"},
-              {k:"dataPedido",label:"📋 Data do pedido da empresa",placeholder:"DD/MM/AAAA (vazio = hoje)",hint:"Deixe em branco para usar hoje"},
-            ].map(({k,label,hint,placeholder})=>(
-              <div key={k} style={{marginBottom:14}}>
-                <label className="label-text" style={{display:"block",marginBottom:5}}>{label}</label>
-                <input value={campos[k]} onChange={e=>set(k,e.target.value)} placeholder={placeholder||"DD/MM/AAAA"} className="input-field"/>
-                {hint&&<p style={{fontSize:11,color:"var(--text-muted)",marginTop:4}}>{hint}</p>}
-              </div>
-            ))}
-          </div>
-          <div style={{display:"flex",gap:10,marginTop:8}}>
-            <button onClick={()=>setEtapa(1)} className="btn-secondary">← Voltar</button>
-            <button onClick={calcular} className="btn-primary" style={{flex:1}}>Calcular direitos →</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ResultadoRepactuacao({ resultado, onVoltar }) {
-  const [copiado, setCopiado] = React.useState(false);
-  const { lei, contrato, dataReferencia, tipoRef, descricaoCctAtual, dataCctAtual, descricaoNovaCct, dataNovaCct, prazoRetro, adquirido, temRetro, dataPedido, categoriaProfissional, alertas } = resultado;
-  const leiLabel = lei==="14133"?"Lei 14.133/2021":lei==="8666"?"Lei 8.666/1993":"Lei a confirmar";
-  const hoje = new Date().toLocaleDateString("pt-BR");
-  const corRetro = temRetro===true?"var(--success-text)":temRetro===false?"var(--warning-text)":"var(--text-muted)";
-  const bgRetro  = temRetro===true?"var(--success-bg)":temRetro===false?"var(--warning-bg)":"var(--surface-2)";
-  const bdRetro  = temRetro===true?"var(--success-border)":temRetro===false?"var(--warning-border)":"var(--card-border)";
-
-  const gerarAnalise = () => {
-    let t=`ANÁLISE DE DIREITO À REPACTUAÇÃO CONTRATUAL\nGerado em: ${hoje}\n${"─".repeat(55)}\n\n`;
-    t+=`CONTRATO: ${contrato?.numero_contrato||"—"}\nCONTRATADA: ${contrato?.contratada||"—"}\nOBJETO: ${contrato?.objeto||"—"}\nCATEGORIA: ${categoriaProfissional||"—"}\nLEI: ${leiLabel}\n`;
-    t+=`DATA DE REFERÊNCIA (${tipoRef}): ${dataReferencia}\n\n`;
-    t+=`${"─".repeat(55)}\n`;
-    t+=`CCT/ACT VIGENTE À ÉPOCA: ${descricaoCctAtual||"—"} (${dataCctAtual||"—"})\n`;
-    t+=`NOVA CCT/ACT: ${descricaoNovaCct||"—"}\nPUBLICAÇÃO: ${dataNovaCct}\n`;
-    t+=`PRAZO RETROATIVIDADE (60d): ${prazoRetro}\nDATA DO PEDIDO: ${dataPedido}\n`;
-    t+=`RETROATIVIDADE: ${temRetro===true?"SIM ✓":temRetro===false?"NÃO ✗ — prazo expirado":"—"}\n`;
-    if(alertas?.length) t+=`\n${"─".repeat(55)}\nALERTAS:\n${alertas.map(a=>`• ${a}`).join("\n")}\n`;
-    return t;
-  };
-
-  const gerarDespacho = () =>
-    `DESPACHO\n\nTrata-se de pedido de repactuação apresentado pela empresa ${contrato?.contratada||"___"}, referente ao Contrato nº ${contrato?.numero_contrato||"___"}, cujo objeto é ${contrato?.objeto||"___"}${categoriaProfissional?`, com emprego de mão de obra da categoria de ${categoriaProfissional}`:""}, celebrado com fundamento na ${leiLabel}.\n\nO marco temporal para fins de repactuação é a data de ${tipoRef}, fixada em ${dataReferencia}, ocasião em que vigorava o instrumento normativo ${descricaoCctAtual||"CCT/ACT anterior"}${dataCctAtual?` (publicado em ${dataCctAtual})`:""}, que estabelecia o piso salarial de referência da categoria.\n\nA nova ${descricaoNovaCct||"CCT/ACT"} foi publicada em ${dataNovaCct}, sendo posterior à data de referência, razão pela qual a empresa passou a ter direito à repactuação a partir de sua publicação, nos termos do ${lei==="8666"?"art. 55, III, c/c art. 65, II, 'd', da Lei nº 8.666/1993":"art. 92, § 5º, da Lei nº 14.133/2021"}.\n\n${temRetro===true?`O pedido foi apresentado em ${dataPedido}, dentro do prazo de 60 (sessenta) dias contados da publicação do novo instrumento normativo (prazo final: ${prazoRetro}), razão pela qual os efeitos financeiros retroagem à data de publicação da ${descricaoNovaCct||"nova CCT/ACT"}.`:`O pedido foi apresentado em ${dataPedido}, após o transcurso do prazo de 60 (sessenta) dias contados da publicação (prazo final: ${prazoRetro}), razão pela qual os efeitos financeiros serão contados a partir da data do pedido, não havendo direito à retroatividade, conforme jurisprudência do TCU (Acórdão 1.827/2018-Plenário).`}\n\n${alertas?.length?`OBSERVAÇÕES:\n${alertas.map(a=>a).join("\n")}\n\n`:""}Encaminhe-se para as providências cabíveis.\n\nRio de Janeiro, ${hoje}.`;
-
-  const copiar = (t) => navigator.clipboard.writeText(t).then(()=>{setCopiado(true);setTimeout(()=>setCopiado(false),2500);});
-
-  return (
-    <div className="module-container">
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24,gap:16}}>
-        <div>
-          <h2 style={{fontSize:18,fontWeight:900,color:"var(--text-primary)",margin:"0 0 4px"}}>
-            {temRetro===true?"✓ Repactuação com retroatividade":temRetro===false?"⚠ Repactuação sem retroatividade":adquirido?"Direito adquirido":"Direito ainda não adquirido"}
-          </h2>
-          <p style={{fontSize:13,color:"var(--text-muted)",margin:0}}>{contrato?.numero_contrato} · {leiLabel} · {categoriaProfissional}</p>
-        </div>
-        <div style={{display:"flex",gap:8,flexShrink:0}}>
-          <button onClick={onVoltar} className="btn-secondary" style={{fontSize:12}}>← Editar</button>
-          <button onClick={()=>copiar(gerarAnalise())} className="btn-primary" style={{fontSize:12}}>{copiado?"✓ Copiado":"📋 Copiar análise"}</button>
-        </div>
-      </div>
-
-      {alertas?.length>0&&<div className="error-box" style={{marginBottom:16}}>{alertas.map((a,i)=><p key={i} style={{margin:i>0?"6px 0 0":0,fontSize:12}}>{a}</p>)}</div>}
-
-      {/* Status principal */}
-      <div style={{background:bgRetro,border:`1px solid ${bdRetro}`,borderRadius:14,padding:"18px 20px",marginBottom:16}}>
-        <p style={{fontSize:14,fontWeight:800,color:corRetro,margin:"0 0 4px"}}>
-          {temRetro===true?"✓ Pedido tempestivo — efeitos financeiros retroativos":temRetro===false?"⚠ Pedido intempestivo — sem retroatividade dos efeitos":adquirido?"Direito adquirido — verifique a data do pedido":"Direito ainda não adquirido"}
-        </p>
-        <p style={{fontSize:12,color:"var(--text-muted)",margin:0}}>
-          {temRetro===true?`A partir de ${dataNovaCct} (data de publicação da nova CCT/ACT)`:temRetro===false?`A partir de ${dataPedido} (data do pedido)`:adquirido?"Informe a data do pedido para calcular":"Aguardar nova CCT/ACT posterior à data de referência"}
-        </p>
-      </div>
-
-      {/* Grid de datas */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:16}}>
-        {[
-          {l:`Data de referência\n(${tipoRef})`, v:dataReferencia, icon:"📅"},
-          {l:"CCT/ACT vigente à época", v:descricaoCctAtual||(dataCctAtual?`Vigente em ${dataCctAtual}`:"—"), icon:"📋"},
-          {l:"Nova CCT/ACT", v:`${descricaoNovaCct||"—"}\n${dataNovaCct}`, icon:"📋"},
-          {l:"Prazo retroatividade\n(60 dias)", v:prazoRetro, icon:"⏰"},
-          {l:"Data do pedido", v:dataPedido, icon:"📨"},
-          {l:"Retroatividade", v:temRetro===true?"✓ Sim":temRetro===false?"✗ Não":"—", icon:"↩️"},
-        ].map(({l,v,icon})=>(
-          <div key={l} style={{background:"var(--card-bg)",border:"1px solid var(--card-border)",borderRadius:10,padding:"12px 14px",boxShadow:"var(--card-shadow)"}}>
-            <p style={{fontSize:10,color:"var(--text-subtle)",fontWeight:700,textTransform:"uppercase",letterSpacing:".04em",margin:"0 0 4px",whiteSpace:"pre-line"}}>{icon} {l}</p>
-            <p style={{fontSize:12,fontWeight:700,color:"var(--text-primary)",margin:0,whiteSpace:"pre-line"}}>{v}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Textos */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-        {[{label:"📋 Análise técnica",texto:gerarAnalise()},{label:"📝 Minuta de despacho",texto:gerarDespacho()}].map(({label,texto})=>(
-          <div key={label} className="card">
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <p style={{fontSize:13,fontWeight:700,color:"var(--text-primary)",margin:0}}>{label}</p>
-              <button onClick={()=>copiar(texto)} className="btn-primary" style={{fontSize:12,padding:"6px 14px"}}>{copiado?"✓ Copiado":"Copiar"}</button>
-            </div>
-            <pre style={{fontSize:11.5,color:"var(--text-secondary)",lineHeight:1.7,whiteSpace:"pre-wrap",wordBreak:"break-word",margin:0,maxHeight:300,overflowY:"auto"}}>{texto}</pre>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-  </script>
-
-  <script type="text/babel">
 
 // ─────────────────────────────────────────────
 // PÁGINA INICIAL + SHELL
@@ -4218,6 +4299,7 @@ document.addEventListener("doccheck:auth", () => {
   _root.render(<Shell />);
 });
 
+  
   
   </script>
 
