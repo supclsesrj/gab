@@ -284,7 +284,9 @@
     async function checkPassword() {
       const input = document.getElementById("pwd-input").value;
       if ((await sha256(input)) === (await sha256("Jope1234"))) {
-        sessionStorage.setItem("doccheck_auth","1");
+        // Armazena a senha CRUA na sessão — será enviada ao backend para autenticação real
+        sessionStorage.setItem("doccheck_auth", "1");
+        sessionStorage.setItem("doccheck_pwd", input);
         showApp();
       } else {
         const err = document.getElementById("login-error");
@@ -321,26 +323,37 @@
 
 
 // ─────────────────────────────────────────────
-// GLOBALS — API KEY HELPER + DARK MODE FIXES
+// GLOBALS — PROXY URL + AUTH SESSION
 // ─────────────────────────────────────────────
 
-// Hook global de API key — lê do localStorage, sem UI própria
-function useGeminiKey() {
-  const [key] = React.useState(() => {
-    try {
-      const v = localStorage.getItem("doccheck_gemini_key");
-      return v ? decodeURIComponent(escape(atob(v))) : "";
-    } catch(e) { return ""; }
+// ⚠️  SUBSTITUA pela URL do seu Web App do Google Apps Script após publicar
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwoK9niyfYw9Zn5IlMpC1zj17vlEixJ-fYp0hptT4Kk5gM_c8q2HHr95Rvd5r4qfiopuw/exec";
+
+// Recupera a senha da sessão (inserida no login) para enviar ao backend
+function getSessionPassword() {
+  try { return sessionStorage.getItem("doccheck_pwd") || ""; } catch(e) { return ""; }
+}
+
+// Função de chamada ao proxy backend — substitui todas as chamadas diretas ao Gemini
+async function callGemini(geminiPayload) {
+  const auth_pass = getSessionPassword();
+  if (!auth_pass) throw new Error("Sessão expirada. Recarregue a página e faça login novamente.");
+
+  const resp = await fetch(APPS_SCRIPT_URL, {
+    method: "POST",
+    // Content-Type text/plain evita preflight CORS rigoroso no Apps Script
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ auth_pass, gemini_payload: geminiPayload }),
   });
-  return key;
-}
 
-function saveGeminiKey(k) {
-  try { localStorage.setItem("doccheck_gemini_key", btoa(unescape(encodeURIComponent(k)))); } catch(e) {}
-}
+  if (!resp.ok) {
+    const errText = await resp.text();
+    throw new Error(\`Erro no proxy (\${resp.status}): \${errText}\`);
+  }
 
-function clearGeminiKey() {
-  try { localStorage.removeItem("doccheck_gemini_key"); } catch(e) {}
+  const data = await resp.json();
+  if (data.error) throw new Error(data.message || "Erro retornado pelo proxy.");
+  return data;
 }
 
   
@@ -473,8 +486,6 @@ const ChecklistItem = ({ item, index }) => {
 };
 
 function App() {
-  const apiKey = useGeminiKey();
-  const apiKeySet = apiKey.length > 10;
   const [presetKey, setPresetKey] = useState("Processo Licitatório");
   const [customItems, setCustomItems] = useState([]);
   const [newItem, setNewItem] = useState("");
@@ -548,12 +559,7 @@ Critérios:
 O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do checklist.`;
 
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+            const resp = await callGemini({
           contents: [{
             parts: [
               { inline_data: { mime_type: "application/pdf", data: pdfBase64 } },
@@ -561,8 +567,7 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
             ],
           }],
           generationConfig: { temperature: 0.1, maxOutputTokens: 8192 },
-        }),
-      });
+        });
 
       if (!resp.ok) {
         const err = await resp.json();
@@ -753,14 +758,14 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
 
             <button
               onClick={runAnalysis}
-              disabled={loading || !pdfFile || !apiKeySet}
+              disabled={loading || !pdfFile }
               style={{
                 padding: "14px 24px",
-                background: loading || !pdfFile || !apiKeySet ? "#E2E8F0" : "var(--text-primary)",
-                color: loading || !pdfFile || !apiKeySet ? "var(--text-subtle)" : "var(--card-bg)",
+                background: loading || !pdfFile  ? "#E2E8F0" : "var(--text-primary)",
+                color: loading || !pdfFile  ? "var(--text-subtle)" : "var(--card-bg)",
                 border: "none", borderRadius: 10,
                 fontSize: 14, fontWeight: 700,
-                cursor: loading || !pdfFile || !apiKeySet ? "not-allowed" : "pointer",
+                cursor: loading || !pdfFile  ? "not-allowed" : "pointer",
                 transition: "all .15s",
               }}
             >
@@ -799,6 +804,20 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
   </script>
 
   <script type="text/babel">
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────
+// UTILITÁRIOS COMPARTILHADOS
+// ─────────────────────────────────────────────
+
+function formatCNPJ(v) {
+  v = v.replace(/\D/g, "").slice(0, 14);
+  if (v.length > 12) v = v.replace(/^
 
 
 
@@ -1028,7 +1047,6 @@ function RappCheck() {
 
   const analisar = async () => {
     if (!pdfBase64) { setError("Carregue o PDF do RAPP primeiro."); return; }
-    if (!apiKeySet) { setError("Configure a chave da API Gemini."); return; }
     setLoading(true); setError(""); setEmpresas([]); setConluios([]);
     setProgresso({ total:0, atual:0, label:"Extraindo empresas do RAPP com IA…" });
 
@@ -1045,18 +1063,13 @@ Exemplo: [{"cnpj":"12.345.678/0001-90","nome":"Empresa ABC Ltda"},...]
 
 Se não encontrar nenhuma empresa, retorne [].`;
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-      const r = await fetch(url, {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({
+            const resp = await callGemini({
           contents:[{ parts:[
             { inline_data:{ mime_type:"application/pdf", data:pdfBase64 } },
             { text:prompt }
           ]}],
           generationConfig:{ temperature:0.1, maxOutputTokens:4096 }
-        })
-      });
+        });
       if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message || `Gemini erro ${r.status}`); }
       const gdata = await r.json();
       const raw = gdata.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
@@ -1187,8 +1200,8 @@ Se não encontrar nenhuma empresa, retorne [].`;
         {error && <p style={{ fontSize:12, color:"var(--danger-text)", marginTop:12 }}>⚠ {error}</p>}
 
         <div style={{ display:"flex", gap:10, marginTop:16 }}>
-          <button onClick={analisar} disabled={loading || !pdfFile || !apiKeySet}
-            style={{ flex:1, padding:"13px 24px", background: loading || !pdfFile || !apiKeySet ? "#E2E8F0" : "var(--text-primary)", color: loading || !pdfFile || !apiKeySet ? "var(--text-subtle)" : "var(--card-bg)", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor: loading || !pdfFile || !apiKeySet ? "not-allowed" : "pointer" }}>
+          <button onClick={analisar} disabled={loading || !pdfFile }
+            style={{ flex:1, padding:"13px 24px", background: loading || !pdfFile  ? "#E2E8F0" : "var(--text-primary)", color: loading || !pdfFile  ? "var(--text-subtle)" : "var(--card-bg)", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor: loading || !pdfFile  ? "not-allowed" : "pointer" }}>
             {loading ? "Analisando…" : "Analisar RAPP"}
           </button>
           {temResultado && (
@@ -1303,21 +1316,7 @@ Se não encontrar nenhuma empresa, retorne [].`;
   
   
   
-  </script>
-
-  <script type="text/babel">
-
-
-
-
-
-
-
-// ─────────────────────────────────────────────
-// MÓDULO — CONTROLE DE VENCIMENTOS
-// ─────────────────────────────────────────────
-
-const GITHUB_BASE = "https://raw.githubusercontent.com/supclsesrj/gab/main/";
+  clsesrj/gab/main/";
 
 function parseData(val) {
   if (!val) return null;
@@ -1845,10 +1844,6 @@ function VencimentosModule() {
 // ─────────────────────────────────────────────
 
 function ComparadorTR() {
-  const apiKey = useGeminiKey();
-  const apiKeySet = apiKey.length > 10;
-
-
   const [pdfAntes, setPdfAntes] = React.useState(null);
   const [b64Antes, setB64Antes] = React.useState(null);
   const [pdfDepois, setPdfDepois] = React.useState(null);
@@ -1904,7 +1899,6 @@ function ComparadorTR() {
 
   const analisar = async () => {
     if (!b64Antes || !b64Depois) { setError("Carregue os dois PDFs antes de comparar."); return; }
-    if (!apiKeySet) { setError("Configure a chave da API Gemini."); return; }
     setLoading(true); setError(""); setResultado(null);
 
     const prompt = `Você é um especialista em licitações e contratos públicos, com domínio das seguintes normas federais e estaduais do Estado do Rio de Janeiro:
@@ -1969,11 +1963,7 @@ Retorne APENAS um JSON puro, sem markdown, sem texto antes ou depois, com esta e
 Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas relevante. Foque em mudanças substantivas que um gestor ou advogado precisaria avaliar.`;
 
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const resp = await callGemini({
           contents: [{
             parts: [
               { text: "DOCUMENTO 1 — VERSÃO ANTERIOR:" },
@@ -1984,8 +1974,7 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
             ]
           }],
           generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
-        })
-      });
+        });
 
       if (!resp.ok) {
         const e = await resp.json();
@@ -2048,13 +2037,13 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
           </div>
         )}
 
-        <button onClick={analisar} disabled={loading || !b64Antes || !b64Depois || !apiKeySet}
+        <button onClick={analisar} disabled={loading || !b64Antes || !b64Depois }
           style={{
             width:"100%", padding:"13px 24px",
-            background: loading || !b64Antes || !b64Depois || !apiKeySet ? "#E2E8F0" : "var(--text-primary)",
-            color: loading || !b64Antes || !b64Depois || !apiKeySet ? "var(--text-subtle)" : "var(--card-bg)",
+            background: loading || !b64Antes || !b64Depois  ? "#E2E8F0" : "var(--text-primary)",
+            color: loading || !b64Antes || !b64Depois  ? "var(--text-subtle)" : "var(--card-bg)",
             border:"none", borderRadius:10, fontSize:14, fontWeight:700,
-            cursor: loading || !b64Antes || !b64Depois || !apiKeySet ? "not-allowed" : "pointer",
+            cursor: loading || !b64Antes || !b64Depois  ? "not-allowed" : "pointer",
           }}>
           {loading ? "Comparando documentos…" : "Comparar TRs"}
         </button>
@@ -2214,9 +2203,19 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
 // ─────────────────────────────────────────────
 
 function ImpugnacaoModule() {
-  const apiKey = useGeminiKey();
-  const apiKeySet = apiKey.length > 10;
+  const [etapa, setEtapa] = React.useState(1);
+  const [loading, setLoading] = React.useState(false);
+  const [progresso, setProgresso] = React.useState("");
+  const [error, setError] = React.useState("");
+  const [res
 
+
+
+// ─────────────────────────────────────────────
+// MÓDULO — AVALIAÇÃO DE IMPUGNAÇÕES E RECURSOS
+// ─────────────────────────────────────────────
+
+function ImpugnacaoModule() {
   const [etapa, setEtapa] = React.useState(1);
   const [loading, setLoading] = React.useState(false);
   const [progresso, setProgresso] = React.useState("");
@@ -2303,12 +2302,8 @@ function ImpugnacaoModule() {
 
   const analisar = async () => {
     if (!temImpugnacao) { setError("Carregue ao menos a impugnação ou recurso."); return; }
-    if (!apiKeySet) { setError("Configure a chave da API Gemini na página inicial."); return; }
-
     setLoading(true); setError(""); setResultado(null);
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-    const prompt = `Você é um especialista em Direito Administrativo e licitações públicas, com profundo conhecimento da Lei nº 14.133/2021, Lei nº 8.666/1993, Lei nº 10.520/2002, decretos estaduais do Rio de Janeiro (especialmente Dec. 48.778/2023, 48.816/2023, 48.817/2023, 48.818/2023, 48.819/2023, 48.820/2023, 48.821/2023), jurisprudência do TCU, TCE-RJ, AGU, e doutrina especializada (Marçal Justen Filho, Joel de Menezes Niebuhr, Jessé Torres Pereira Junior, entre outros).
+        const prompt = `Você é um especialista em Direito Administrativo e licitações públicas, com profundo conhecimento da Lei nº 14.133/2021, Lei nº 8.666/1993, Lei nº 10.520/2002, decretos estaduais do Rio de Janeiro (especialmente Dec. 48.778/2023, 48.816/2023, 48.817/2023, 48.818/2023, 48.819/2023, 48.820/2023, 48.821/2023), jurisprudência do TCU, TCE-RJ, AGU, e doutrina especializada (Marçal Justen Filho, Joel de Menezes Niebuhr, Jessé Torres Pereira Junior, entre outros).
 
 Foram fornecidos os seguintes documentos de um processo licitatório:
 - Impugnação(ões) e/ou recurso(s) administrativo(s)
@@ -2389,10 +2384,7 @@ IMPORTANTE:
       parts.push({ text: prompt });
 
       setProgresso(`Analisando ${totalDocs} documento${totalDocs > 1 ? "s" : ""}…`);
-      const resp = await fetch(url, {
-        method:"POST", headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ contents:[{ parts }], generationConfig:{ temperature:0.15, maxOutputTokens:8192 } })
-      });
+      const resp = await callGemini({ contents:[{ parts }], generationConfig:{ temperature:0.15, maxOutputTokens:8192 } });
       if (!resp.ok) { const e = await resp.json(); throw new Error(e.error?.message || `Gemini ${resp.status}`); }
       const data = await resp.json();
       const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
@@ -2458,7 +2450,7 @@ IMPORTANTE:
           </div>
         )}
 
-        <button onClick={analisar} disabled={loading || !temImpugnacao || !apiKeySet}
+        <button onClick={analisar} disabled={loading || !temImpugnacao }
           className="btn-primary" style={{ width:"100%", padding:"13px", fontSize:14 }}>
           {loading ? "Analisando documentos…" : `Analisar ${totalDocs > 0 ? `${totalDocs} documento${totalDocs>1?"s":""}` : ""}`}
         </button>
@@ -2762,9 +2754,13 @@ function ResultadoImpugnacao({ resultado, onVoltar }) {
   
   
   
-  </script>
+  State([]); // múltiplas tabelas
+  const [b64Tabelas, setB64Tabelas] = React.useState([]);
 
-  <script type="text/babel">
+  const [loading, setLoading] = React.useState(false);
+  const [progresso, setProgresso] = React.useState("");
+  const [error, setError] = React.useState("");
+  const [resultado
 
 
 
@@ -2776,10 +2772,6 @@ function ResultadoImpugnacao({ resultado, onVoltar }) {
 // ─────────────────────────────────────────────
 
 function PesquisaSemestral() {
-  const apiKey = useGeminiKey();
-  const apiKeySet = apiKey.length > 10;
-
-
   const [pdfRelatorio, setPdfRelatorio] = React.useState(null);
   const [b64Relatorio, setB64Relatorio] = React.useState(null);
   const [pdfTabelas, setPdfTabelas] = React.useState([]); // múltiplas tabelas
@@ -2817,8 +2809,6 @@ function PesquisaSemestral() {
   const analisar = async () => {
     if (!b64Relatorio) { setError("Carregue o relatório da Coordenação de Compras."); return; }
     if (b64Tabelas.length === 0) { setError("Carregue ao menos uma tabela de preços."); return; }
-    if (!apiKeySet) { setError("Configure a chave da API Gemini."); return; }
-
     setLoading(true); setError(""); setResultado(null);
 
     const prompt = `Você é um especialista em contratos administrativos e registro de preços no âmbito da Administração Pública do Estado do Rio de Janeiro, com domínio do Decreto Estadual nº 48.821/2023 (alterado pelo Decreto nº 49.956/2025), que regulamenta o Sistema de Registro de Preços (SRP).
@@ -2861,9 +2851,7 @@ Retorne APENAS um JSON puro com esta estrutura (sem markdown):
 
     try {
       setProgresso("Enviando documentos ao Gemini…");
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-      // Monta parts com todas as tabelas + relatório
+            // Monta parts com todas as tabelas + relatório
       const parts = [];
       b64Tabelas.forEach((b64, i) => {
         parts.push({ text: `TABELA DE PREÇOS ${i + 1} (${pdfTabelas[i]?.name || "tabela"}):` });
@@ -2874,14 +2862,10 @@ Retorne APENAS um JSON puro com esta estrutura (sem markdown):
       parts.push({ text: prompt });
 
       setProgresso("Analisando compatibilidade de preços…");
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const resp = await callGemini({
           contents: [{ parts }],
           generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
-        })
-      });
+        });
 
       if (!resp.ok) {
         const e = await resp.json();
@@ -3003,7 +2987,7 @@ Retorne APENAS um JSON puro com esta estrutura (sem markdown):
           </div>
         )}
 
-        <button onClick={analisar} disabled={loading || !b64Relatorio || b64Tabelas.length === 0 || !apiKeySet}
+        <button onClick={analisar} disabled={loading || !b64Relatorio || b64Tabelas.length === 0 }
           className="btn-primary" style={{ width:"100%", padding:"13px" }}>
           {loading ? "Analisando documentos…" : "Analisar compatibilidade de preços"}
         </button>
@@ -3133,23 +3117,7 @@ Retorne APENAS um JSON puro com esta estrutura (sem markdown):
   
   
   
-  </script>
-
-  <script type="text/babel">
-// ─────────────────────────────────────────────
-// MÓDULO — REAJUSTE CONTRATUAL (v3)
-// ─────────────────────────────────────────────
-function ReajusteModule() {
-  const apiKey = useGeminiKey();
-  const apiKeySet = apiKey.length > 10;
-  const [etapa, setEtapa] = React.useState(1);
-  const [loading, setLoading] = React.useState(false);
-  const [loadingIbge, setLoadingIbge] = React.useState(false);
-  const [error, setError] = React.useState("");
-  const [pdfContrato, setPdfContrato] = React.useState(null);
-  const [b64Contrato, setB64Contrato] = React.useState(null);
-  const [contratoInfo, setContratoInfo] = React.useState(null);
-  const [campos, setCampos] = React.useState({
+  s] = React.useState({
     dataBase: "", indice: "IPCA", indiceCustom: "",
     reajustesAnteriores: [], // [{dataConcessao, cicloNumero}]
     dataPedido: "",
@@ -3174,14 +3142,12 @@ function ReajusteModule() {
 
   const analisarContrato = async () => {
     if (!b64Contrato) { setError("Carregue o contrato."); return; }
-    if (!apiKeySet) { setError("Configure a chave Gemini na página inicial."); return; }
     setLoading(true); setError("");
     try {
       const prompt = `Analise este contrato administrativo e extraia as informações abaixo. Retorne APENAS JSON puro sem markdown:
 {"lei_aplicavel":"8666"|"14133"|"indeterminado","numero_contrato":"...","objeto":"resumo em até 10 palavras","contratada":"nome da empresa","data_assinatura":"DD/MM/AAAA ou null","data_abertura_pregao":"DD/MM/AAAA ou null","data_proposta":"DD/MM/AAAA ou null","data_rapp":"DD/MM/AAAA ou null","indice_reajuste":"nome exato do índice previsto no contrato (ex: IPCA, INPC, IGP-M, IPC-A) ou null","tem_clausula_reajuste":true|false,"clausula_reajuste":"transcrição resumida da cláusula de reajuste ou null","periodicidade_reajuste":"12 meses ou outro prazo se previsto expressamente","justificativa_lei":"por que identificou esta lei — cite elementos do contrato","observacoes":"alertas sobre cláusulas incomuns, vedações ou particularidades relevantes, ou null"}
 Atenção: o índice de reajuste DEVE ser extraído da cláusula contratual. Não assuma IPCA se não estiver expresso.`;
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-      const resp = await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64Contrato}},{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:1024}})});
+      const resp = await callGemini({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64Contrato}},{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:1024}});
       const data = await resp.json();
       const parsed = JSON.parse((data.candidates?.[0]?.content?.parts?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
       setContratoInfo(parsed);
@@ -3317,8 +3283,7 @@ Atenção: o índice de reajuste DEVE ser extraído da cláusula contratual. Nã
         <p style={{fontSize:13,color:"var(--text-muted)",margin:0}}>Período aquisitivo de 12 meses, cômputo do índice e prazo de 60 dias para retroatividade dos efeitos financeiros.</p>
       </div>
       <Stepper/>
-      {!apiKeySet&&<div className="info-box" style={{marginBottom:20}}><p style={{fontSize:13,color:"var(--info-text)",margin:0}}>🔑 Configure a chave Gemini na página inicial.</p></div>}
-      {error&&<div className="error-box" style={{marginBottom:16}}><p style={{margin:0}}>⚠ {error}</p></div>}
+{error&&<div className="error-box" style={{marginBottom:16}}><p style={{margin:0}}>⚠ {error}</p></div>}
 
       {/* ETAPA 1 — só o contrato */}
       <div className="card" style={{marginBottom:20,opacity:etapa>1?.65:1}}>
@@ -3328,7 +3293,7 @@ Atenção: o índice de reajuste DEVE ser extraído da cláusula contratual. Nã
           <input ref={refContrato} type="file" accept=".pdf" style={{display:"none"}} onChange={e=>handleContrato(e.target.files[0])}/>
           {pdfContrato?(<><div style={{fontSize:22}}>📄</div><p style={{fontSize:13,fontWeight:600,color:"var(--accent)",margin:"6px 0 2px"}}>{pdfContrato.name}</p><p className="text-muted" style={{fontSize:11}}>Clique para trocar</p></>):(<><div style={{fontSize:22}}>📂</div><p style={{fontSize:12,color:"var(--text-muted)",margin:"6px 0 0"}}>Arraste ou <strong style={{color:"var(--accent)"}}>clique</strong> para selecionar o PDF do contrato</p></>)}
         </div>
-        {etapa===1&&<button onClick={analisarContrato} disabled={loading||!b64Contrato||!apiKeySet} className="btn-primary" style={{width:"100%"}}>{loading?"Analisando contrato…":"Analisar contrato →"}</button>}
+        {etapa===1&&<button onClick={analisarContrato} disabled={loading||!b64Contrato} className="btn-primary" style={{width:"100%"}}>{loading?"Analisando contrato…":"Analisar contrato →"}</button>}
         {contratoInfo&&etapa>1&&(
           <div style={{marginTop:12,padding:"10px 14px",background:"var(--surface-2)",borderRadius:8,fontSize:12,color:"var(--text-secondary)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span>✓ <strong>{contratoInfo.numero_contrato||"Contrato"}</strong> · Lei <strong>{contratoInfo.lei_aplicavel==="14133"?"14.133/2021":contratoInfo.lei_aplicavel==="8666"?"8.666/1993":"a confirmar"}</strong> · Índice: <strong>{contratoInfo.indice_reajuste||"verificar"}</strong></span>
@@ -3569,8 +3534,28 @@ function ResultadoReajuste({ resultado, onVoltar }) {
 // ─────────────────────────────────────────────
 
 function RepactuacaoModule() {
-  const apiKey = useGeminiKey();
-  const apiKeySet = apiKey.length > 10;
+  const [etapa, setEtapa] = React.useState(1);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  // Etapa 1
+  const [pdfContrato, setPdfContrato] = React.useState(null);
+  const [b64Contrato, setB64Contrato] = React.useState(null);
+  const [contratoInfo, setContratoInfo] = React.useState(null);
+
+  // Etapa 2
+  const [pdfCctBase, setPdfCctBase] = React.useState(null);
+  const [b64CctBase, setB64CctBase] = React.useState(null);
+  const [cctBaseInfo, setCctBaseInfo] = React.useState(null);
+  const [novasCcts, setNovasCcts] = React.use
+// ─────────────────────────────────────────────
+// MÓDULO — REPACTUAÇÃO (v3)
+// Etapa 1: só contrato
+// Etapa 2: CCT atual + nova CCT + dados
+// Múltiplos direitos = múltiplas CCTs posteriores
+// ─────────────────────────────────────────────
+
+function RepactuacaoModule() {
   const [etapa, setEtapa] = React.useState(1);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
@@ -3623,13 +3608,11 @@ function RepactuacaoModule() {
   // Etapa 1 — analisa só o contrato
   const analisarContrato = async () => {
     if(!b64Contrato){setError("Carregue o contrato.");return;}
-    if(!apiKeySet){setError("Configure a chave Gemini na página inicial.");return;}
     setLoading(true);setError("");
     try {
       const prompt=`Analise este contrato administrativo. Retorne APENAS JSON puro sem markdown:
 {"lei_aplicavel":"8666"|"14133"|"indeterminado","numero_contrato":"...","objeto":"até 10 palavras","contratada":"nome","data_abertura_pregao":"DD/MM/AAAA ou null","data_rapp":"DD/MM/AAAA ou null","tem_clausula_repactuacao":true|false,"clausula_repactuacao":"texto resumido ou null","categoria_profissional":"categoria ou null","tem_planilha_custos":true|false,"justificativa_lei":"...","observacoes":"alertas ou null"}`;
-      const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-      const resp=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64Contrato}},{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:1024}})});
+      const resp = await callGemini({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64Contrato}},{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:1024}});
       const data=await resp.json();
       const c=JSON.parse((data.candidates?.[0]?.content?.parts?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
       setContratoInfo(c);
@@ -3643,15 +3626,14 @@ function RepactuacaoModule() {
   // Etapa 2 — analisa CCTs
   const analisarCcts = async () => {
     if(!apiKeySet)return;
-    const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    const promptCct=`Analise este instrumento normativo trabalhista (CCT/ACT/Acordo Coletivo/Lei do Piso/Dissídio). Retorne APENAS JSON puro sem markdown:
+        const promptCct=`Analise este instrumento normativo trabalhista (CCT/ACT/Acordo Coletivo/Lei do Piso/Dissídio). Retorne APENAS JSON puro sem markdown:
 {"tipo":"CCT"|"ACT"|"Lei do Piso"|"Dissídio"|"outro","descricao":"identificação completa (ex: CCT 2024/2025 — Vigilantes SP)","data_publicacao":"DD/MM/AAAA ou null","data_vigencia_inicio":"DD/MM/AAAA ou null","data_base_categoria":"mês/ano ou null","categoria":"categoria profissional","sindicato_laboral":"nome do sindicato dos trabalhadores","sindicato_patronal":"nome ou null","piso_salarial":"valor se informado ou null","percentual_reajuste":"percentual se informado ou null","regra_retroatividade":"descrição da regra de retroatividade prevista no próprio documento, se houver (ex: 'efeitos retroativos a 01/01/2024 conforme cláusula 3ª') ou null","vigencia_fim":"DD/MM/AAAA ou null","observacoes":"alertas sobre cláusulas especiais, retroatividade diferente do padrão de 60 dias, ou outros pontos relevantes para a repactuação, ou null"}`;
 
     // Analisa CCT base se ainda não analisou
     if(b64CctBase&&!cctBaseInfo){
       setLoading(true);
       try {
-        const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64CctBase}},{text:promptCct}]}],generationConfig:{temperature:0.1,maxOutputTokens:512}})});
+        const resp = await callGemini({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:b64CctBase}},{text:promptCct}]}],generationConfig:{temperature:0.1,maxOutputTokens:512}});
         const d=await r.json();
         const c=JSON.parse((d.candidates?.[0]?.content?.parts?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
         setCctBaseInfo(c);
@@ -3665,7 +3647,7 @@ function RepactuacaoModule() {
       if(!atualizadas[i].analisado){
         setLoading(true);
         try {
-          const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:atualizadas[i].b64}},{text:promptCct}]}],generationConfig:{temperature:0.1,maxOutputTokens:512}})});
+          const resp = await callGemini({contents:[{parts:[{inline_data:{mime_type:"application/pdf",data:atualizadas[i].b64}},{text:promptCct}]}],generationConfig:{temperature:0.1,maxOutputTokens:512}});
           const d=await r.json();
           const c=JSON.parse((d.candidates?.[0]?.content?.parts?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
           atualizadas[i]={...atualizadas[i],info:c,analisado:true};
@@ -3750,9 +3732,7 @@ function RepactuacaoModule() {
         <p style={{fontSize:13,color:"var(--text-muted)",margin:0}}>Direito a repactuação por novas CCT/ACT/Lei do Piso posteriores à data de referência — um direito por instrumento normativo.</p>
       </div>
       <Stepper/>
-
-      {!apiKeySet&&<div className="info-box" style={{marginBottom:20}}><p style={{fontSize:13,color:"var(--info-text)",margin:0}}>🔑 Configure a chave Gemini na página inicial.</p></div>}
-      {error&&<div className="error-box" style={{marginBottom:16}}><p style={{margin:0}}>⚠ {error}</p></div>}
+{error&&<div className="error-box" style={{marginBottom:16}}><p style={{margin:0}}>⚠ {error}</p></div>}
 
       {/* Link o conciliador */}
       <div style={{padding:"12px 16px",background:"var(--surface-2)",border:"1px solid var(--card-border)",borderRadius:10,marginBottom:20,display:"flex",alignItems:"center",gap:12}}>
@@ -3771,7 +3751,7 @@ function RepactuacaoModule() {
           <input ref={refContrato} type="file" accept=".pdf" style={{display:"none"}} onChange={e=>handleContrato(e.target.files[0])}/>
           {pdfContrato?(<><div style={{fontSize:22}}>📄</div><p style={{fontSize:13,fontWeight:600,color:"var(--accent)",margin:"6px 0 2px"}}>{pdfContrato.name}</p><p className="text-muted" style={{fontSize:11}}>Clique para trocar</p></>):(<><div style={{fontSize:22}}>📂</div><p style={{fontSize:12,color:"var(--text-muted)",margin:"6px 0 0"}}>Arraste ou <strong style={{color:"var(--accent)"}}>clique</strong> para selecionar</p></>)}
         </div>
-        {etapa===1&&<button onClick={analisarContrato} disabled={loading||!b64Contrato||!apiKeySet} className="btn-primary" style={{width:"100%"}}>{loading?"Analisando contrato…":"Analisar contrato →"}</button>}
+        {etapa===1&&<button onClick={analisarContrato} disabled={loading||!b64Contrato} className="btn-primary" style={{width:"100%"}}>{loading?"Analisando contrato…":"Analisar contrato →"}</button>}
         {contratoInfo&&etapa>1&&(
           <div style={{marginTop:12,padding:"10px 14px",background:"var(--surface-2)",borderRadius:8,fontSize:12,color:"var(--text-secondary)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span>✓ <strong>{contratoInfo.numero_contrato}</strong> · Lei <strong>{contratoInfo.lei_aplicavel==="14133"?"14.133/2021":contratoInfo.lei_aplicavel==="8666"?"8.666/1993":"a confirmar"}</strong></span>
@@ -3994,98 +3974,13 @@ function ResultadoRepactuacao({ resultado, onVoltar }) {
   );
 }
 
-  </script>
-
-  <script type="text/babel">
 
 
 // ─────────────────────────────────────────────
 // PÁGINA INICIAL + SHELL
 // ─────────────────────────────────────────────
 
-function ApiKeyPanel() {
-  const [key, setKey] = React.useState(() => {
-    try { const v = localStorage.getItem("doccheck_gemini_key"); return v ? decodeURIComponent(escape(atob(v))) : ""; } catch(e) { return ""; }
-  });
-  const [saved, setSaved] = React.useState(() => {
-    try { const v = localStorage.getItem("doccheck_gemini_key"); return !!(v && atob(v).length > 10); } catch(e) { return false; }
-  });
-  const [editing, setEditing] = React.useState(false);
-  const [testing, setTesting] = React.useState(false);
-  const [testResult, setTestResult] = React.useState(null);
 
-  const salvar = () => {
-    if (key.length > 10) {
-      saveGeminiKey(key);
-      setSaved(true); setEditing(false); setTestResult(null);
-    }
-  };
-
-  const testar = async () => {
-    if (!key || key.length < 10) return;
-    setTesting(true); setTestResult(null);
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
-      const r = await fetch(url, {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ contents:[{parts:[{text:"responda apenas: ok"}]}], generationConfig:{maxOutputTokens:5} })
-      });
-      if (r.ok) {
-        setTestResult({ ok:true, msg:"Conexão bem-sucedida ✓" });
-        saveGeminiKey(key); setSaved(true); setEditing(false);
-      } else {
-        const e = await r.json();
-        setTestResult({ ok:false, msg: e.error?.message || `Erro ${r.status}` });
-      }
-    } catch(e) {
-      setTestResult({ ok:false, msg:"Falha de rede: " + e.message });
-    } finally { setTesting(false); }
-  };
-
-  const remover = () => { clearGeminiKey(); setSaved(false); setKey(""); setEditing(false); setTestResult(null); };
-
-  if (saved && !editing) return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 18px", background:"var(--success-bg)", border:"1px solid var(--success-border)", borderRadius:12 }}>
-      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-        <div style={{ width:32, height:32, borderRadius:8, background:"var(--success-text)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, color:"var(--card-bg)" }}>✓</div>
-        <div>
-          <p style={{ fontSize:13, fontWeight:700, color:"var(--success-text)", margin:0 }}>API Gemini configurada</p>
-          <p style={{ fontSize:11, color:"var(--text-muted)", margin:0 }}>Chave salva no navegador · Todos os módulos de IA estão ativos</p>
-        </div>
-      </div>
-      <div style={{ display:"flex", gap:8 }}>
-        <button onClick={() => setEditing(true)} className="btn-secondary" style={{ fontSize:12 }}>Alterar</button>
-        <button onClick={remover} className="btn-link" style={{ fontSize:12, color:"var(--danger-text)" }}>Remover</button>
-      </div>
-    </div>
-  );
-
-  return (
-    <div style={{ padding:"20px", background:"var(--card-bg)", border:"1px solid var(--card-border)", borderRadius:12, boxShadow:"var(--card-shadow)" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
-        <div style={{ width:32, height:32, borderRadius:8, background:"var(--accent-light)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>🔑</div>
-        <div>
-          <p style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", margin:0 }}>API Gemini (Google AI Studio)</p>
-          <p style={{ fontSize:11, color:"var(--text-muted)", margin:0 }}>Necessária para os módulos de IA. Gratuita em aistudio.google.com</p>
-        </div>
-      </div>
-      <div style={{ display:"flex", gap:8 }}>
-        <input type="password" value={key} onChange={e => setKey(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && testar()}
-          placeholder="AIzaSy..." className="input-field" style={{ flex:1, fontFamily:"monospace" }} />
-        <button onClick={testar} disabled={testing || key.length < 10} className="btn-primary" style={{ whiteSpace:"nowrap" }}>
-          {testing ? "Testando…" : "Testar e salvar"}
-        </button>
-        {editing && <button onClick={() => setEditing(false)} className="btn-secondary">Cancelar</button>}
-      </div>
-      {testResult && (
-        <p style={{ fontSize:12, marginTop:8, color: testResult.ok ? "var(--success-text)" : "var(--danger-text)" }}>
-          {testResult.ok ? "✓" : "✗"} {testResult.msg}
-        </p>
-      )}
-    </div>
-  );
-}
 
 function HomePage({ onNavigate }) {
   const grupos = [
@@ -4130,9 +4025,13 @@ function HomePage({ onNavigate }) {
         <p style={{ fontSize:13, color:"var(--text-subtle)", margin:0 }}>Selecione um módulo ou use a navegação no topo</p>
       </div>
 
-      {/* Painel de API key */}
-      <div style={{ marginBottom:48 }}>
-        <ApiKeyPanel />
+      {/* Conexão via backend seguro — sem exposição de chave */}
+      <div style={{ marginBottom:48, padding:"14px 18px", background:"var(--success-bg)", border:"1px solid var(--success-border)", borderRadius:12, display:"flex", alignItems:"center", gap:12 }}>
+        <div style={{ width:32, height:32, borderRadius:8, background:"var(--success-text)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, color:"#fff" }}>🔒</div>
+        <div>
+          <p style={{ fontSize:13, fontWeight:700, color:"var(--success-text)", margin:0 }}>Conexão segura via proxy backend</p>
+          <p style={{ fontSize:11, color:"var(--text-muted)", margin:0 }}>A chave da API Gemini está protegida no servidor — nenhuma credencial é exposta no navegador.</p>
+        </div>
       </div>
 
       {/* Módulos por grupo */}
@@ -4298,10 +4197,3 @@ document.addEventListener("doccheck:auth", () => {
   const _root = ReactDOM.createRoot(document.getElementById("root"));
   _root.render(<Shell />);
 });
-
-  
-  
-  </script>
-
-</body>
-</html>
