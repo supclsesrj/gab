@@ -9,122 +9,260 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  
   <style>
-:root {
-  /* Cores base — modo claro */
-  --page-bg: #F0F4F8;
-  --header-bg: #ffffff;
-  --header-border: #E2E8F0;
-  --header-text: #0F172A;
-  --header-muted: #64748B;
-  --tab-active-bg: #EFF6FF;
-  --tab-active-color: #1D4ED8;
-  --tab-active-shadow: 0 0 0 1px #BFDBFE inset;
-  --card-bg: #ffffff;
-  --card-header-bg: #F8FAFC;
-  --card-border: #E2E8F0;
-  --card-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-  --surface-2: #F1F5F9;
-  --text-primary: #0F172A;
-  --text-secondary: #374151;
-  --text-muted: #64748B;
-  --accent: #2563EB;
-  --accent-hover: #1D4ED8;
-  --accent-light: #EFF6FF;
-  --input-bg: #ffffff;
-  --input-border: #CBD5E1;
-  --input-focus: #2563EB;
-  /* Status */
-  --success-bg: #F0FDF4; --success-border: #BBF7D0; --success-text: #15803D;
-  --warning-bg: #FFFBEB; --warning-border: #FDE68A; --warning-text: #B45309;
-  --danger-bg:  #FEF2F2; --danger-border:  #FEE2E2; --danger-text:  #B91C1C;
-  --info-bg:    #EFF6FF; --info-border:    #BFDBFE; --info-text:    #1D4ED8;
-}
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-[data-theme="dark"] {
-  --page-bg: #0D1117;
-  --header-bg: #161B22;
-  --header-border: #30363D;
-  --header-text: #F0F6FC;
-  --header-muted: #8B949E;
-  --tab-active-bg: #1F2D3D;
-  --tab-active-color: #58A6FF;
-  --tab-active-shadow: 0 0 0 1px #1F6FEB inset;
-  --card-bg: #161B22;
-  --card-header-bg: #1C2128;
-  --card-border: #30363D;
-  --card-shadow: 0 1px 3px rgba(0,0,0,.3);
-  --surface-2: #1C2128;
-  --text-primary: #F0F6FC;
-  --text-secondary: #C9D1D9;
-  --text-muted: #8B949E;
-  --accent: #58A6FF;
-  --accent-hover: #79B8FF;
-  --accent-light: #1F2D3D;
-  --input-bg: #0D1117;
-  --input-border: #30363D;
-  --input-focus: #58A6FF;
-  /* Status escuro */
-  --success-bg: #0D2818; --success-border: #1A4731; --success-text: #3FB950;
-  --warning-bg: #2D1B00; --warning-border: #5C3700; --warning-text: #D29922;
-  --danger-bg:  #2D0F0F; --danger-border:  #5C1A1A; --danger-text:  #F85149;
-  --info-bg:    #0D1F3C; --info-border:    #1F3A6E; --info-text:    #58A6FF;
-}
+    /* ── Tokens — Modo Claro ── */
+    :root {
+      --page-bg:           #F4F6FA;
+      --header-bg:         #FFFFFF;
+      --header-border:     #E8ECF0;
+      --header-shadow:     rgba(0,0,0,.06);
+      --header-text:       #0F172A;
+      --header-muted:      #64748B;
+      --subheader-bg:      #FAFBFC;
+      --tab-active-color:  #4F46E5;
+      --card-bg:           #FFFFFF;
+      --card-header-bg:    #F8FAFC;
+      --card-border:       #E8ECF0;
+      --card-shadow:       0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+      --card-shadow-hover: 0 8px 24px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
+      --surface-2:         #F1F5F9;
+      --divider:           #E8ECF0;
+      --text-primary:      #0F172A;
+      --text-secondary:    #334155;
+      --text-muted:        #64748B;
+      --text-subtle:       #94A3B8;
+      --accent:            #4F46E5;
+      --accent-hover:      #4338CA;
+      --accent-light:      #EEF2FF;
+      --input-bg:          #FFFFFF;
+      --input-border:      #CBD5E1;
+      --input-focus:       #4F46E5;
+      --success-bg:        #F0FDF4; --success-border: #86EFAC; --success-text: #15803D;
+      --warning-bg:        #FFFBEB; --warning-border: #FCD34D; --warning-text: #B45309;
+      --danger-bg:         #FEF2F2; --danger-border:  #FCA5A5; --danger-text:  #B91C1C;
+      --info-bg:           #EFF6FF; --info-border:    #93C5FD; --info-text:    #1D4ED8;
+      --orange-bg:         #FFF7ED; --orange-border:  #FDBA74; --orange-text:  #9A3412;
+    }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--page-bg); color: var(--text-primary); transition: background .2s, color .2s; }
+    /* ── Tokens — Modo Escuro ── */
+    [data-theme="dark"] {
+      --page-bg:           #0A0D14;
+      --header-bg:         #0F1420;
+      --header-border:     #1E2535;
+      --header-shadow:     rgba(0,0,0,.4);
+      --header-text:       #F1F5F9;
+      --header-muted:      #6B7A99;
+      --subheader-bg:      #0D1119;
+      --tab-active-color:  #818CF8;
+      --card-bg:           #0F1420;
+      --card-header-bg:    #131926;
+      --card-border:       #1E2535;
+      --card-shadow:       0 1px 3px rgba(0,0,0,.4);
+      --card-shadow-hover: 0 8px 32px rgba(0,0,0,.5);
+      --surface-2:         #131926;
+      --divider:           #1E2535;
+      --text-primary:      #F1F5F9;
+      --text-secondary:    #CBD5E1;
+      --text-muted:        #6B7A99;
+      --text-subtle:       #3D4A63;
+      --accent:            #818CF8;
+      --accent-hover:      #6366F1;
+      --accent-light:      #1E1B4B;
+      --input-bg:          #0A0D14;
+      --input-border:      #1E2535;
+      --input-focus:       #818CF8;
+      --success-bg:        #052E16; --success-border: #166534; --success-text: #4ADE80;
+      --warning-bg:        #1C1400; --warning-border: #713F12; --warning-text: #FCD34D;
+      --danger-bg:         #1C0505; --danger-border:  #7F1D1D; --danger-text:  #F87171;
+      --info-bg:           #0C1545; --info-border:    #1E3A8A; --info-text:    #93C5FD;
+      --orange-bg:         #1C0A00; --orange-border:  #7C2D12; --orange-text:  #FB923C;
+    }
 
-/* Componentes reutilizáveis */
-.module-container { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
-.card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 24px; box-shadow: var(--card-shadow); }
-.card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-.card-subtitle { font-size: 12px; color: var(--text-muted); }
-.label-text { font-size: 12px; font-weight: 600; color: var(--text-muted); }
-.input-field { width: 100%; padding: 9px 12px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; color: var(--text-primary); font-size: 13px; outline: none; transition: border-color .15s; }
-.input-field:focus { border-color: var(--input-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
-.btn-primary { padding: 9px 20px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .15s, opacity .15s; }
-.btn-primary:hover { background: var(--accent-hover); }
-.btn-primary:disabled { background: var(--surface-2); color: var(--text-muted); cursor: not-allowed; }
-.btn-secondary { padding: 9px 16px; background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--card-border); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
-.btn-link { font-size: 12px; color: var(--text-muted); background: none; border: none; cursor: pointer; text-decoration: underline; }
-.dropzone { border: 2px dashed var(--input-border); border-radius: 10px; padding: 24px 16px; text-align: center; cursor: pointer; background: var(--surface-2); transition: all .15s; }
-.dropzone:hover { border-color: var(--accent); background: var(--accent-light); }
-.dropzone.active { border-color: var(--accent); background: var(--accent-light); }
-.error-box { background: var(--danger-bg); border: 1px solid var(--danger-border); border-radius: 8px; padding: 12px 16px; color: var(--danger-text); font-size: 13px; }
-.info-box { background: var(--info-bg); border: 1px solid var(--info-border); border-radius: 8px; padding: 14px 16px; }
-.text-success { color: var(--success-text); }
-.text-danger  { color: var(--danger-text);  }
-.text-muted   { color: var(--text-muted);   }
-.section-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+    /* ── Base ── */
+    html { font-size: 16px; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--page-bg);
+      color: var(--text-primary);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      transition: background .25s ease, color .25s ease;
+    }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 99px; }
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width:5px; height:5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--divider); border-radius:99px; }
+    nav::-webkit-scrollbar { display:none; }
 
-/* Login */
-#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background:linear-gradient(135deg, #0F172A 0%, #1E293B 100%); }
-.login-box { background: rgba(255,255,255,.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; padding: 44px 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,.4); }
-.login-logo { width: 52px; height: 52px; background: linear-gradient(135deg, #2563EB, #60A5FA); border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 24px; color: white; box-shadow: 0 8px 20px rgba(37,99,235,.4); }
-.login-title { color: #F8FAFC; font-size: 22px; font-weight: 800; margin-bottom: 4px; letter-spacing: -.02em; }
-.login-sub { color: #94A3B8; font-size: 13px; margin-bottom: 32px; }
-.login-input { width: 100%; padding: 13px 16px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; color: #F1F5F9; font-size: 14px; outline: none; margin-bottom: 12px; letter-spacing: 2px; transition: border-color .15s; }
-.login-input:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,.25); }
-.login-btn { width: 100%; padding: 13px; background: linear-gradient(135deg, #2563EB, #3B82F6); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity .15s, transform .1s; box-shadow: 0 4px 12px rgba(37,99,235,.4); }
-.login-btn:hover { opacity: .9; transform: translateY(-1px); }
-.login-error { color: #F87171; font-size: 12px; margin-top: 10px; min-height: 18px; }
-</style>
+    /* ── Utilitários ── */
+    .module-container { max-width: 960px; margin: 0 auto; padding: 36px 24px; }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: var(--card-shadow);
+      transition: background .25s, border-color .25s;
+    }
+
+    .card-title   { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+    .card-subtitle { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+    .label-text   { font-size: 11.5px; font-weight: 600; color: var(--text-muted); letter-spacing: .02em; text-transform: uppercase; }
+    .section-title { font-size: 10.5px; font-weight: 700; color: var(--text-subtle); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+
+    .input-field {
+      width: 100%;
+      padding: 9px 13px;
+      background: var(--input-bg);
+      border: 1.5px solid var(--input-border);
+      border-radius: 9px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .input-field:focus {
+      border-color: var(--input-focus);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+    }
+    .input-field::placeholder { color: var(--text-subtle); }
+
+    select.input-field { cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+
+    .btn-primary {
+      padding: 9px 20px;
+      background: var(--accent);
+      color: #fff;
+      border: none; border-radius: 9px;
+      font-size: 13px; font-weight: 700; font-family: inherit;
+      cursor: pointer;
+      transition: background .15s, transform .1s, box-shadow .15s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.15);
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 35%, transparent); }
+    .btn-primary:disabled { background: var(--surface-2); color: var(--text-subtle); cursor: not-allowed; box-shadow: none; transform: none; }
+
+    .btn-secondary {
+      padding: 9px 16px;
+      background: var(--surface-2);
+      color: var(--text-secondary);
+      border: 1.5px solid var(--card-border);
+      border-radius: 9px;
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-link {
+      font-size: 12px; color: var(--text-muted); background: none;
+      border: none; cursor: pointer; text-decoration: underline; font-family: inherit;
+      transition: color .15s;
+    }
+    .btn-link:hover { color: var(--accent); }
+
+    .dropzone {
+      border: 2px dashed var(--input-border);
+      border-radius: 12px; padding: 28px 16px;
+      text-align: center; cursor: pointer;
+      background: var(--surface-2);
+      transition: all .18s;
+    }
+    .dropzone:hover { border-color: var(--accent); background: var(--accent-light); }
+
+    .error-box {
+      background: var(--danger-bg); border: 1px solid var(--danger-border);
+      border-radius: 10px; padding: 12px 16px;
+      color: var(--danger-text); font-size: 13px;
+    }
+
+    .info-box {
+      background: var(--info-bg); border: 1px solid var(--info-border);
+      border-radius: 10px; padding: 14px 16px;
+    }
+
+    .text-success { color: var(--success-text); }
+    .text-danger  { color: var(--danger-text);  }
+    .text-muted   { color: var(--text-muted);   }
+
+    /* ── Login ── */
+    #login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 60% 50%, #1a1040 0%, #070B14 60%);
+    }
+    .login-card {
+      background: rgba(255,255,255,.04);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 24px;
+      padding: 48px 44px;
+      width: 100%; max-width: 420px;
+      text-align: center;
+      box-shadow: 0 32px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.05);
+    }
+    .login-icon {
+      width: 64px; height: 64px; border-radius: 18px;
+      background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 28px; color: #fff; font-weight: 900;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px rgba(99,102,241,.5);
+    }
+    .login-title { color: #F8FAFC; font-size: 26px; font-weight: 900; margin-bottom: 6px; letter-spacing: -.03em; }
+    .login-sub   { color: #64748B; font-size: 13.5px; margin-bottom: 36px; }
+    .login-input {
+      width: 100%; padding: 14px 18px;
+      background: rgba(255,255,255,.06);
+      border: 1.5px solid rgba(255,255,255,.1);
+      border-radius: 12px; color: #F1F5F9;
+      font-size: 15px; font-family: inherit;
+      outline: none; margin-bottom: 14px;
+      letter-spacing: 3px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .login-input:focus { border-color: #6366F1; box-shadow: 0 0 0 4px rgba(99,102,241,.2); }
+    .login-input::placeholder { letter-spacing: 0; color: #475569; }
+    .login-btn {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      color: #fff; border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 700; font-family: inherit;
+      cursor: pointer;
+      transition: opacity .15s, transform .12s;
+      box-shadow: 0 4px 20px rgba(99,102,241,.5);
+    }
+    .login-btn:hover { opacity: .9; transform: translateY(-1px); }
+    .login-error { color: #F87171; font-size: 12.5px; margin-top: 12px; min-height: 20px; }
+    .login-badge {
+      display: inline-block; margin-top: 24px;
+      padding: 5px 14px; border-radius: 99px;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+      color: #475569; font-size: 11px; letter-spacing: .04em;
+    }
+  </style>
 </head>
 <body>
   <div id="login-screen">
-    <div class="login-box">
-      <div class="login-logo">✓</div>
-      <p class="login-title">DocCheck</p>
-      <p class="login-sub">GAB — SUPCL / SESRJ</p>
+    <div class="login-card">
+      <div class="login-icon">✓</div>
+      <h1 class="login-title">DocCheck</h1>
+      <p class="login-sub">Plataforma de análise documental</p>
       <input class="login-input" type="password" id="pwd-input" placeholder="Senha de acesso"
         onkeydown="if(event.key==='Enter') checkPassword()" autofocus />
       <button class="login-btn" onclick="checkPassword()">Entrar</button>
       <p class="login-error" id="login-error"></p>
+      <span class="login-badge">GAB · SUPCL/SESRJ</span>
     </div>
   </div>
   <div id="root" style="display:none;"></div>
@@ -160,7 +298,10 @@ body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: v
     }
   </script>
 
+  
+  
   <script type="text/babel">
+
 
 
 // DocCheck — Gemini edition (versão CDN, sem imports)
@@ -638,9 +779,11 @@ O array deve ter exatamente ${activeItems.length} objetos, na mesma ordem do che
 
 
   
+  
   </script>
 
   <script type="text/babel">
+
 
 // ─────────────────────────────────────────────
 // UTILITÁRIOS COMPARTILHADOS
@@ -1133,9 +1276,11 @@ Se não encontrar nenhuma empresa, retorne [].`;
 
 
   
+  
   </script>
 
   <script type="text/babel">
+
 
 // ─────────────────────────────────────────────
 // MÓDULO — CONTROLE DE VENCIMENTOS
@@ -1648,9 +1793,11 @@ function VencimentosModule() {
 
 
   
+  
   </script>
 
   <script type="text/babel">
+
 
 // ─────────────────────────────────────────────
 // MÓDULO — COMPARADOR DE TERMO DE REFERÊNCIA
@@ -2037,71 +2184,11 @@ Seja criterioso mas equilibrado. Não classifique como crítico o que é apenas 
 
 
   
-  </script>
-
-  <script type="text/babel">
-
-// ─────────────────────────────────────────────
-// SHELL — NAVEGAÇÃO POR ABAS
-// ─────────────────────────────────────────────
-function Shell() {
-  const [aba, setAba] = React.useState(() => localStorage.getItem("doccheck_aba") || "checklist");
-  const trocar = (a) => { setAba(a); localStorage.setItem("doccheck_aba", a); };
-
-  const abas = [
-    { id:"checklist",   label:"✓ Checklist" },
-    { id:"vencimentos", label:"📅 Vencimentos" },
-    { id:"comparador",  label:"🔀 Comparador de TR" },
-    { id:"rapp",        label:"🔍 Background Check RAPP" },
-    { id:"cnpj",        label:"🏢 Consulta CNPJ" },
-  ];
-
-  return (
-    <div style={{ fontFamily:"'Inter', system-ui, sans-serif", minHeight:"100vh", background:"#F8F9FB" }}>
-      <div style={{ background:"#0F172A", padding:"0 32px" }}>
-        <div style={{ maxWidth:1000, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", height:52 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <div style={{ width:26, height:26, borderRadius:6, background:"#4F8EF7", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, color:"#fff" }}>✓</div>
-            <span style={{ color:"#F1F5F9", fontWeight:700, fontSize:15 }}>DocCheck</span>
-            <span style={{ color:"#475569", fontSize:12, marginLeft:4 }}>by Ítalo Peixoto</span>
-          </div>
-          <span style={{ color:"#64748B", fontSize:12 }}>GAB — SUPCL/SESRJ</span>
-        </div>
-      </div>
-      <div style={{ background:"#fff", borderBottom:"1px solid #E2E8F0", overflowX:"auto" }}>
-        <div style={{ maxWidth:1000, margin:"0 auto", padding:"0 32px", display:"flex", minWidth:"max-content" }}>
-          {abas.map(a => (
-            <button key={a.id} onClick={() => trocar(a.id)} style={{
-              padding:"14px 18px", background:"none", border:"none",
-              borderBottom: aba === a.id ? "2px solid #4F8EF7" : "2px solid transparent",
-              color: aba === a.id ? "#1E40AF" : "#6B7280",
-              fontSize:13, fontWeight: aba === a.id ? 700 : 500,
-              cursor:"pointer", transition:"all .15s", whiteSpace:"nowrap",
-            }}>{a.label}</button>
-          ))}
-        </div>
-      </div>
-      <div style={{ display: aba==="checklist"  ? "block":"none" }}><App /></div>
-      <div style={{ display: aba==="vencimentos" ? "block":"none" }}><VencimentosModule /></div>
-      <div style={{ display: aba==="comparador"  ? "block":"none" }}><ComparadorTR /></div>
-      <div style={{ display: aba==="rapp"        ? "block":"none" }}><RappCheck /></div>
-      <div style={{ display: aba==="cnpj"        ? "block":"none" }}><BackgroundCheck /></div>
-    </div>
-  );
-}
-
-document.addEventListener("doccheck:auth", () => {
-  const _root = ReactDOM.createRoot(document.getElementById("root"));
-  _root.render(<Shell />);
-});
-// Montagem via evento — não precisa de fallback aqui
-// O showApp() no login já dispara doccheck:auth após o load
-
-  
   
   </script>
 
   <script type="text/babel">
+
 // ─────────────────────────────────────────────
 // MÓDULO — PESQUISA SEMESTRAL DE PREÇOS (ARP)
 // ─────────────────────────────────────────────
@@ -2481,20 +2568,1057 @@ Retorne APENAS um JSON puro com esta estrutura (sem markdown):
   );
 }
 
+  
+  </script>
+
+  <script type="text/babel">
+
+// ─────────────────────────────────────────────
+// MÓDULO — REAJUSTE (ÍNDICE)
+// ─────────────────────────────────────────────
+function ReajusteModule() {
+  const [apiKey, setApiKey] = React.useState(() => {
+    try { const v = localStorage.getItem("doccheck_gemini_key"); return v ? decodeURIComponent(escape(atob(v))) : ""; } catch(e) { return ""; }
+  });
+  const [apiKeySet, setApiKeySet] = React.useState(() => {
+    try { const v = localStorage.getItem("doccheck_gemini_key"); return !!(v && atob(v).length > 10); } catch(e) { return false; }
+  });
+
+  // Etapas: 1=contrato, 2=complemento, 3=resultado
+  const [etapa, setEtapa] = React.useState(1);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  // Etapa 1
+  const [pdfContrato, setPdfContrato] = React.useState(null);
+  const [b64Contrato, setB64Contrato] = React.useState(null);
+  const [contratoInfo, setContratoInfo] = React.useState(null); // extração da IA
+
+  // Etapa 2 — campos manuais
+  const [campos, setCampos] = React.useState({
+    dataAberturaPregao: "",
+    dataProposta: "",        // 8666
+    dataRapp: "",            // 14133
+    indice: "IPCA",
+    indiceCustom: "",
+    dataPublicacaoIndice: "",
+    dataUltimoReajuste: "",
+    dataPedido: "",
+  });
+
+  // Etapa 3
+  const [resultado, setResultado] = React.useState(null);
+
+  const refContrato = React.useRef();
+
+  const lerPdf = (file) => new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result.split(",")[1]);
+    reader.readAsDataURL(file);
+  });
+
+  const handleContrato = async (file) => {
+    if (!file || file.type !== "application/pdf") return;
+    setPdfContrato(file); setB64Contrato(await lerPdf(file));
+    setError(""); setContratoInfo(null); setEtapa(1);
+  };
+
+  const confirmarChave = () => {
+    if (apiKey.length > 10) {
+      try { localStorage.setItem("doccheck_gemini_key", btoa(unescape(encodeURIComponent(apiKey)))); } catch(x){}
+      setApiKeySet(true);
+    }
+  };
+
+  // ETAPA 1 → extrai info do contrato
+  const analisarContrato = async () => {
+    if (!b64Contrato) { setError("Carregue o contrato inicial."); return; }
+    if (!apiKeySet) { setError("Configure a chave da API Gemini."); return; }
+    setLoading(true); setError("");
+    try {
+      const prompt = `Analise este contrato administrativo e extraia as seguintes informações. Retorne APENAS JSON puro sem markdown:
+{
+  "lei_aplicavel": "8666" | "14133" | "indeterminado",
+  "numero_contrato": "número do contrato",
+  "objeto": "objeto resumido em até 10 palavras",
+  "contratada": "nome da empresa contratada",
+  "data_assinatura": "DD/MM/AAAA ou null",
+  "data_inicio_vigencia": "DD/MM/AAAA ou null",
+  "data_abertura_pregao": "DD/MM/AAAA ou null",
+  "data_proposta": "DD/MM/AAAA ou null",
+  "data_rapp": "DD/MM/AAAA ou null",
+  "indice_reajuste": "nome do índice previsto contratualmente (ex: IPCA, INPC, IGP-M) ou null",
+  "clausula_reajuste": "transcrição resumida da cláusula de reajuste, se existir, ou null",
+  "tem_clausula_reajuste": true | false,
+  "observacoes": "alertas ou inconsistências relevantes encontrados no contrato, ou null",
+  "justificativa_lei": "por que identificou essa lei — cite elementos do contrato"
+}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const resp = await fetch(url, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [
+          { inline_data: { mime_type: "application/pdf", data: b64Contrato } },
+          { text: prompt }
+        ]}], generationConfig: { temperature: 0.1, maxOutputTokens: 2048 } })
+      });
+      if (!resp.ok) { const e = await resp.json(); throw new Error(e.error?.message || `Gemini ${resp.status}`); }
+      const data = await resp.json();
+      const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+      setContratoInfo(parsed);
+      // Pré-preenche campos identificados
+      setCampos(prev => ({
+        ...prev,
+        dataAberturaPregao: parsed.data_abertura_pregao || "",
+        dataProposta: parsed.data_proposta || "",
+        dataRapp: parsed.data_rapp || "",
+        indice: parsed.indice_reajuste || "IPCA",
+      }));
+      setEtapa(2);
+    } catch(e) { setError("Erro: " + e.message); }
+    finally { setLoading(false); }
+  };
+
+  const set = (k, v) => setCampos(prev => ({ ...prev, [k]: v }));
+
+  // ETAPA 2 → calcula direitos
+  const calcular = () => {
+    setError("");
+    const lei = contratoInfo?.lei_aplicavel;
+
+    // Data base
+    let dataBaseStr = lei === "8666" ? campos.dataProposta : campos.dataRapp;
+    if (!dataBaseStr) { setError(`Informe a ${lei === "8666" ? "data da proposta" : "data do RAPP"}.`); return; }
+
+    const parseDate = (s) => {
+      if (!s) return null;
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) { const [d,m,y] = s.split("/"); return new Date(`${y}-${m}-${d}`); }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s);
+      return null;
+    };
+    const fmtDate = (d) => d ? d.toLocaleDateString("pt-BR") : "—";
+    const addMonths = (d, n) => { const r = new Date(d); r.setMonth(r.getMonth() + n); return r; };
+    const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const diffDays = (a, b) => Math.ceil((b - a) / 86400000);
+
+    const dataBase = parseDate(dataBaseStr);
+    if (!dataBase) { setError("Data base inválida. Use DD/MM/AAAA."); return; }
+
+    const dataPedido = campos.dataPedido ? parseDate(campos.dataPedido) : hoje;
+    const dataPublicacao = campos.dataPublicacaoIndice ? parseDate(campos.dataPublicacaoIndice) : null;
+    const dataUltimo = campos.dataUltimoReajuste ? parseDate(campos.dataUltimoReajuste) : null;
+
+    // Calcula todos os direitos (a cada 12 meses desde a data base)
+    const direitos = [];
+    let refBase = dataUltimo || dataBase;
+    let periodo = 1;
+    while (true) {
+      const dataAquisicao = addMonths(refBase === dataBase ? dataBase : dataBase, periodo * 12);
+      if (dataAquisicao > addMonths(hoje, 1)) break; // até 1 mês no futuro
+      if (periodo > 10) break; // limite de segurança
+
+      const prazoRetro = dataPublicacao ? addDays(dataPublicacao, 60) : null;
+      const temRetro = dataPedido && prazoRetro ? dataPedido <= prazoRetro : null;
+      const statusAquisicao = dataAquisicao <= hoje ? "adquirido" : "futuro";
+      const diasParaAquisicao = diffDays(hoje, dataAquisicao);
+
+      let statusPedido = null;
+      if (statusAquisicao === "adquirido" && dataPedido) {
+        statusPedido = dataPedido >= dataAquisicao ? "tempestivo" : "prematuro";
+      }
+
+      direitos.push({
+        periodo,
+        dataBase: fmtDate(dataBase),
+        dataAquisicao: fmtDate(dataAquisicao),
+        statusAquisicao,
+        diasParaAquisicao,
+        prazoRetroatividade: prazoRetro ? fmtDate(prazoRetro) : null,
+        temRetroatividade: temRetro,
+        statusPedido,
+        efeitosFinanceiros: temRetro === true
+          ? `A partir de ${fmtDate(dataAquisicao)} (retroativo)`
+          : temRetro === false
+            ? `A partir de ${fmtDate(dataPedido)} (sem retroatividade — prazo expirado)`
+            : statusAquisicao === "futuro"
+              ? `A partir de ${fmtDate(dataAquisicao)}`
+              : "Verificar data do pedido",
+      });
+
+      // Próximo período usa data de aquisição anterior como referência
+      refBase = parseDate(fmtDate(dataAquisicao).split("/").reverse().join("-"));
+      periodo++;
+    }
+
+    if (direitos.length === 0) {
+      // Direito ainda não adquirido
+      const proxAquisicao = addMonths(dataBase, 12);
+      direitos.push({
+        periodo: 1,
+        dataBase: fmtDate(dataBase),
+        dataAquisicao: fmtDate(proxAquisicao),
+        statusAquisicao: "futuro",
+        diasParaAquisicao: diffDays(hoje, proxAquisicao),
+        prazoRetroatividade: null,
+        temRetroatividade: null,
+        statusPedido: null,
+        efeitosFinanceiros: `A partir de ${fmtDate(proxAquisicao)}`,
+      });
+    }
+
+    setResultado({
+      tipo: "reajuste",
+      lei,
+      contrato: contratoInfo,
+      dataBase: fmtDate(dataBase),
+      indice: campos.indice === "Outro" ? campos.indiceCustom : campos.indice,
+      dataPublicacaoIndice: dataPublicacao ? fmtDate(dataPublicacao) : null,
+      dataPedido: dataPedido ? fmtDate(dataPedido) : null,
+      direitos,
+      alertas: [
+        !contratoInfo?.tem_clausula_reajuste && "⚠️ Contrato não possui cláusula de reajuste expressa — verificar previsão editalícia.",
+        contratoInfo?.lei_aplicavel === "indeterminado" && "⚠️ Não foi possível identificar a lei aplicável com certeza — confirme manualmente.",
+        contratoInfo?.observacoes,
+      ].filter(Boolean),
+    });
+    setEtapa(3);
+  };
+
+  const Input = ({ label, k, placeholder, hint }) => (
+    <div style={{ marginBottom: 14 }}>
+      <label className="label-text" style={{ display:"block", marginBottom:5 }}>{label}</label>
+      <input value={campos[k]} onChange={e => set(k, e.target.value)}
+        placeholder={placeholder || "DD/MM/AAAA"}
+        className="input-field" />
+      {hint && <p style={{ fontSize:11, color:"var(--text-muted)", marginTop:4 }}>{hint}</p>}
+    </div>
+  );
+
+  return (
+    <div className="module-container">
+      <div style={{ marginBottom:20 }}>
+        <h2 style={{ fontSize:18, fontWeight:800, color:"var(--text-primary)", margin:0 }}>📈 Reajuste Contratual</h2>
+        <p style={{ fontSize:13, color:"var(--text-muted)", marginTop:4 }}>Cálculo de direito a reajuste por índice (IPCA, INPC, IGP-M etc.) — Lei 8.666/93 e Lei 14.133/2021</p>
+      </div>
+
+      {/* Stepper */}
+      <div style={{ display:"flex", alignItems:"center", gap:0, marginBottom:28 }}>
+        {["Contrato","Dados","Resultado"].map((s, i) => {
+          const num = i + 1;
+          const ativo = etapa === num;
+          const feito = etapa > num;
+          return (
+            <React.Fragment key={s}>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <div style={{ width:28, height:28, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:800,
+                  background: feito ? "var(--success-text)" : ativo ? "var(--accent)" : "var(--surface-2)",
+                  color: feito || ativo ? "#fff" : "var(--text-muted)" }}>
+                  {feito ? "✓" : num}
+                </div>
+                <span style={{ fontSize:12, fontWeight: ativo ? 700 : 500, color: ativo ? "var(--text-primary)" : "var(--text-muted)" }}>{s}</span>
+              </div>
+              {i < 2 && <div style={{ flex:1, height:2, background: feito ? "var(--success-text)" : "var(--card-border)", margin:"0 10px" }} />}
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      {/* API Key */}
+      {!apiKeySet && (
+        <div className="card" style={{ marginBottom:20 }}>
+          <p className="card-title">Chave de API — Google Gemini</p>
+          <div style={{ display:"flex", gap:8, marginTop:12 }}>
+            <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)}
+              placeholder="AIzaSy…" onKeyDown={e => e.key==="Enter" && confirmarChave()} className="input-field" style={{ flex:1 }} />
+            <button onClick={confirmarChave} className="btn-primary">Confirmar</button>
+          </div>
+        </div>
+      )}
+
+      {error && <div className="error-box" style={{ marginBottom:16 }}><p style={{ margin:0 }}>⚠ {error}</p></div>}
+
+      {/* ETAPA 1 */}
+      {etapa >= 1 && (
+        <div className="card" style={{ marginBottom:20, opacity: etapa > 1 ? .6 : 1 }}>
+          <p className="card-title">Etapa 1 — Contrato inicial</p>
+          <p className="card-subtitle" style={{ marginBottom:14 }}>O sistema identificará a lei aplicável, data base e cláusula de reajuste automaticamente.</p>
+          <div onClick={() => refContrato.current.click()}
+            onDrop={e => { e.preventDefault(); handleContrato(e.dataTransfer.files[0]); }}
+            onDragOver={e => e.preventDefault()} className="dropzone" style={{ marginBottom:14 }}>
+            <input ref={refContrato} type="file" accept=".pdf" style={{ display:"none" }} onChange={e => handleContrato(e.target.files[0])} />
+            {pdfContrato ? (
+              <><div style={{ fontSize:22 }}>📄</div>
+              <p style={{ fontSize:13, fontWeight:600, color:"var(--accent)", margin:"6px 0 2px" }}>{pdfContrato.name}</p>
+              <p className="text-muted" style={{ fontSize:11 }}>Clique para trocar</p></>
+            ) : (
+              <><div style={{ fontSize:22 }}>📂</div>
+              <p style={{ fontSize:12, color:"var(--text-muted)", margin:"6px 0 0" }}>Arraste ou <strong style={{ color:"var(--accent)" }}>clique para selecionar</strong> o contrato em PDF</p></>
+            )}
+          </div>
+          {etapa === 1 && <button onClick={analisarContrato} disabled={loading || !b64Contrato || !apiKeySet}
+            className="btn-primary" style={{ width:"100%" }}>
+            {loading ? "Analisando contrato…" : "Analisar contrato →"}
+          </button>}
+          {contratoInfo && etapa > 1 && (
+            <div style={{ marginTop:12, padding:"10px 14px", background:"var(--surface-2)", borderRadius:8, fontSize:12, color:"var(--text-secondary)" }}>
+              ✓ <strong>{contratoInfo.numero_contrato || "Contrato"}</strong> · Lei <strong>{contratoInfo.lei_aplicavel === "indeterminado" ? "a confirmar" : contratoInfo.lei_aplicavel + "/93" === "14133/93" ? "14.133/2021" : contratoInfo.lei_aplicavel + "/93"}</strong> · {contratoInfo.contratada}
+              <button onClick={() => setEtapa(1)} className="btn-link" style={{ marginLeft:12 }}>Trocar</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ETAPA 2 */}
+      {etapa >= 2 && contratoInfo && (
+        <div className="card" style={{ marginBottom:20 }}>
+          <p className="card-title">Etapa 2 — Dados para cálculo</p>
+
+          {/* Alerta lei */}
+          <div style={{ margin:"12px 0 16px", padding:"10px 14px", borderRadius:8,
+            background: contratoInfo.lei_aplicavel === "indeterminado" ? "var(--warning-bg)" : "var(--info-bg)",
+            border:`1px solid ${contratoInfo.lei_aplicavel === "indeterminado" ? "var(--warning-border)" : "var(--info-border)"}` }}>
+            <p style={{ fontSize:12, fontWeight:700, color: contratoInfo.lei_aplicavel === "indeterminado" ? "var(--warning-text)" : "var(--info-text)", margin:0 }}>
+              {contratoInfo.lei_aplicavel === "14133" && "⚖️ Lei 14.133/2021 — Data base: data do RAPP (orçamento estimativo)"}
+              {contratoInfo.lei_aplicavel === "8666"  && "⚖️ Lei 8.666/93 — Data base: data da proposta apresentada no pregão"}
+              {contratoInfo.lei_aplicavel === "indeterminado" && "⚠️ Lei não identificada com certeza — preencha os dados da lei correta abaixo"}
+            </p>
+            {contratoInfo.justificativa_lei && <p style={{ fontSize:11, color:"var(--text-muted)", margin:"4px 0 0" }}>{contratoInfo.justificativa_lei}</p>}
+          </div>
+
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 20px" }}>
+            {/* Data base conforme lei */}
+            {(contratoInfo.lei_aplicavel === "8666" || contratoInfo.lei_aplicavel === "indeterminado") && (
+              <Input k="dataProposta" label="📅 Data da proposta (8.666/93)" hint="Data em que a empresa apresentou a proposta no pregão" />
+            )}
+            {(contratoInfo.lei_aplicavel === "14133" || contratoInfo.lei_aplicavel === "indeterminado") && (
+              <Input k="dataRapp" label="📅 Data do RAPP (14.133/2021)" hint="Data de elaboração do orçamento estimativo (RAPP)" />
+            )}
+            <Input k="dataAberturaPregao" label="📅 Data de abertura do pregão" hint="Opcional — para conferência" placeholder="DD/MM/AAAA (opcional)" />
+            <div style={{ marginBottom:14 }}>
+              <label className="label-text" style={{ display:"block", marginBottom:5 }}>📊 Índice de reajuste</label>
+              <select value={campos.indice} onChange={e => set("indice", e.target.value)} className="input-field">
+                {["IPCA","INPC","IGP-M","IGP-DI","IPCA-E","Outro"].map(i => <option key={i}>{i}</option>)}
+              </select>
+              {campos.indice === "Outro" && <input value={campos.indiceCustom} onChange={e => set("indiceCustom", e.target.value)}
+                placeholder="Nome do índice" className="input-field" style={{ marginTop:8 }} />}
+            </div>
+            <Input k="dataPublicacaoIndice" label="📰 Data de publicação do índice" hint="Data em que o índice do período foi publicado (para calcular prazo de 60 dias)" />
+            <Input k="dataUltimoReajuste" label="🔄 Data do último reajuste concedido" hint="Deixe em branco se nunca houve reajuste" placeholder="DD/MM/AAAA (se já houve reajuste anterior)" />
+            <Input k="dataPedido" label="📋 Data do pedido da empresa" hint="Deixe em branco para usar a data de hoje" placeholder="DD/MM/AAAA (ou vazio para hoje)" />
+          </div>
+
+          <div style={{ display:"flex", gap:10, marginTop:8 }}>
+            <button onClick={() => setEtapa(1)} className="btn-secondary">← Voltar</button>
+            <button onClick={calcular} className="btn-primary" style={{ flex:1 }}>Calcular direitos →</button>
+          </div>
+        </div>
+      )}
+
+      {/* ETAPA 3 */}
+      {etapa === 3 && resultado && <ResultadoReajuste resultado={resultado} onVoltar={() => setEtapa(2)} />}
+    </div>
+  );
+}
+
+function ResultadoReajuste({ resultado, onVoltar }) {
+  const [copiado, setCopiado] = React.useState(false);
+  const { direitos, contrato, lei, dataBase, indice, dataPublicacaoIndice, dataPedido, alertas } = resultado;
+
+  const leiLabel = lei === "14133" ? "Lei 14.133/2021" : lei === "8666" ? "Lei 8.666/1993" : "Lei a confirmar";
+  const hoje = new Date().toLocaleDateString("pt-BR");
+
+  const gerarTexto = () => {
+    let t = `ANÁLISE DE DIREITO A REAJUSTE CONTRATUAL\n`;
+    t += `Gerado em: ${hoje}\n`;
+    t += `${"─".repeat(50)}\n\n`;
+    t += `CONTRATO: ${contrato?.numero_contrato || "—"}\n`;
+    t += `CONTRATADA: ${contrato?.contratada || "—"}\n`;
+    t += `OBJETO: ${contrato?.objeto || "—"}\n`;
+    t += `LEI APLICÁVEL: ${leiLabel}\n`;
+    t += `DATA BASE: ${dataBase}\n`;
+    t += `ÍNDICE: ${indice || "—"}\n`;
+    if (dataPublicacaoIndice) t += `PUBLICAÇÃO DO ÍNDICE: ${dataPublicacaoIndice}\n`;
+    if (dataPedido) t += `DATA DO PEDIDO: ${dataPedido}\n`;
+    t += `\n${"─".repeat(50)}\n`;
+    t += `DIREITOS IDENTIFICADOS: ${direitos.length}\n\n`;
+
+    direitos.forEach((d, i) => {
+      t += `${i+1}º DIREITO (${d.periodo * 12} meses)\n`;
+      t += `   Data de aquisição do direito: ${d.dataAquisicao}\n`;
+      t += `   Status: ${d.statusAquisicao === "adquirido" ? "DIREITO ADQUIRIDO" : "Direito ainda não adquirido"}\n`;
+      if (d.prazoRetroatividade) t += `   Prazo para retroatividade (60 dias): ${d.prazoRetroatividade}\n`;
+      if (d.temRetroatividade === true)  t += `   Retroatividade: SIM ✓\n`;
+      if (d.temRetroatividade === false) t += `   Retroatividade: NÃO — prazo expirado\n`;
+      t += `   Efeitos financeiros: ${d.efeitosFinanceiros}\n\n`;
+    });
+
+    if (alertas?.length > 0) {
+      t += `${"─".repeat(50)}\nALERTAS:\n`;
+      alertas.forEach(a => t += `${a}\n`);
+    }
+    return t;
+  };
+
+  const gerarDespacho = () => {
+    const d0 = direitos[0];
+    return `DESPACHO
+
+Trata-se de pedido de reajuste contratual apresentado pela empresa ${contrato?.contratada || "___"}, referente ao Contrato nº ${contrato?.numero_contrato || "___"}, cujo objeto é ${contrato?.objeto || "___"}.
+
+O contrato foi celebrado com fundamento na ${leiLabel}. Nos termos da legislação aplicável, a data base para fins de reajuste é ${lei === "14133" ? "a data de elaboração do orçamento estimativo (RAPP)" : "a data da proposta apresentada no certame licitatório"}, fixada em ${dataBase}.
+
+O direito ao primeiro reajuste foi adquirido em ${d0?.dataAquisicao || "___"}, completados 12 (doze) meses a contar da data base, conforme ${lei === "8666" ? "art. 40, inciso XI, e art. 55, inciso III, da Lei nº 8.666/1993" : "art. 92, §§ 1º e 2º, da Lei nº 14.133/2021"}.
+
+${direitos.length > 1 ? `Verificam-se ainda ${direitos.length - 1} direito(s) adicional(is) de reajuste, relativos aos períodos subsequentes, conforme demonstrado abaixo:\n\n${direitos.slice(1).map((d,i) => `${i+2}º Direito: adquirido em ${d.dataAquisicao}.`).join("\n")}\n\n` : ""}${d0?.prazoRetroatividade ? `O índice aplicável (${indice}) foi publicado em ${dataPublicacaoIndice}, de modo que o prazo de 60 (sessenta) dias para requerimento com efeito retroativo encerra-se em ${d0.prazoRetroatividade}. ${d0.temRetroatividade === true ? "O pedido foi apresentado dentro do prazo, razão pela qual os efeitos financeiros retroagem à data de aquisição do direito." : d0.temRetroatividade === false ? "O pedido foi apresentado após o prazo de 60 dias, razão pela qual os efeitos financeiros somente serão computados a partir da data do pedido, não havendo direito à retroatividade." : ""}` : ""}
+
+${alertas?.length > 0 ? `OBSERVAÇÕES:\n${alertas.join("\n")}\n\n` : ""}Encaminhe-se para as providências cabíveis.
+
+Rio de Janeiro, ${hoje}.`;
+  };
+
+  const copiar = (texto) => {
+    navigator.clipboard.writeText(texto).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 2500); });
+  };
+
+  return (
+    <div>
+      {/* Cabeçalho resultado */}
+      <div className="card" style={{ marginBottom:16, background:"var(--info-bg)", border:"1px solid var(--info-border)" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+          <div>
+            <p style={{ fontSize:15, fontWeight:800, color:"var(--info-text)", margin:"0 0 4px" }}>
+              {direitos.length} direito{direitos.length > 1 ? "s" : ""} de reajuste identificado{direitos.length > 1 ? "s" : ""}
+            </p>
+            <p style={{ fontSize:12, color:"var(--text-muted)", margin:0 }}>
+              {contrato?.numero_contrato} · {leiLabel} · Base: {dataBase} · Índice: {indice}
+            </p>
+          </div>
+          <button onClick={onVoltar} className="btn-secondary" style={{ fontSize:12 }}>← Editar</button>
+        </div>
+      </div>
+
+      {/* Alertas */}
+      {alertas?.length > 0 && (
+        <div className="error-box" style={{ marginBottom:16 }}>
+          {alertas.map((a,i) => <p key={i} style={{ margin: i>0 ? "6px 0 0":0, fontSize:12 }}>{a}</p>)}
+        </div>
+      )}
+
+      {/* Cards de direitos */}
+      {direitos.map((d, i) => {
+        const adquirido = d.statusAquisicao === "adquirido";
+        const cor = adquirido ? (d.temRetroatividade === false ? "var(--warning-text)" : "var(--success-text)") : "var(--text-muted)";
+        const bg  = adquirido ? (d.temRetroatividade === false ? "var(--warning-bg)" : "var(--success-bg)") : "var(--surface-2)";
+        const border = adquirido ? (d.temRetroatividade === false ? "var(--warning-border)" : "var(--success-border)") : "var(--card-border)";
+        return (
+          <div key={i} style={{ background:bg, border:`1px solid ${border}`, borderRadius:12, padding:"16px 18px", marginBottom:12 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+              <p style={{ fontSize:13, fontWeight:800, color:cor, margin:0 }}>
+                {i+1}º Direito — {d.periodo * 12} meses a contar da data base
+              </p>
+              <span style={{ fontSize:11, fontWeight:700, padding:"3px 12px", borderRadius:20, background:adquirido?"rgba(0,0,0,.08)":"rgba(0,0,0,.05)", color:cor }}>
+                {adquirido ? "Direito adquirido" : `Em ${d.diasParaAquisicao} dias`}
+              </span>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10 }}>
+              {[
+                { l:"Data de aquisição", v:d.dataAquisicao },
+                { l:"Prazo retroatividade (60d)", v:d.prazoRetroatividade || "—" },
+                { l:"Retroatividade", v:d.temRetroatividade === true ? "✓ Sim" : d.temRetroatividade === false ? "✗ Não (expirado)" : "—" },
+              ].map(({ l, v }) => (
+                <div key={l} style={{ background:"rgba(255,255,255,.5)", borderRadius:8, padding:"8px 12px" }}>
+                  <p style={{ fontSize:10, color:"var(--text-muted)", fontWeight:700, textTransform:"uppercase", letterSpacing:".04em", margin:"0 0 3px" }}>{l}</p>
+                  <p style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", margin:0 }}>{v}</p>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop:10, padding:"8px 12px", background:"rgba(255,255,255,.4)", borderRadius:8 }}>
+              <p style={{ fontSize:11, color:"var(--text-muted)", margin:"0 0 2px", fontWeight:700, textTransform:"uppercase", letterSpacing:".04em" }}>Efeitos financeiros</p>
+              <p style={{ fontSize:13, color:"var(--text-primary)", margin:0, fontWeight:600 }}>{d.efeitosFinanceiros}</p>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Textos */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginTop:8 }}>
+        {[
+          { label:"📋 Análise técnica", texto: gerarTexto() },
+          { label:"📝 Minuta de despacho", texto: gerarDespacho() },
+        ].map(({ label, texto }) => (
+          <div key={label} className="card">
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+              <p style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", margin:0 }}>{label}</p>
+              <button onClick={() => copiar(texto)} className="btn-primary" style={{ fontSize:12, padding:"6px 14px" }}>
+                {copiado ? "✓ Copiado" : "Copiar"}
+              </button>
+            </div>
+            <pre style={{ fontSize:11.5, color:"var(--text-secondary)", lineHeight:1.7, whiteSpace:"pre-wrap", wordBreak:"break-word", margin:0, maxHeight:280, overflowY:"auto" }}>
+              {texto}
+            </pre>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+  
+  </script>
+
+  <script type="text/babel">
+
+// ─────────────────────────────────────────────
+// MÓDULO — REPACTUAÇÃO (CCT/ACT/LEI DO PISO)
+// ─────────────────────────────────────────────
+function RepactuacaoModule() {
+  const [apiKey, setApiKey] = React.useState(() => {
+    try { const v = localStorage.getItem("doccheck_gemini_key"); return v ? decodeURIComponent(escape(atob(v))) : ""; } catch(e) { return ""; }
+  });
+  const [apiKeySet, setApiKeySet] = React.useState(() => {
+    try { const v = localStorage.getItem("doccheck_gemini_key"); return !!(v && atob(v).length > 10); } catch(e) { return false; }
+  });
+
+  const [etapa, setEtapa] = React.useState(1);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  const [pdfContrato, setPdfContrato] = React.useState(null);
+  const [b64Contrato, setB64Contrato] = React.useState(null);
+  const [pdfCct, setPdfCct] = React.useState(null);
+  const [b64Cct, setB64Cct] = React.useState(null);
+  const [contratoInfo, setContratoInfo] = React.useState(null);
+  const [cctInfo, setCctInfo] = React.useState(null);
+
+  const [campos, setCampos] = React.useState({
+    dataReferencia: "",       // data RAPP (14133) ou abertura edital (8666)
+    dataCctVigente: "",       // data da CCT/ACT/Lei do piso vigente à época
+    dataNovaCct: "",          // data da nova CCT/ACT/Lei do piso
+    dataPedido: "",
+    descricaoCct: "",         // ex: "CCT 2023 — Sindicato dos Vigilantes"
+    descricaoNovaCct: "",
+    categoriaProfissional: "",
+  });
+  const [resultado, setResultado] = React.useState(null);
+
+  const refContrato = React.useRef();
+  const refCct = React.useRef();
+
+  const lerPdf = (file) => new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result.split(",")[1]);
+    reader.readAsDataURL(file);
+  });
+
+  const handleContrato = async (file) => {
+    if (!file || file.type !== "application/pdf") return;
+    setPdfContrato(file); setB64Contrato(await lerPdf(file));
+    setError(""); setContratoInfo(null); setEtapa(1);
+  };
+
+  const handleCct = async (file) => {
+    if (!file || file.type !== "application/pdf") return;
+    setPdfCct(file); setB64Cct(await lerPdf(file));
+  };
+
+  const confirmarChave = () => {
+    if (apiKey.length > 10) {
+      try { localStorage.setItem("doccheck_gemini_key", btoa(unescape(encodeURIComponent(apiKey)))); } catch(x){}
+      setApiKeySet(true);
+    }
+  };
+
+  const set = (k, v) => setCampos(prev => ({ ...prev, [k]: v }));
+
+  const analisarDocs = async () => {
+    if (!b64Contrato) { setError("Carregue o contrato inicial."); return; }
+    if (!apiKeySet) { setError("Configure a chave da API Gemini."); return; }
+    setLoading(true); setError("");
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+      // Analisa contrato
+      const promptContrato = `Analise este contrato e retorne APENAS JSON puro sem markdown:
+{
+  "lei_aplicavel": "8666" | "14133" | "indeterminado",
+  "numero_contrato": "número",
+  "objeto": "objeto em até 10 palavras",
+  "contratada": "nome da empresa",
+  "data_assinatura": "DD/MM/AAAA ou null",
+  "data_abertura_pregao": "DD/MM/AAAA ou null",
+  "data_rapp": "DD/MM/AAAA ou null",
+  "tem_clausula_repactuacao": true | false,
+  "clausula_repactuacao": "texto resumido da cláusula ou null",
+  "categoria_profissional": "categoria identificada (ex: vigilantes, limpeza, recepcionistas) ou null",
+  "tem_planilha_custos": true | false,
+  "justificativa_lei": "por que identificou essa lei",
+  "observacoes": "alertas relevantes ou null"
+}`;
+
+      const r1 = await fetch(url, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ contents:[{ parts:[
+          { inline_data:{ mime_type:"application/pdf", data:b64Contrato } },
+          { text: promptContrato }
+        ]}], generationConfig:{ temperature:0.1, maxOutputTokens:2048 } })
+      });
+      const d1 = await r1.json();
+      const c1 = JSON.parse((d1.candidates?.[0]?.content?.parts?.[0]?.text || "{}").replace(/```json|```/g,"").trim());
+      setContratoInfo(c1);
+
+      // Analisa CCT se fornecida
+      let cctParsed = null;
+      if (b64Cct) {
+        const promptCct = `Analise este documento (CCT/ACT/Lei do Piso/Convenção Coletiva) e retorne APENAS JSON puro sem markdown:
+{
+  "tipo": "CCT" | "ACT" | "Lei do Piso" | "outro",
+  "descricao": "identificação completa (ex: CCT 2024 — Vigilantes RJ)",
+  "data_publicacao": "DD/MM/AAAA ou null",
+  "data_vigencia_inicio": "DD/MM/AAAA ou null",
+  "data_base_categoria": "DD/MM/AAAA ou null",
+  "categoria": "categoria profissional",
+  "sindicato": "sindicato ou entidade",
+  "percentual_reajuste": "percentual se informado ou null",
+  "observacoes": "alertas relevantes ou null"
+}`;
+        const r2 = await fetch(url, {
+          method:"POST", headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({ contents:[{ parts:[
+            { inline_data:{ mime_type:"application/pdf", data:b64Cct } },
+            { text: promptCct }
+          ]}], generationConfig:{ temperature:0.1, maxOutputTokens:1024 } })
+        });
+        const d2 = await r2.json();
+        cctParsed = JSON.parse((d2.candidates?.[0]?.content?.parts?.[0]?.text || "{}").replace(/```json|```/g,"").trim());
+        setCctInfo(cctParsed);
+        setCampos(prev => ({
+          ...prev,
+          descricaoNovaCct: cctParsed.descricao || "",
+          dataNovaCct: cctParsed.data_publicacao || cctParsed.data_vigencia_inicio || "",
+          categoriaProfissional: cctParsed.categoria || "",
+        }));
+      }
+
+      // Pré-preenche campos do contrato
+      setCampos(prev => ({
+        ...prev,
+        dataReferencia: c1.lei_aplicavel === "8666" ? (c1.data_abertura_pregao || "") : (c1.data_rapp || ""),
+        categoriaProfissional: c1.categoria_profissional || prev.categoriaProfissional,
+      }));
+      setEtapa(2);
+    } catch(e) { setError("Erro: " + e.message); }
+    finally { setLoading(false); }
+  };
+
+  const calcular = () => {
+    setError("");
+    const parseDate = (s) => {
+      if (!s) return null;
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) { const [d,m,y]=s.split("/"); return new Date(`${y}-${m}-${d}`); }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s);
+      return null;
+    };
+    const fmtDate = (d) => d ? d.toLocaleDateString("pt-BR") : "—";
+    const addDays = (d, n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+
+    const dataRef = parseDate(campos.dataReferencia);
+    const dataNovaCct = parseDate(campos.dataNovaCct);
+    const dataPedido = campos.dataPedido ? parseDate(campos.dataPedido) : hoje;
+
+    if (!dataRef) { setError(`Informe a data de referência (${contratoInfo?.lei_aplicavel === "8666" ? "abertura do pregão" : "RAPP"}).`); return; }
+    if (!dataNovaCct) { setError("Informe a data da nova CCT/ACT/Lei do Piso."); return; }
+
+    // Direitos: um por cada nova CCT posterior à data de referência
+    // Simplificado: calcula 1 direito por nova CCT informada
+    // O pedido pode gerar múltiplos direitos acumulados (anos anteriores)
+
+    const prazoRetro = addDays(dataNovaCct, 60);
+    const temRetro = dataPedido <= prazoRetro;
+    const adquirido = dataNovaCct <= hoje;
+
+    const efeitosFinanceiros = temRetro
+      ? `A partir de ${fmtDate(dataNovaCct)} (retroativo à publicação da ${campos.descricaoNovaCct || "nova CCT/ACT"})`
+      : `A partir de ${fmtDate(dataPedido)} (sem retroatividade — prazo de 60 dias expirado em ${fmtDate(prazoRetro)})`;
+
+    const lei = contratoInfo?.lei_aplicavel;
+    const alertas = [
+      !contratoInfo?.tem_clausula_repactuacao && "⚠️ Contrato não possui cláusula expressa de repactuação — verificar previsão editalícia.",
+      !contratoInfo?.tem_planilha_custos && "⚠️ Planilha de custos e formação de preços não identificada — é documento essencial para a repactuação.",
+      contratoInfo?.observacoes,
+      cctInfo?.observacoes,
+      lei === "indeterminado" && "⚠️ Lei aplicável não identificada com certeza — confirme manualmente.",
+    ].filter(Boolean);
+
+    setResultado({
+      tipo: "repactuacao",
+      lei,
+      contrato: contratoInfo,
+      cct: cctInfo,
+      dataReferencia: fmtDate(dataRef),
+      tipoReferencia: lei === "8666" ? "abertura do pregão" : "elaboração do RAPP",
+      descricaoCctAnterior: campos.descricaoCct,
+      descricaoNovaCct: campos.descricaoNovaCct || cctInfo?.descricao || "Nova CCT/ACT/Lei do Piso",
+      dataNovaCct: fmtDate(dataNovaCct),
+      prazoRetroatividade: fmtDate(prazoRetro),
+      temRetroatividade: temRetro,
+      dataPedido: fmtDate(dataPedido),
+      adquirido,
+      efeitosFinanceiros,
+      categoriaProfissional: campos.categoriaProfissional,
+      alertas,
+    });
+    setEtapa(3);
+  };
+
+  const Input = ({ label, k, placeholder, hint, full }) => (
+    <div style={{ marginBottom:14, gridColumn: full ? "1 / -1" : undefined }}>
+      <label className="label-text" style={{ display:"block", marginBottom:5 }}>{label}</label>
+      <input value={campos[k]} onChange={e => set(k, e.target.value)}
+        placeholder={placeholder || "DD/MM/AAAA"} className="input-field" />
+      {hint && <p style={{ fontSize:11, color:"var(--text-muted)", marginTop:4 }}>{hint}</p>}
+    </div>
+  );
+
+  return (
+    <div className="module-container">
+      <div style={{ marginBottom:20 }}>
+        <h2 style={{ fontSize:18, fontWeight:800, color:"var(--text-primary)", margin:0 }}>🔄 Repactuação Contratual</h2>
+        <p style={{ fontSize:13, color:"var(--text-muted)", marginTop:4 }}>Cálculo de direito a repactuação por CCT/ACT/Lei do Piso — Lei 8.666/93 e Lei 14.133/2021</p>
+      </div>
+
+      {/* Stepper */}
+      <div style={{ display:"flex", alignItems:"center", gap:0, marginBottom:28 }}>
+        {["Documentos","Dados","Resultado"].map((s,i) => {
+          const num=i+1, ativo=etapa===num, feito=etapa>num;
+          return (
+            <React.Fragment key={s}>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <div style={{ width:28, height:28, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:800,
+                  background: feito?"var(--success-text)":ativo?"var(--accent)":"var(--surface-2)",
+                  color: feito||ativo?"#fff":"var(--text-muted)" }}>
+                  {feito?"✓":num}
+                </div>
+                <span style={{ fontSize:12, fontWeight:ativo?700:500, color:ativo?"var(--text-primary)":"var(--text-muted)" }}>{s}</span>
+              </div>
+              {i<2 && <div style={{ flex:1, height:2, background:feito?"var(--success-text)":"var(--card-border)", margin:"0 10px" }} />}
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      {!apiKeySet && (
+        <div className="card" style={{ marginBottom:20 }}>
+          <p className="card-title">Chave de API — Google Gemini</p>
+          <div style={{ display:"flex", gap:8, marginTop:12 }}>
+            <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)}
+              placeholder="AIzaSy…" onKeyDown={e => e.key==="Enter" && confirmarChave()} className="input-field" style={{ flex:1 }} />
+            <button onClick={confirmarChave} className="btn-primary">Confirmar</button>
+          </div>
+        </div>
+      )}
+
+      {error && <div className="error-box" style={{ marginBottom:16 }}><p style={{ margin:0 }}>⚠ {error}</p></div>}
+
+      {/* ETAPA 1 */}
+      {etapa >= 1 && (
+        <div className="card" style={{ marginBottom:20, opacity: etapa>1?.6:1 }}>
+          <p className="card-title">Etapa 1 — Documentos</p>
+          <p className="card-subtitle" style={{ marginBottom:16 }}>
+            Carregue o contrato inicial (obrigatório) e a nova CCT/ACT/Lei do Piso (opcional — pode informar manualmente).
+          </p>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:14 }}>
+            {[
+              { label:"📄 Contrato inicial (obrigatório)", ref:refContrato, file:pdfContrato, handler:handleContrato, mult:false },
+              { label:"📋 Nova CCT/ACT/Lei do Piso (opcional)", ref:refCct, file:pdfCct, handler:handleCct, mult:false },
+            ].map(({ label, ref, file, handler }) => (
+              <div key={label}>
+                <p className="label-text" style={{ marginBottom:6 }}>{label}</p>
+                <div onClick={() => ref.current.click()}
+                  onDrop={e => { e.preventDefault(); handler(e.dataTransfer.files[0]); }}
+                  onDragOver={e => e.preventDefault()} className="dropzone">
+                  <input ref={ref} type="file" accept=".pdf" style={{ display:"none" }} onChange={e => handler(e.target.files[0])} />
+                  {file ? (
+                    <><div style={{ fontSize:18 }}>📄</div>
+                    <p style={{ fontSize:12, fontWeight:600, color:"var(--accent)", margin:"4px 0 2px" }}>{file.name}</p>
+                    <p className="text-muted" style={{ fontSize:10 }}>Clique para trocar</p></>
+                  ) : (
+                    <><div style={{ fontSize:18 }}>📂</div>
+                    <p style={{ fontSize:11, color:"var(--text-muted)", margin:"4px 0 0" }}>Arraste ou <strong style={{ color:"var(--accent)" }}>clique</strong></p></>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="info-box" style={{ marginBottom:14 }}>
+            <p style={{ fontSize:12, color:"var(--info-text)", margin:0 }}>
+              💡 O sistema identificará automaticamente a lei aplicável, data de referência e cláusula de repactuação. A análise da CCT extrai data de publicação e vigência para os cálculos.
+            </p>
+          </div>
+
+          {etapa === 1 && <button onClick={analisarDocs} disabled={loading || !b64Contrato || !apiKeySet}
+            className="btn-primary" style={{ width:"100%" }}>
+            {loading ? "Analisando documentos…" : "Analisar documentos →"}
+          </button>}
+
+          {contratoInfo && etapa > 1 && (
+            <div style={{ marginTop:12, padding:"10px 14px", background:"var(--surface-2)", borderRadius:8, fontSize:12, color:"var(--text-secondary)" }}>
+              ✓ <strong>{contratoInfo.numero_contrato}</strong> · Lei <strong>{contratoInfo.lei_aplicavel}</strong> · {contratoInfo.contratada}
+              <button onClick={() => setEtapa(1)} className="btn-link" style={{ marginLeft:12 }}>Trocar</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ETAPA 2 */}
+      {etapa >= 2 && contratoInfo && (
+        <div className="card" style={{ marginBottom:20 }}>
+          <p className="card-title" style={{ marginBottom:4 }}>Etapa 2 — Dados para cálculo</p>
+
+          <div style={{ margin:"12px 0 16px", padding:"10px 14px", borderRadius:8, background:"var(--info-bg)", border:"1px solid var(--info-border)" }}>
+            <p style={{ fontSize:12, fontWeight:700, color:"var(--info-text)", margin:"0 0 4px" }}>
+              {contratoInfo.lei_aplicavel === "14133"
+                ? "⚖️ Lei 14.133/2021 — Marco temporal: data do RAPP (orçamento estimativo)"
+                : contratoInfo.lei_aplicavel === "8666"
+                  ? "⚖️ Lei 8.666/93 — Marco temporal: data de abertura do pregão/edital"
+                  : "⚠️ Lei não identificada — preencha a data de referência correta"}
+            </p>
+            <p style={{ fontSize:11, color:"var(--text-muted)", margin:0 }}>
+              A CCT/ACT/Lei do Piso vigente nessa data-marco determina o piso de referência. A nova CCT publicada posteriormente gera o direito à repactuação.
+            </p>
+          </div>
+
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 20px" }}>
+            <Input k="dataReferencia"
+              label={`📅 Data de referência (${contratoInfo.lei_aplicavel === "8666" ? "abertura do pregão" : "RAPP"})`}
+              hint={contratoInfo.lei_aplicavel === "8666" ? "Data de abertura do certame licitatório" : "Data de elaboração do orçamento estimativo"} />
+            <Input k="categoriaProfissional" label="👷 Categoria profissional"
+              placeholder="Ex: vigilantes, limpeza, TI" hint="Para identificar a CCT/ACT aplicável" />
+            <Input k="descricaoCct" label="📋 CCT/ACT/Lei do Piso vigente à época"
+              placeholder="Ex: CCT 2023 — Vigilantes RJ" hint="Identificação do ato normativo vigente na data de referência" />
+            <Input k="dataCctVigente" label="📅 Data da CCT/ACT vigente à época"
+              hint="Data de publicação ou início de vigência do ato normativo anterior" />
+            <Input k="descricaoNovaCct" label="📋 Nova CCT/ACT/Lei do Piso"
+              placeholder="Ex: CCT 2024 — Vigilantes RJ" hint="Identificação do novo ato normativo que gera o direito" />
+            <Input k="dataNovaCct" label="📅 Data de publicação da nova CCT/ACT"
+              hint="A partir desta data conta o prazo de 60 dias para retroatividade" />
+            <Input k="dataPedido" label="📋 Data do pedido da empresa"
+              placeholder="DD/MM/AAAA (vazio = hoje)" hint="Deixe em branco para usar a data de hoje" />
+          </div>
+
+          <div style={{ display:"flex", gap:10, marginTop:8 }}>
+            <button onClick={() => setEtapa(1)} className="btn-secondary">← Voltar</button>
+            <button onClick={calcular} className="btn-primary" style={{ flex:1 }}>Calcular direitos →</button>
+          </div>
+        </div>
+      )}
+
+      {/* ETAPA 3 */}
+      {etapa === 3 && resultado && <ResultadoRepactuacao resultado={resultado} onVoltar={() => setEtapa(2)} />}
+    </div>
+  );
+}
+
+function ResultadoRepactuacao({ resultado, onVoltar }) {
+  const [copiado, setCopiado] = React.useState(false);
+  const { lei, contrato, descricaoNovaCct, dataNovaCct, prazoRetroatividade, temRetroatividade, dataPedido, efeitosFinanceiros, alertas, dataReferencia, tipoReferencia, descricaoCctAnterior, categoriaProfissional } = resultado;
+  const leiLabel = lei === "14133" ? "Lei 14.133/2021" : lei === "8666" ? "Lei 8.666/1993" : "Lei a confirmar";
+  const hoje = new Date().toLocaleDateString("pt-BR");
+
+  const gerarAnalise = () => {
+    let t = `ANÁLISE DE DIREITO À REPACTUAÇÃO CONTRATUAL\nGerado em: ${hoje}\n${"─".repeat(50)}\n\n`;
+    t += `CONTRATO: ${contrato?.numero_contrato || "—"}\nCONTRATADA: ${contrato?.contratada || "—"}\nOBJETO: ${contrato?.objeto || "—"}\n`;
+    t += `CATEGORIA: ${categoriaProfissional || "—"}\nLEI APLICÁVEL: ${leiLabel}\n`;
+    t += `DATA DE REFERÊNCIA (${tipoReferencia}): ${dataReferencia}\n\n${"─".repeat(50)}\n`;
+    t += `INSTRUMENTO NORMATIVO ANTERIOR: ${descricaoCctAnterior || "—"}\n`;
+    t += `NOVO INSTRUMENTO NORMATIVO: ${descricaoNovaCct}\nPUBLICAÇÃO: ${dataNovaCct}\n`;
+    t += `PRAZO PARA RETROATIVIDADE (60d): ${prazoRetroatividade}\n`;
+    t += `DATA DO PEDIDO: ${dataPedido}\n`;
+    t += `RETROATIVIDADE: ${temRetroatividade ? "SIM ✓" : "NÃO ✗ — prazo expirado"}\n`;
+    t += `EFEITOS FINANCEIROS: ${efeitosFinanceiros}\n`;
+    if (alertas?.length) { t += `\n${"─".repeat(50)}\nALERTAS:\n${alertas.join("\n")}\n`; }
+    return t;
+  };
+
+  const gerarDespacho = () =>
+    `DESPACHO\n\nTrata-se de pedido de repactuação contratual apresentado pela empresa ${contrato?.contratada || "___"}, referente ao Contrato nº ${contrato?.numero_contrato || "___"}, cujo objeto é ${contrato?.objeto || "___"}${categoriaProfissional ? `, com emprego de mão de obra da categoria de ${categoriaProfissional}` : ""}.\n\nO contrato foi celebrado com fundamento na ${leiLabel}. O marco temporal para fins de repactuação é a data de ${tipoReferencia}, fixada em ${dataReferencia}, quando vigorava o instrumento normativo ${descricaoCctAnterior || "anterior"}.\n\nA nova ${descricaoNovaCct || "CCT/ACT/Lei do Piso"} foi publicada em ${dataNovaCct}, passando a empresa a ter direito à repactuação a partir desta data, nos termos do ${lei === "8666" ? "art. 55, inciso III, c/c art. 65, inciso II, alínea 'd', da Lei nº 8.666/1993" : "art. 92, § 5º, da Lei nº 14.133/2021"}.\n\n${temRetroatividade ? `O pedido foi apresentado em ${dataPedido}, dentro do prazo de 60 (sessenta) dias contados da publicação do novo instrumento normativo (prazo final: ${prazoRetroatividade}), razão pela qual os efeitos financeiros retroagem à data de publicação da ${descricaoNovaCct || "nova CCT/ACT"}.` : `O pedido foi apresentado em ${dataPedido}, após o transcurso do prazo de 60 (sessenta) dias contados da publicação do novo instrumento normativo (prazo final: ${prazoRetroatividade}), razão pela qual os efeitos financeiros somente serão computados a partir da data do pedido, não havendo direito à retroatividade.`}\n\n${alertas?.length ? `OBSERVAÇÕES:\n${alertas.join("\n")}\n\n` : ""}Encaminhe-se para as providências cabíveis.\n\nRio de Janeiro, ${hoje}.`;
+
+  const copiar = (t) => navigator.clipboard.writeText(t).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 2500); });
+  const corRetro = temRetroatividade ? "var(--success-text)" : "var(--warning-text)";
+  const bgRetro  = temRetroatividade ? "var(--success-bg)"  : "var(--warning-bg)";
+  const bdRetro  = temRetroatividade ? "var(--success-border)" : "var(--warning-border)";
+
+  return (
+    <div>
+      <div style={{ background:bgRetro, border:`1px solid ${bdRetro}`, borderRadius:12, padding:20, marginBottom:16 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+          <div>
+            <p style={{ fontSize:15, fontWeight:800, color:corRetro, margin:"0 0 4px" }}>
+              {temRetroatividade ? "✓ Direito à repactuação com retroatividade" : "⚠️ Direito à repactuação sem retroatividade"}
+            </p>
+            <p style={{ fontSize:12, color:"var(--text-muted)", margin:0 }}>{contrato?.numero_contrato} · {leiLabel} · {categoriaProfissional}</p>
+          </div>
+          <button onClick={onVoltar} className="btn-secondary" style={{ fontSize:12 }}>← Editar</button>
+        </div>
+      </div>
+
+      {alertas?.length > 0 && (
+        <div className="error-box" style={{ marginBottom:16 }}>
+          {alertas.map((a,i) => <p key={i} style={{ margin:i>0?"6px 0 0":0, fontSize:12 }}>{a}</p>)}
+        </div>
+      )}
+
+      {/* Cards de datas */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:16 }}>
+        {[
+          { l:`Data de referência\n(${tipoReferencia})`, v:dataReferencia, icon:"📅" },
+          { l:"Publicação nova CCT/ACT", v:dataNovaCct, icon:"📋" },
+          { l:"Prazo retroatividade (60d)", v:prazoRetroatividade, icon:"⏰" },
+          { l:"Data do pedido", v:dataPedido, icon:"📨" },
+          { l:"Retroatividade", v:temRetroatividade?"✓ Sim":"✗ Não", icon:"↩️" },
+          { l:"Efeitos a partir de", v:efeitosFinanceiros.split("(")[0].replace("A partir de","").trim(), icon:"💰" },
+        ].map(({ l, v, icon }) => (
+          <div key={l} style={{ background:"var(--card-bg)", border:"1px solid var(--card-border)", borderRadius:10, padding:"12px 14px", boxShadow:"var(--card-shadow)" }}>
+            <p style={{ fontSize:10, color:"var(--text-muted)", fontWeight:700, textTransform:"uppercase", letterSpacing:".04em", margin:"0 0 4px" }}>{icon} {l}</p>
+            <p style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", margin:0 }}>{v}</p>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background:"var(--card-bg)", border:`1px solid ${bdRetro}`, borderRadius:10, padding:"12px 16px", marginBottom:16 }}>
+        <p style={{ fontSize:11, fontWeight:700, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:".04em", margin:"0 0 4px" }}>Efeitos financeiros</p>
+        <p style={{ fontSize:13, fontWeight:600, color:corRetro, margin:0 }}>{efeitosFinanceiros}</p>
+      </div>
+
+      {/* Textos */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+        {[{ label:"📋 Análise técnica", texto:gerarAnalise() },{ label:"📝 Minuta de despacho", texto:gerarDespacho() }].map(({ label, texto }) => (
+          <div key={label} className="card">
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+              <p style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", margin:0 }}>{label}</p>
+              <button onClick={() => copiar(texto)} className="btn-primary" style={{ fontSize:12, padding:"6px 14px" }}>
+                {copiado ? "✓ Copiado" : "Copiar"}
+              </button>
+            </div>
+            <pre style={{ fontSize:11.5, color:"var(--text-secondary)", lineHeight:1.7, whiteSpace:"pre-wrap", wordBreak:"break-word", margin:0, maxHeight:280, overflowY:"auto" }}>{texto}</pre>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+  
   </script>
 
   <script type="text/babel">
 // ─────────────────────────────────────────────
-// SHELL — NAVEGAÇÃO POR ABAS + TEMA
+// PÁGINA INICIAL + SHELL COM GRUPOS DE ABAS
 // ─────────────────────────────────────────────
-function Shell() {
-  const [aba, setAba] = React.useState(() => localStorage.getItem("doccheck_aba") || "checklist");
-  const [dark, setDark] = React.useState(() => localStorage.getItem("doccheck_theme") === "dark");
 
-  const trocar = (a) => { setAba(a); localStorage.setItem("doccheck_aba", a); };
+function HomePage({ onNavigate }) {
+  const cards = [
+    {
+      group: "licitacao", groupLabel: "Licitação",
+      icon: "⚖️", color: "#6366F1", light: "#EEF2FF", dark: "#1e1b4b",
+      items: [
+        { id:"checklist",  icon:"✓",  label:"Checklist Documental", desc:"Verifique itens obrigatórios em processos e documentos PDF" },
+        { id:"comparador", icon:"🔀", label:"Comparador de TR",      desc:"Identifique alterações entre versões do Termo de Referência" },
+      ]
+    },
+    {
+      group: "contratos", groupLabel: "Contratos",
+      icon: "📑", color: "#0EA5E9", light: "#F0F9FF", dark: "#0c2340",
+      items: [
+        { id:"vencimentos",  icon:"📅", label:"Controle de Vencimentos", desc:"Acompanhe vencimentos e gere alertas para WhatsApp" },
+        { id:"reajuste",     icon:"📈", label:"Reajuste Contratual",      desc:"Calcule direitos a reajuste por índice (IPCA, INPC, IGP-M)" },
+        { id:"repactuacao",  icon:"🔄", label:"Repactuação",              desc:"Calcule direitos a repactuação por CCT/ACT/Lei do Piso" },
+        { id:"checklist",   icon:"✓",  label:"Checklist de Contratos",   desc:"Verifique conformidade de contratos administrativos" },
+      ]
+    },
+    {
+      group: "pesquisa", groupLabel: "Pesquisa & Background",
+      icon: "🔍", color: "#10B981", light: "#F0FDF4", dark: "#052e16",
+      items: [
+        { id:"pesquisa", icon:"📊", label:"Pesquisa Semestral ARP",  desc:"Analise compatibilidade de preços com o mercado (Dec. 48.821/2023)" },
+        { id:"rapp",     icon:"🔍", label:"Background Check RAPP",   desc:"Cruzamento de sócios em empresas participantes de licitação" },
+        { id:"cnpj",     icon:"🏢", label:"Consulta CNPJ",           desc:"Consulta cadastral e sanções federais (Receita + Portal Transparência)" },
+      ]
+    },
+  ];
+
+  return (
+    <div style={{ maxWidth:1100, margin:"0 auto", padding:"48px 24px" }}>
+      {/* Hero */}
+      <div style={{ textAlign:"center", marginBottom:56 }}>
+        <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:72, height:72, borderRadius:20, background:"var(--accent)", marginBottom:20, boxShadow:"0 8px 32px color-mix(in srgb, var(--accent) 40%, transparent)" }}>
+          <span style={{ fontSize:32, color:"#fff", fontWeight:900 }}>✓</span>
+        </div>
+        <h1 style={{ fontSize:36, fontWeight:900, color:"var(--text-primary)", margin:"0 0 12px", letterSpacing:"-.03em", lineHeight:1.1 }}>
+          DocCheck
+        </h1>
+        <p style={{ fontSize:16, color:"var(--text-muted)", margin:"0 0 6px" }}>
+          Plataforma de análise documental · GAB — SUPCL/SESRJ
+        </p>
+        <p style={{ fontSize:13, color:"var(--text-subtle)", margin:0 }}>
+          Selecione um módulo abaixo ou use as abas de navegação no topo
+        </p>
+      </div>
+
+      {/* Grupos */}
+      {cards.map(group => (
+        <div key={group.group} style={{ marginBottom:40 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
+            <div style={{ width:32, height:32, borderRadius:8, background:group.color, display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>
+              {group.icon}
+            </div>
+            <h2 style={{ fontSize:15, fontWeight:800, color:"var(--text-primary)", margin:0, letterSpacing:"-.01em" }}>{group.groupLabel}</h2>
+            <div style={{ flex:1, height:1, background:"var(--divider)" }} />
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(240px,1fr))", gap:12 }}>
+            {group.items.map(item => (
+              <button key={item.id+item.label} onClick={() => onNavigate(group.group, item.id)}
+                style={{ textAlign:"left", padding:"18px 20px", background:"var(--card-bg)", border:"1px solid var(--card-border)", borderRadius:14, cursor:"pointer", transition:"all .18s", boxShadow:"var(--card-shadow)" }}
+                onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="var(--card-shadow-hover)"; e.currentTarget.style.borderColor=group.color; }}
+                onMouseLeave={e => { e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="var(--card-shadow)"; e.currentTarget.style.borderColor="var(--card-border)"; }}>
+                <div style={{ width:40, height:40, borderRadius:10, background:`color-mix(in srgb, ${group.color} 15%, var(--card-bg))`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, marginBottom:12 }}>
+                  {item.icon}
+                </div>
+                <p style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", margin:"0 0 5px" }}>{item.label}</p>
+                <p style={{ fontSize:12, color:"var(--text-muted)", margin:0, lineHeight:1.5 }}>{item.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {/* Footer */}
+      <div style={{ marginTop:48, paddingTop:24, borderTop:"1px solid var(--divider)", textAlign:"center" }}>
+        <p style={{ fontSize:12, color:"var(--text-subtle)", margin:0 }}>
+          DocCheck · GAB SUPCL/SESRJ · Desenvolvido por Ítalo Peixoto Silva — OAB/RJ 205.534
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Shell() {
+  const [grupo, setGrupo] = React.useState(() => localStorage.getItem("doccheck_grupo") || "home");
+  const [aba, setAba]     = React.useState(() => localStorage.getItem("doccheck_aba")   || "checklist");
+  const [dark, setDark]   = React.useState(() => localStorage.getItem("doccheck_theme") === "dark");
+  const [menuOpen, setMenuOpen] = React.useState(false);
+
+  const navGrupo = (g, a) => {
+    setGrupo(g); if(a) setAba(a);
+    localStorage.setItem("doccheck_grupo", g);
+    if(a) localStorage.setItem("doccheck_aba", a);
+    setMenuOpen(false);
+  };
+
   const toggleTheme = () => {
-    const nd = !dark;
-    setDark(nd);
+    const nd = !dark; setDark(nd);
     localStorage.setItem("doccheck_theme", nd ? "dark" : "light");
     document.documentElement.setAttribute("data-theme", nd ? "dark" : "light");
   };
@@ -2503,63 +3627,125 @@ function Shell() {
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
   }, []);
 
-  const abas = [
-    { id:"checklist",   label:"✓",  full:"Checklist" },
-    { id:"vencimentos", label:"📅", full:"Vencimentos" },
-    { id:"comparador",  label:"🔀", full:"Comparador TR" },
-    { id:"pesquisa",    label:"📊", full:"Pesquisa ARP" },
-    { id:"rapp",        label:"🔍", full:"Background RAPP" },
-    { id:"cnpj",        label:"🏢", full:"Consulta CNPJ" },
+  const grupos = [
+    { id:"home",      label:"🏠 Início",   abas:[] },
+    { id:"licitacao", label:"⚖️ Licitação", abas:[
+      { id:"checklist",  label:"✓ Checklist" },
+      { id:"comparador", label:"🔀 Comparador TR" },
+    ]},
+    { id:"contratos", label:"📑 Contratos", abas:[
+      { id:"vencimentos", label:"📅 Vencimentos" },
+      { id:"reajuste",    label:"📈 Reajuste" },
+      { id:"repactuacao", label:"🔄 Repactuação" },
+      { id:"checklist",   label:"✓ Checklist" },
+    ]},
+    { id:"pesquisa",  label:"🔍 Pesquisa",  abas:[
+      { id:"pesquisa", label:"📊 Pesquisa ARP" },
+      { id:"rapp",     label:"🔍 Background RAPP" },
+      { id:"cnpj",     label:"🏢 Consulta CNPJ" },
+    ]},
   ];
 
-  return (
-    <div style={{ fontFamily:"'Inter',system-ui,sans-serif", minHeight:"100vh", background:"var(--page-bg)" }}>
-      {/* Header */}
-      <header style={{ background:"var(--header-bg)", borderBottom:"1px solid var(--header-border)", padding:"0 24px", position:"sticky", top:0, zIndex:100 }}>
-        <div style={{ maxWidth:1100, margin:"0 auto", display:"flex", alignItems:"center", height:56, gap:16 }}>
-          {/* Logo */}
-          <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
-            <div style={{ width:30, height:30, borderRadius:8, background:"var(--accent)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, color:"#fff", fontWeight:800 }}>✓</div>
-            <div>
-              <span style={{ color:"var(--header-text)", fontWeight:800, fontSize:15, letterSpacing:"-.02em" }}>DocCheck</span>
-              <span style={{ color:"var(--header-muted)", fontSize:11, marginLeft:8 }}>GAB · SUPCL/SESRJ</span>
-            </div>
-          </div>
+  const grupoAtivo = grupos.find(g => g.id === grupo) || grupos[0];
+  const abaAtiva = aba;
 
-          {/* Abas */}
+  return (
+    <div style={{ fontFamily:"'Inter',system-ui,sans-serif", minHeight:"100vh", background:"var(--page-bg)", transition:"background .25s" }}>
+
+      {/* HEADER */}
+      <header style={{
+        background:"var(--header-bg)",
+        borderBottom:"1px solid var(--header-border)",
+        position:"sticky", top:0, zIndex:200,
+        boxShadow:"0 1px 12px var(--header-shadow)"
+      }}>
+        <div style={{ maxWidth:1200, margin:"0 auto", padding:"0 20px", display:"flex", alignItems:"center", height:58, gap:8 }}>
+
+          {/* Logo */}
+          <button onClick={() => navGrupo("home")} style={{ display:"flex", alignItems:"center", gap:10, background:"none", border:"none", cursor:"pointer", flexShrink:0, padding:"4px 8px 4px 0", borderRadius:8 }}>
+            <div style={{ width:32, height:32, borderRadius:9, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, color:"#fff", fontWeight:900, boxShadow:"0 2px 8px rgba(99,102,241,.4)" }}>✓</div>
+            <div style={{ lineHeight:1 }}>
+              <div style={{ fontSize:15, fontWeight:900, color:"var(--text-primary)", letterSpacing:"-.02em" }}>DocCheck</div>
+              <div style={{ fontSize:10, color:"var(--text-subtle)", marginTop:1 }}>GAB · SUPCL/SESRJ</div>
+            </div>
+          </button>
+
+          {/* Divisor */}
+          <div style={{ width:1, height:28, background:"var(--divider)", flexShrink:0, margin:"0 4px" }} />
+
+          {/* Grupos */}
           <nav style={{ display:"flex", gap:2, flex:1, overflowX:"auto", scrollbarWidth:"none" }}>
-            {abas.map(a => (
-              <button key={a.id} onClick={() => trocar(a.id)} style={{
-                display:"flex", alignItems:"center", gap:6,
-                padding:"8px 14px", borderRadius:8, border:"none",
-                background: aba === a.id ? "var(--tab-active-bg)" : "transparent",
-                color: aba === a.id ? "var(--tab-active-color)" : "var(--header-muted)",
-                fontSize:13, fontWeight: aba === a.id ? 700 : 500,
-                cursor:"pointer", transition:"all .15s", whiteSpace:"nowrap",
-                boxShadow: aba === a.id ? "var(--tab-active-shadow)" : "none",
-              }}>
-                <span>{a.label}</span>
-                <span style={{ display:"inline" }}>{a.full}</span>
+            {grupos.map(g => (
+              <button key={g.id} onClick={() => navGrupo(g.id, g.abas[0]?.id)}
+                style={{
+                  padding:"6px 14px", borderRadius:8, border:"none", cursor:"pointer",
+                  background: grupo===g.id ? "var(--accent)" : "transparent",
+                  color: grupo===g.id ? "#fff" : "var(--header-muted)",
+                  fontSize:13, fontWeight: grupo===g.id ? 700 : 500,
+                  transition:"all .15s", whiteSpace:"nowrap", flexShrink:0,
+                }}>
+                {g.label}
               </button>
             ))}
           </nav>
 
-          {/* Toggle tema */}
-          <button onClick={toggleTheme} title={dark ? "Modo claro" : "Modo escuro"}
-            style={{ flexShrink:0, width:36, height:36, borderRadius:8, border:"1px solid var(--card-border)", background:"var(--surface-2)", color:"var(--text-secondary)", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          {/* Toggle */}
+          <button onClick={toggleTheme} title={dark?"Modo claro":"Modo escuro"}
+            style={{ flexShrink:0, width:36, height:36, borderRadius:9, border:"1px solid var(--card-border)", background:"var(--surface-2)", color:"var(--text-secondary)", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"all .15s" }}>
             {dark ? "☀️" : "🌙"}
           </button>
         </div>
+
+        {/* Sub-nav de abas (só quando não está na home) */}
+        {grupo !== "home" && grupoAtivo.abas.length > 0 && (
+          <div style={{ borderTop:"1px solid var(--header-border)", background:"var(--subheader-bg)" }}>
+            <div style={{ maxWidth:1200, margin:"0 auto", padding:"0 20px", display:"flex", gap:0, overflowX:"auto", scrollbarWidth:"none" }}>
+              {grupoAtivo.abas.map(a => (
+                <button key={a.id+a.label} onClick={() => { setAba(a.id); localStorage.setItem("doccheck_aba", a.id); }}
+                  style={{
+                    padding:"10px 16px", border:"none", borderBottom: abaAtiva===a.id ? "2px solid var(--accent)" : "2px solid transparent",
+                    background:"transparent", color: abaAtiva===a.id ? "var(--accent)" : "var(--text-muted)",
+                    fontSize:13, fontWeight: abaAtiva===a.id ? 700 : 400,
+                    cursor:"pointer", transition:"all .15s", whiteSpace:"nowrap",
+                  }}>
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </header>
 
-      {/* Conteúdo */}
+      {/* CONTEÚDO */}
       <main>
-        <div style={{ display: aba==="checklist"  ? "block":"none" }}><App /></div>
-        <div style={{ display: aba==="vencimentos" ? "block":"none" }}><VencimentosModule /></div>
-        <div style={{ display: aba==="comparador"  ? "block":"none" }}><ComparadorTR /></div>
-        <div style={{ display: aba==="pesquisa"    ? "block":"none" }}><PesquisaSemestral /></div>
-        <div style={{ display: aba==="rapp"        ? "block":"none" }}><RappCheck /></div>
-        <div style={{ display: aba==="cnpj"        ? "block":"none" }}><BackgroundCheck /></div>
+        {grupo === "home" && <HomePage onNavigate={navGrupo} />}
+
+        {/* Licitação */}
+        {grupo === "licitacao" && (
+          <>
+            <div style={{ display: abaAtiva==="checklist"  ? "block":"none" }}><App /></div>
+            <div style={{ display: abaAtiva==="comparador" ? "block":"none" }}><ComparadorTR /></div>
+          </>
+        )}
+
+        {/* Contratos */}
+        {grupo === "contratos" && (
+          <>
+            <div style={{ display: abaAtiva==="vencimentos"  ? "block":"none" }}><VencimentosModule /></div>
+            <div style={{ display: abaAtiva==="reajuste"     ? "block":"none" }}><ReajusteModule /></div>
+            <div style={{ display: abaAtiva==="repactuacao"  ? "block":"none" }}><RepactuacaoModule /></div>
+            <div style={{ display: abaAtiva==="checklist"    ? "block":"none" }}><App /></div>
+          </>
+        )}
+
+        {/* Pesquisa */}
+        {grupo === "pesquisa" && (
+          <>
+            <div style={{ display: abaAtiva==="pesquisa" ? "block":"none" }}><PesquisaSemestral /></div>
+            <div style={{ display: abaAtiva==="rapp"     ? "block":"none" }}><RappCheck /></div>
+            <div style={{ display: abaAtiva==="cnpj"     ? "block":"none" }}><BackgroundCheck /></div>
+          </>
+        )}
       </main>
     </div>
   );
@@ -2569,8 +3755,6 @@ document.addEventListener("doccheck:auth", () => {
   const _root = ReactDOM.createRoot(document.getElementById("root"));
   _root.render(<Shell />);
 });
-// Montagem via evento — não precisa de fallback aqui
-// O showApp() no login já dispara doccheck:auth após o load
 
   </script>
 
