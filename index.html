@@ -151,8 +151,12 @@ body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: v
       document.getElementById("root").style.display = "block";
       document.dispatchEvent(new Event("doccheck:auth"));
     }
+    // Aguarda todos os scripts Babel compilarem antes de montar
     if (sessionStorage.getItem("doccheck_auth") === "1") {
-      document.addEventListener("DOMContentLoaded", showApp);
+      window.addEventListener("load", () => {
+        // Pequeno delay para garantir que o Babel finalizou todos os blocos
+        setTimeout(showApp, 200);
+      });
     }
   </script>
 
@@ -2090,14 +2094,8 @@ document.addEventListener("doccheck:auth", () => {
   const _root = ReactDOM.createRoot(document.getElementById("root"));
   _root.render(<Shell />);
 });
-if (sessionStorage.getItem("doccheck_auth") === "1") {
-  document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(() => {
-      const _root = ReactDOM.createRoot(document.getElementById("root"));
-      _root.render(<Shell />);
-    }, 100);
-  });
-}
+// Montagem via evento — não precisa de fallback aqui
+// O showApp() no login já dispara doccheck:auth após o load
 
   
   
@@ -2571,14 +2569,8 @@ document.addEventListener("doccheck:auth", () => {
   const _root = ReactDOM.createRoot(document.getElementById("root"));
   _root.render(<Shell />);
 });
-if (sessionStorage.getItem("doccheck_auth") === "1") {
-  document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(() => {
-      const _root = ReactDOM.createRoot(document.getElementById("root"));
-      _root.render(<Shell />);
-    }, 100);
-  });
-}
+// Montagem via evento — não precisa de fallback aqui
+// O showApp() no login já dispara doccheck:auth após o load
 
   </script>
 
