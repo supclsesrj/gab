@@ -283,18 +283,17 @@
     }
     async function checkPassword() {
       const input = document.getElementById("pwd-input").value;
-      if ((await sha256(input)) === (await sha256("Jope1234"))) {
-        // Armazena a senha CRUA na sessão — será enviada ao backend para autenticação real
-        sessionStorage.setItem("doccheck_auth", "1");
-        sessionStorage.setItem("doccheck_pwd", input);
-        showApp();
-      } else {
+      if (!input || input.length < 3) {
         const err = document.getElementById("login-error");
-        err.textContent = "Senha incorreta. Tente novamente.";
-        document.getElementById("pwd-input").value = "";
-        document.getElementById("pwd-input").focus();
-        setTimeout(() => err.textContent = "", 3000);
+        err.textContent = "Digite a senha de acesso.";
+        setTimeout(() => err.textContent = "", 2000);
+        return;
       }
+      // Validação real é feita pelo backend (Apps Script) a cada chamada de IA.
+      // Aqui apenas avançamos a tela e armazenamos a senha na sessão.
+      sessionStorage.setItem("doccheck_auth", "1");
+      sessionStorage.setItem("doccheck_pwd", input);
+      showApp();
     }
     function showApp() {
       document.getElementById("login-screen").style.display = "none";
@@ -303,9 +302,20 @@
     }
     // Aguarda todos os scripts Babel compilarem antes de montar
     if (sessionStorage.getItem("doccheck_auth") === "1") {
+      // Aguarda o Babel compilar todos os blocos JSX antes de montar o React
       window.addEventListener("load", () => {
-        // Pequeno delay para garantir que o Babel finalizou todos os blocos
-        setTimeout(showApp, 200);
+        // Tenta montar com retry caso o Shell ainda não esteja compilado
+        function tryMount(attempts) {
+          if (typeof Shell !== "undefined") {
+            showApp();
+          } else if (attempts > 0) {
+            setTimeout(() => tryMount(attempts - 1), 300);
+          } else {
+            // Fallback: mostra a tela de login para o usuário fazer login manual
+            console.warn("DocCheck: timeout aguardando compilação do Babel. Recarregue a página.");
+          }
+        }
+        setTimeout(() => tryMount(10), 300);
       });
     }
   </script>
@@ -3739,7 +3749,7 @@ function RepactuacaoModule() {
         <span style={{fontSize:20}}>🔗</span>
         <div>
           <p style={{fontSize:12,fontWeight:700,color:"var(--text-primary)",margin:"0 0 2px"}}>Portal O Conciliador</p>
-          <p style={{fontSize:11,color:"var(--text-muted)",margin:0}}>Consulte CCTs e ACTs vigentes por categoria e localidade: <strong style={{color:"var(--accent)"}}>oconciliador.com.br</strong> — útil para identificar todos os instrumentos normativos posteriores à data de referência.</p>
+          <p style={{fontSize:11,color:"var(--text-muted)",margin:0}}>Consulte CCTs e ACTs vigentes por categoria e localidade: <strong style={{color:"var(--accent)"}}>MEDIADOR (MTE)</strong> — consulte em <strong style={{color:"var(--accent)"}}>www3.mte.gov.br/sistemas/mediador</strong> para localizar CCTs e ACTs por categoria e data.</p>
         </div>
       </div>
 
@@ -3899,7 +3909,7 @@ function ResultadoRepactuacao({ resultado, onVoltar }) {
       {/* Link o conciliador */}
       <div style={{padding:"10px 14px",background:"var(--surface-2)",border:"1px solid var(--card-border)",borderRadius:10,marginBottom:16,display:"flex",gap:10,alignItems:"center"}}>
         <span style={{fontSize:16}}>🔗</span>
-        <p style={{fontSize:12,color:"var(--text-muted)",margin:0}}>Consulte CCTs e ACTs: <strong style={{color:"var(--accent)"}}>oconciliador.com.br</strong> — verifique se há instrumentos normativos adicionais ainda não incluídos nesta análise.</p>
+        <p style={{fontSize:12,color:"var(--text-muted)",margin:0}}>Consulte CCTs e ACTs: <strong style={{color:"var(--accent)"}}>www3.mte.gov.br/sistemas/mediador (MEDIADOR/MTE)</strong> — verifique se há instrumentos normativos adicionais ainda não incluídos nesta análise.</p>
       </div>
 
       {/* Cards por direito */}
