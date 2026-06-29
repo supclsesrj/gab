@@ -9561,6 +9561,9 @@ function Shell() {
     }, {
       id: "comparador",
       label: "🔀 Comparador TR"
+    }, {
+      id: "impugnacao",
+      label: "⚖️ Impugnações/Recursos"
     }]
   }, {
     id: "contratos",
@@ -9756,43 +9759,17 @@ function Shell() {
     }, a.label);
   })))), /*#__PURE__*/React.createElement("main", null, grupo === "home" && /*#__PURE__*/React.createElement(HomePage, {
     onNavigate: navGrupo
-  }), grupo === "licitacao" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: aba === "checklist" ? "block" : "none"
-    }
-  }, /*#__PURE__*/React.createElement(App, null)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: aba === "comparador" ? "block" : "none"
-    }
-  }, /*#__PURE__*/React.createElement(ComparadorTR, null))), grupo === "contratos" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: aba === "vencimentos" ? "block" : "none"
-    }
-  }, /*#__PURE__*/React.createElement(VencimentosModule, null)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: aba === "reajuste" ? "block" : "none"
-    }
-  }, /*#__PURE__*/React.createElement(ReajusteModule, null)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: aba === "repactuacao" ? "block" : "none"
-    }
-  }, /*#__PURE__*/React.createElement(RepactuacaoModule, null)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: aba === "checklist" ? "block" : "none"
-    }
-  }, /*#__PURE__*/React.createElement(App, null))), grupo === "pesquisa" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: aba === "pesquisa" ? "block" : "none"
-    }
-  }, /*#__PURE__*/React.createElement(PesquisaSemestral, null)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: aba === "rapp" ? "block" : "none"
-    }
-  }, /*#__PURE__*/React.createElement(RappCheck, null)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: aba === "cnpj" ? "block" : "none"
-    }
-  }, /*#__PURE__*/React.createElement(BackgroundCheck, null)))));
+  }),
+  grupo === "licitacao" && aba === "checklist"  && /*#__PURE__*/React.createElement(App, null),
+  grupo === "licitacao" && aba === "comparador" && /*#__PURE__*/React.createElement(ComparadorTR, null),
+  grupo === "licitacao" && aba === "impugnacao" && /*#__PURE__*/React.createElement(ImpugnacaoModule, null),
+  grupo === "contratos" && aba === "vencimentos"  && /*#__PURE__*/React.createElement(VencimentosModule, null),
+  grupo === "contratos" && aba === "reajuste"     && /*#__PURE__*/React.createElement(ReajusteModule, null),
+  grupo === "contratos" && aba === "repactuacao"  && /*#__PURE__*/React.createElement(RepactuacaoModule, null),
+  grupo === "contratos" && aba === "checklist"    && /*#__PURE__*/React.createElement(App, null),
+  grupo === "pesquisa"  && aba === "pesquisa" && /*#__PURE__*/React.createElement(PesquisaSemestral, null),
+  grupo === "pesquisa"  && aba === "rapp"     && /*#__PURE__*/React.createElement(RappCheck, null),
+  grupo === "pesquisa"  && aba === "cnpj"     && /*#__PURE__*/React.createElement(BackgroundCheck, null);
 }
 document.addEventListener("doccheck:auth", function () {
   var _root = ReactDOM.createRoot(document.getElementById("root"));
