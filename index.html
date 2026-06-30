@@ -945,12 +945,7 @@ function App() {
             }).join("\n"), "\n\nCrit\xE9rios:\n- \"presente\" = item claramente identificado no documento\n- \"parcial\" = existe mas de forma incompleta, amb\xEDgua ou sem os elementos essenciais\n- \"ausente\" = n\xE3o encontrado no documento\n\nO array deve ter exatamente ").concat(activeItems.length, " objetos, na mesma ordem do checklist.");
             _context.p = 4;
             _context.n = 5;
-            return fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
+            return callGemini({
                 contents: [{
                   parts: [{
                     inline_data: {
@@ -965,8 +960,7 @@ function App() {
                   temperature: 0.1,
                   maxOutputTokens: 8192
                 }
-              })
-            });
+              });
           case 5:
             resp = _context.v;
             if (resp.ok) {
@@ -2112,12 +2106,7 @@ function RappCheck() {
             // ETAPA 1 — Gemini extrai CNPJs e nomes do PDF
             prompt = "Analise este documento PDF (RAPP \u2014 Relat\xF3rio de An\xE1lise de Pre\xE7os e Proposta ou similar) e extraia TODAS as empresas mencionadas como participantes, licitantes ou proponentes.\n\nPara cada empresa, retorne um objeto com:\n- \"cnpj\": CNPJ no formato XX.XXX.XXX/XXXX-XX (ou null se n\xE3o encontrado)\n- \"nome\": raz\xE3o social ou nome da empresa\n\nResponda APENAS com um array JSON puro, sem markdown, sem texto antes ou depois.\nExemplo: [{\"cnpj\":\"12.345.678/0001-90\",\"nome\":\"Empresa ABC Ltda\"},...]\n\nSe n\xE3o encontrar nenhuma empresa, retorne [].";
             _context3.n = 3;
-            return fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
+            return callGemini({
                 contents: [{
                   parts: [{
                     inline_data: {
@@ -2133,7 +2122,6 @@ function RappCheck() {
                   maxOutputTokens: 4096
                 }
               })
-            });
           case 3:
             r = _context3.v;
             if (r.ok) {
@@ -4064,12 +4052,7 @@ function ComparadorTR() {
             prompt = "Voc\xEA \xE9 um especialista em licita\xE7\xF5es e contratos p\xFAblicos, com dom\xEDnio das seguintes normas federais e estaduais do Estado do Rio de Janeiro:\n\nNORMAS FEDERAIS:\n- Lei n\xBA 14.133/2021 (Nova Lei de Licita\xE7\xF5es e Contratos \u2014 NLLC)\n- Lei n\xBA 8.666/1993 (ainda aplic\xE1vel a contratos vigentes firmados sob sua \xE9gide)\n- Lei n\xBA 10.520/2002 (Preg\xE3o \u2014 ainda aplic\xE1vel a contratos vigentes)\n- IN SEGES/ME n\xBA 65/2021 (pesquisa de pre\xE7os)\n- IN SEGES n\xBA 05/2017 (servi\xE7os com dedica\xE7\xE3o exclusiva de m\xE3o de obra \u2014 ainda vigente para contratos antigos)\n\nDECRETOS ESTADUAIS DO RIO DE JANEIRO (regulamenta\xE7\xE3o da Lei 14.133/2021):\n- Decreto Estadual n\xBA 48.778/2023 \u2014 Regulamenta o Preg\xE3o Eletr\xF4nico no \xE2mbito estadual\n- Decreto Estadual n\xBA 48.816/2023 \u2014 Regulamenta a fase preparat\xF3ria das contrata\xE7\xF5es (inclui TR, ETP e pesquisa de pre\xE7os)\n- Decreto Estadual n\xBA 48.817/2023 \u2014 Regulamenta a gest\xE3o e fiscaliza\xE7\xE3o de contratos administrativos\n- Decreto Estadual n\xBA 48.818/2023 \u2014 Regulamenta as san\xE7\xF5es administrativas\n- Decreto Estadual n\xBA 48.819/2023 \u2014 Regulamenta a Concorr\xEAncia e o Di\xE1logo Competitivo\n- Decreto Estadual n\xBA 48.820/2023 \u2014 Regulamenta a Contrata\xE7\xE3o Direta (dispensa e inexigibilidade)\n- Decreto Estadual n\xBA 48.821/2023 (alterado pelo Dec. 49.956/2025) \u2014 Regulamenta o Sistema de Registro de Pre\xE7os (SRP) e ades\xE3o a atas\n- Decreto Estadual n\xBA 48.929/2024 \u2014 Pesquisa de pre\xE7os e or\xE7amento de refer\xEAncia para obras e servi\xE7os de engenharia\n- Decreto Estadual n\xBA 48.979/2024 \u2014 Regulamenta o credenciamento\n- Decreto Estadual n\xBA 49.193/2024 \u2014 Institui o SIGA (Sistema Integrado de Gest\xE3o de Aquisi\xE7\xF5es) como plataforma obrigat\xF3ria para licita\xE7\xF5es estaduais\n- Decreto Estadual n\xBA 49.233/2024 \u2014 Diretrizes para contrata\xE7\xE3o de mulheres v\xEDtimas de viol\xEAncia dom\xE9stica e crit\xE9rio de desempate\n- Decreto Estadual n\xBA 49.316/2024 \u2014 Institui o CatELog (Cat\xE1logo Eletr\xF4nico de Padroniza\xE7\xE3o de Log\xEDstica)\n\nForam fornecidos dois documentos PDF:\n- DOCUMENTO 1: vers\xE3o ANTERIOR do Termo de Refer\xEAncia\n- DOCUMENTO 2: vers\xE3o ATUAL/NOVA do Termo de Refer\xEAncia\n\nFa\xE7a uma compara\xE7\xE3o detalhada e identifique todas as diferen\xE7as entre os dois documentos.\n\nPara cada diferen\xE7a, classifique como:\n- \"alterada\": cl\xE1usula/se\xE7\xE3o que existia e foi modificada\n- \"incluida\": cl\xE1usula/se\xE7\xE3o nova que n\xE3o existia na vers\xE3o anterior\n- \"removida\": cl\xE1usula/se\xE7\xE3o que existia e foi retirada\n\nPara cada diferen\xE7a, avalie tamb\xE9m o impacto no processo de contrata\xE7\xE3o segundo estes crit\xE9rios:\n- \"critico\": mudan\xE7a que pode gerar nulidade, impugna\xE7\xE3o, restri\xE7\xE3o \xE0 competitividade, altera\xE7\xE3o do objeto ou desequil\xEDbrio econ\xF4mico-financeiro\n- \"relevante\": mudan\xE7a que afeta prazo, valor estimado, crit\xE9rio de julgamento, habilita\xE7\xE3o, obriga\xE7\xF5es essenciais ou exige nova pesquisa de pre\xE7os\n- \"baixo\": ajuste redacional, corre\xE7\xE3o formal, renumera\xE7\xE3o ou mudan\xE7a sem impacto substancial\n\nRetorne APENAS um JSON puro, sem markdown, sem texto antes ou depois, com esta estrutura:\n{\n  \"resumo\": \"Resumo executivo das principais mudan\xE7as e seus impactos em 3-4 frases, com avalia\xE7\xE3o geral do risco do conjunto de altera\xE7\xF5es\",\n  \"alerta_geral\": \"critico\" | \"relevante\" | \"baixo\",\n  \"total_alteradas\": 0,\n  \"total_incluidas\": 0,\n  \"total_removidas\": 0,\n  \"clausulas\": [\n    {\n      \"tipo\": \"alterada\",\n      \"referencia\": \"Ex: Item 3.1 \u2014 Prazo de execu\xE7\xE3o\",\n      \"antes\": \"Descri\xE7\xE3o do conte\xFAdo anterior (m\xE1x 300 chars)\",\n      \"depois\": \"Descri\xE7\xE3o do conte\xFAdo novo (m\xE1x 300 chars)\",\n      \"impacto_descricao\": \"Descri\xE7\xE3o objetiva do impacto desta mudan\xE7a no processo de contrata\xE7\xE3o (m\xE1x 200 chars)\",\n      \"impacto_nivel\": \"critico\" | \"relevante\" | \"baixo\",\n      \"fundamento\": \"Fundamento legal ou t\xE9cnico que justifica a classifica\xE7\xE3o, se aplic\xE1vel (m\xE1x 150 chars, ou null)\"\n    }\n  ]\n}\n\nSeja criterioso mas equilibrado. N\xE3o classifique como cr\xEDtico o que \xE9 apenas relevante. Foque em mudan\xE7as substantivas que um gestor ou advogado precisaria avaliar.";
             _context.p = 2;
             _context.n = 3;
-            return fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
+            return callGemini({
                 contents: [{
                   parts: [{
                     text: "DOCUMENTO 1 — VERSÃO ANTERIOR:"
@@ -4094,7 +4077,6 @@ function ComparadorTR() {
                   maxOutputTokens: 8192
                 }
               })
-            });
           case 3:
             resp = _context.v;
             if (resp.ok) {
@@ -4949,12 +4931,7 @@ function ImpugnacaoModule() {
             });
             setProgresso("Analisando ".concat(totalDocs, " documento").concat(totalDocs > 1 ? "s" : "", "\u2026"));
             _context3.n = 6;
-            return fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
+            return callGemini({
                 contents: [{
                   parts: parts
                 }],
@@ -4963,7 +4940,6 @@ function ImpugnacaoModule() {
                   maxOutputTokens: 8192
                 }
               })
-            });
           case 6:
             resp = _context3.v;
             if (resp.ok) {
@@ -6195,12 +6171,7 @@ function PesquisaSemestral() {
             });
             setProgresso("Analisando compatibilidade de preços…");
             _context3.n = 4;
-            return fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
+            return callGemini({
                 contents: [{
                   parts: parts
                 }],
@@ -6209,7 +6180,6 @@ function PesquisaSemestral() {
                   maxOutputTokens: 8192
                 }
               })
-            });
           case 4:
             resp = _context3.v;
             if (resp.ok) {
@@ -7009,12 +6979,7 @@ function ReajusteModule() {
             _context2.p = 2;
             prompt = "Analise este contrato administrativo e extraia as informa\xE7\xF5es abaixo. Retorne APENAS JSON puro sem markdown:\n{\"lei_aplicavel\":\"8666\"|\"14133\"|\"indeterminado\",\"numero_contrato\":\"...\",\"objeto\":\"resumo em at\xE9 10 palavras\",\"contratada\":\"nome da empresa\",\"data_assinatura\":\"DD/MM/AAAA ou null\",\"data_abertura_pregao\":\"DD/MM/AAAA ou null\",\"data_proposta\":\"DD/MM/AAAA ou null\",\"data_rapp\":\"DD/MM/AAAA ou null\",\"indice_reajuste\":\"nome exato do \xEDndice previsto no contrato (ex: IPCA, INPC, IGP-M, IPC-A) ou null\",\"tem_clausula_reajuste\":true|false,\"clausula_reajuste\":\"transcri\xE7\xE3o resumida da cl\xE1usula de reajuste ou null\",\"periodicidade_reajuste\":\"12 meses ou outro prazo se previsto expressamente\",\"justificativa_lei\":\"por que identificou esta lei \u2014 cite elementos do contrato\",\"observacoes\":\"alertas sobre cl\xE1usulas incomuns, veda\xE7\xF5es ou particularidades relevantes, ou null\"}\nAten\xE7\xE3o: o \xEDndice de reajuste DEVE ser extra\xEDdo da cl\xE1usula contratual. N\xE3o assuma IPCA se n\xE3o estiver expresso.";
             _context2.n = 3;
-            return fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
+            return callGemini({
                 contents: [{
                   parts: [{
                     inline_data: {
@@ -7030,7 +6995,6 @@ function ReajusteModule() {
                   maxOutputTokens: 1024
                 }
               })
-            });
           case 3:
             resp = _context2.v;
             _context2.n = 4;
@@ -8423,12 +8387,7 @@ function RepactuacaoModule() {
             _context4.p = 2;
             prompt = "Analise este contrato administrativo. Retorne APENAS JSON puro sem markdown:\n{\"lei_aplicavel\":\"8666\"|\"14133\"|\"indeterminado\",\"numero_contrato\":\"...\",\"objeto\":\"at\xE9 10 palavras\",\"contratada\":\"nome\",\"data_abertura_pregao\":\"DD/MM/AAAA ou null\",\"data_rapp\":\"DD/MM/AAAA ou null\",\"tem_clausula_repactuacao\":true|false,\"clausula_repactuacao\":\"texto resumido ou null\",\"categoria_profissional\":\"categoria ou null\",\"tem_planilha_custos\":true|false,\"justificativa_lei\":\"...\",\"observacoes\":\"alertas ou null\"}";
             _context4.n = 3;
-            return fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
+            return callGemini({
                 contents: [{
                   parts: [{
                     inline_data: {
@@ -8444,7 +8403,6 @@ function RepactuacaoModule() {
                   maxOutputTokens: 1024
                 }
               })
-            });
           case 3:
             resp = _context4.v;
             _context4.n = 4;
@@ -8503,12 +8461,7 @@ function RepactuacaoModule() {
             setLoading(true);
             _context5.p = 2;
             _context5.n = 3;
-            return fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
+            return callGemini({
                 contents: [{
                   parts: [{
                     inline_data: {
@@ -8524,7 +8477,6 @@ function RepactuacaoModule() {
                   maxOutputTokens: 512
                 }
               })
-            });
           case 3:
             r = _context5.v;
             _context5.n = 4;
@@ -8560,12 +8512,7 @@ function RepactuacaoModule() {
             setLoading(true);
             _context5.p = 8;
             _context5.n = 9;
-            return fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
+            return callGemini({
                 contents: [{
                   parts: [{
                     inline_data: {
@@ -8581,7 +8528,6 @@ function RepactuacaoModule() {
                   maxOutputTokens: 512
                 }
               })
-            });
           case 9:
             _r = _context5.v;
             _context5.n = 10;
