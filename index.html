@@ -278,32 +278,56 @@
   <div id="root" style="display:none;"></div>
 
   <script>
+    // ── Estado global de montagem (evita root duplicado) ──
+    var __reactRoot = null;
+
+    function mountApp() {
+      var rootEl = document.getElementById("root");
+      // Verifica se React, ReactDOM e Shell estão prontos
+      if (typeof React === "undefined" || typeof ReactDOM === "undefined" || typeof Shell === "undefined") {
+        return false; // ainda não pronto
+      }
+      document.getElementById("login-screen").style.display = "none";
+      rootEl.style.display = "block";
+      // Cria o root apenas UMA vez
+      if (!__reactRoot) {
+        __reactRoot = ReactDOM.createRoot(rootEl);
+      }
+      __reactRoot.render(React.createElement(Shell));
+      return true;
+    }
+
+    // Tenta montar com retry até que React/Shell estejam disponíveis
+    function mountWithRetry(attempts) {
+      if (mountApp()) return;
+      if (attempts > 0) {
+        setTimeout(function() { mountWithRetry(attempts - 1); }, 100);
+      } else {
+        console.error("DocCheck: falha ao carregar. Verifique a conexão com os scripts do React (CDN).");
+        var err = document.getElementById("login-error");
+        if (err) err.textContent = "Erro ao carregar a aplicação. Recarregue a página.";
+      }
+    }
+
     async function checkPassword() {
-      const input = document.getElementById("pwd-input").value;
+      var input = document.getElementById("pwd-input").value;
       if (!input || input.length < 3) {
-        const err = document.getElementById("login-error");
+        var err = document.getElementById("login-error");
         err.textContent = "Digite a senha de acesso.";
-        setTimeout(() => err.textContent = "", 2000);
+        setTimeout(function() { err.textContent = ""; }, 2000);
         return;
       }
       sessionStorage.setItem("doccheck_auth", "1");
       sessionStorage.setItem("doccheck_pwd", input);
-      showApp();
+      mountWithRetry(50); // tenta por até 5 segundos
     }
 
-    function showApp() {
-      document.getElementById("login-screen").style.display = "none";
-      document.getElementById("root").style.display = "block";
-      if (typeof Shell !== "undefined") {
-        ReactDOM.createRoot(document.getElementById("root")).render(
-          React.createElement(Shell)
-        );
+    // Se já autenticado, monta ao carregar a página
+    window.addEventListener("load", function() {
+      if (sessionStorage.getItem("doccheck_auth") === "1") {
+        mountWithRetry(50);
       }
-    }
-
-    if (sessionStorage.getItem("doccheck_auth") === "1") {
-      window.addEventListener("DOMContentLoaded", showApp);
-    }
+    });
   </script>
 
   <script>
@@ -9771,23 +9795,6 @@ function Shell() {
   grupo === "pesquisa"  && aba === "rapp"     && /*#__PURE__*/React.createElement(RappCheck, null),
   grupo === "pesquisa"  && aba === "cnpj"     && /*#__PURE__*/React.createElement(BackgroundCheck, null)));
 }
-document.addEventListener("doccheck:auth", function () {
-  var _root = ReactDOM.createRoot(document.getElementById("root"));
-  _root.render(/*#__PURE__*/React.createElement(Shell, null));
-});
-
-
-
-  // Monta o React após todos os módulos carregarem
-  window.addEventListener("DOMContentLoaded", function() {
-    if (sessionStorage.getItem("doccheck_auth") === "1") {
-      if (typeof Shell !== "undefined") {
-        ReactDOM.createRoot(document.getElementById("root")).render(
-          React.createElement(Shell)
-        );
-      }
-    }
-  });
   </script>
 
 </body>
