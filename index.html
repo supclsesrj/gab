@@ -624,7 +624,7 @@ async function callGemini(geminiPayload) {
   const resp = await fetch(APPS_SCRIPT_URL, {
     method: "POST",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({ auth_pass, gemini_payload: geminiPayload }),
+    body: JSON.stringify({ auth_pass, action: "gemini", gemini_payload: geminiPayload }),
   });
   if (!resp.ok) {
     const errText = await resp.text();
@@ -633,6 +633,25 @@ async function callGemini(geminiPayload) {
   const data = await resp.json();
   if (data.error) throw new Error(data.message || "Erro retornado pelo proxy.");
   return data;
+}
+
+// Proxy para consulta de CNPJ via ReceitaWS (evita bloqueio CORS)
+// Retorna um objeto compatível com Response (.ok, .status, .json())
+async function callCnpj(cnpj) {
+  const auth_pass = getSessionPassword();
+  if (!auth_pass) throw new Error("Sessão expirada. Recarregue a página e faça login novamente.");
+  const resp = await fetch(APPS_SCRIPT_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ auth_pass, action: "cnpj", cnpj: cnpj }),
+  });
+  const data = await resp.json();
+  // Simula uma Response para compatibilidade com o código existente
+  return {
+    ok: resp.ok && !data.error,
+    status: data.error ? (data.code || 502) : 200,
+    json: async () => data,
+  };
 }
 
 
@@ -1711,7 +1730,7 @@ function BackgroundCheck() {
             _context.p = 2;
             setStep("Consultando Receita Federal…");
             _context.n = 3;
-            return fetch("https://receitaws.com.br/v1/cnpj/".concat(raw));
+            return callCnpj(raw);
           case 3:
             r1 = _context.v;
             if (r1.ok) {
@@ -2010,7 +2029,7 @@ function RappCheck() {
             raw = cnpj.replace(/\D/g, "");
             _context2.p = 1;
             _context2.n = 2;
-            return fetch("https://receitaws.com.br/v1/cnpj/".concat(raw));
+            return callCnpj(raw);
           case 2:
             r = _context2.v;
             if (r.ok) {
@@ -9817,6 +9836,27 @@ function HomePage(_ref) {
     }
   }, "DocCheck \xB7 GAB SUPCL/SESRJ")));
 }
+
+// ── ERROR BOUNDARY — mostra erros na tela em vez de tela branca ──
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError: false, error: null, info: null }; }
+  static getDerivedStateFromError(error) { return { hasError: true, error: error }; }
+  componentDidCatch(error, info) { this.setState({ error: error, info: info }); console.error("ErrorBoundary:", error, info); }
+  render() {
+    if (this.state.hasError) {
+      return React.createElement("div", { style: { padding: "40px", maxWidth: "800px", margin: "40px auto", background: "#FEF2F2", border: "2px solid #FCA5A5", borderRadius: "12px", fontFamily: "monospace" } },
+        React.createElement("h2", { style: { color: "#B91C1C", marginBottom: "16px" } }, "⚠ Erro ao renderizar este módulo"),
+        React.createElement("p", { style: { color: "#7F1D1D", fontWeight: "bold", marginBottom: "12px" } }, this.state.error ? this.state.error.toString() : "Erro desconhecido"),
+        React.createElement("pre", { style: { background: "#1C0505", color: "#F87171", padding: "16px", borderRadius: "8px", fontSize: "12px", overflow: "auto", maxHeight: "300px", whiteSpace: "pre-wrap" } },
+          this.state.error && this.state.error.stack ? this.state.error.stack : "",
+          this.state.info && this.state.info.componentStack ? "\n\nComponente:" + this.state.info.componentStack : ""),
+        React.createElement("button", { onClick: function() { window.location.reload(); }, style: { marginTop: "16px", padding: "10px 20px", background: "#B91C1C", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer" } }, "Recarregar página")
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function Shell() {
   var _React$useState1 = React.useState(function () {
       return localStorage.getItem("doccheck_grupo") || "home";
@@ -10060,7 +10100,7 @@ function Shell() {
         whiteSpace: "nowrap"
       }
     }, a.label);
-  })))), /*#__PURE__*/React.createElement("main", null, grupo === "home" && /*#__PURE__*/React.createElement(HomePage, {
+  })))), /*#__PURE__*/React.createElement("main", null, React.createElement(ErrorBoundary, { key: grupo + aba }, grupo === "home" && /*#__PURE__*/React.createElement(HomePage, {
     onNavigate: navGrupo
   }),
   grupo === "licitacao" && aba === "checklist"  && /*#__PURE__*/React.createElement(App, null),
@@ -10072,7 +10112,7 @@ function Shell() {
   grupo === "contratos" && aba === "checklist"    && /*#__PURE__*/React.createElement(App, null),
   grupo === "pesquisa"  && aba === "pesquisa" && /*#__PURE__*/React.createElement(PesquisaSemestral, null),
   grupo === "pesquisa"  && aba === "rapp"     && /*#__PURE__*/React.createElement(RappCheck, null),
-  grupo === "pesquisa"  && aba === "cnpj"     && /*#__PURE__*/React.createElement(BackgroundCheck, null)));
+  grupo === "pesquisa"  && aba === "cnpj"     && /*#__PURE__*/React.createElement(BackgroundCheck, null))));
 }
   </script>
 
