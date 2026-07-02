@@ -945,8 +945,8 @@ function App() {
             return callGemini({
                 contents: [{
                   parts: [{
-                    inline_data: {
-                      mime_type: "application/pdf",
+                    inlineData: {
+                      mimeType: "application/pdf",
                       data: pdfBase64
                     }
                   }, {
@@ -2106,8 +2106,8 @@ function RappCheck() {
             return callGemini({
                 contents: [{
                   parts: [{
-                    inline_data: {
-                      mime_type: "application/pdf",
+                    inlineData: {
+                      mimeType: "application/pdf",
                       data: pdfBase64
                     }
                   }, {
@@ -4054,15 +4054,15 @@ function ComparadorTR() {
                   parts: [{
                     text: "DOCUMENTO 1 — VERSÃO ANTERIOR:"
                   }, {
-                    inline_data: {
-                      mime_type: "application/pdf",
+                    inlineData: {
+                      mimeType: "application/pdf",
                       data: b64Antes
                     }
                   }, {
                     text: "DOCUMENTO 2 — VERSÃO ATUAL:"
                   }, {
-                    inline_data: {
-                      mime_type: "application/pdf",
+                    inlineData: {
+                      mimeType: "application/pdf",
                       data: b64Depois
                     }
                   }, {
@@ -4900,8 +4900,8 @@ function ImpugnacaoModule() {
                         text: "\n--- ".concat(label).concat(b64s[key].length > 1 ? " (".concat(i + 1, "/").concat(b64s[key].length, ")") : "", " ---")
                       });
                       parts.push({
-                        inline_data: {
-                          mime_type: "application/pdf",
+                        inlineData: {
+                          mimeType: "application/pdf",
                           data: b64
                         }
                       });
@@ -6148,8 +6148,8 @@ function PesquisaSemestral() {
                 text: "TABELA DE PRE\xC7OS ".concat(i + 1, " (").concat(((_pdfTabelas$i = pdfTabelas[i]) === null || _pdfTabelas$i === void 0 ? void 0 : _pdfTabelas$i.name) || "tabela", "):")
               });
               parts.push({
-                inline_data: {
-                  mime_type: "application/pdf",
+                inlineData: {
+                  mimeType: "application/pdf",
                   data: b64
                 }
               });
@@ -6158,8 +6158,8 @@ function PesquisaSemestral() {
               text: "RELAT\xD3RIO DA COORDENA\xC7\xC3O DE COMPRAS (".concat((pdfRelatorio === null || pdfRelatorio === void 0 ? void 0 : pdfRelatorio.name) || "relatório", "):")
             });
             parts.push({
-              inline_data: {
-                mime_type: "application/pdf",
+              inlineData: {
+                mimeType: "application/pdf",
                 data: b64Relatorio
               }
             });
@@ -6979,8 +6979,8 @@ function ReajusteModule() {
             return callGemini({
                 contents: [{
                   parts: [{
-                    inline_data: {
-                      mime_type: "application/pdf",
+                    inlineData: {
+                      mimeType: "application/pdf",
                       data: b64Contrato
                     }
                   }, {
@@ -8387,8 +8387,8 @@ function RepactuacaoModule() {
             return callGemini({
                 contents: [{
                   parts: [{
-                    inline_data: {
-                      mime_type: "application/pdf",
+                    inlineData: {
+                      mimeType: "application/pdf",
                       data: b64Contrato
                     }
                   }, {
@@ -8461,8 +8461,8 @@ function RepactuacaoModule() {
             return callGemini({
                 contents: [{
                   parts: [{
-                    inline_data: {
-                      mime_type: "application/pdf",
+                    inlineData: {
+                      mimeType: "application/pdf",
                       data: b64CctBase
                     }
                   }, {
@@ -8512,8 +8512,8 @@ function RepactuacaoModule() {
             return callGemini({
                 contents: [{
                   parts: [{
-                    inline_data: {
-                      mime_type: "application/pdf",
+                    inlineData: {
+                      mimeType: "application/pdf",
                       data: atualizadas[i].b64
                     }
                   }, {
