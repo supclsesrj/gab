@@ -626,13 +626,10 @@ async function callGemini(geminiPayload) {
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify({ auth_pass, action: "gemini", gemini_payload: geminiPayload }),
   });
-  if (!resp.ok) {
-    const errText = await resp.text();
-    throw new Error(`Erro no proxy (${resp.status}): ${errText}`);
-  }
   const data = await resp.json();
   if (data.error) throw new Error(data.message || "Erro retornado pelo proxy.");
-  return data;
+  // Retorna objeto compatível com Response para o código transpilado que usa r.ok e r.json()
+  return { ok: true, status: 200, json: async () => data };
 }
 
 // Proxy para consulta de CNPJ via ReceitaWS (evita bloqueio CORS)
